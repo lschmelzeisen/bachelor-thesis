@@ -1,24 +1,91 @@
 \documentclass[11pt,a4paper]{article}
 
-\usepackage{mathtools}
-\usepackage{amssymb}
+\usepackage{amsmath}
 
 \usepackage{color}
 
 \usepackage{hyperref}
 
+\usepackage[parfill]{parskip}
+
 \newcommand{\todo}[1]{\textcolor{red}{\textbf{TODO}: #1}}
 \newcommand{\lukas}[1]{\textcolor{magenta}{Lukas #1}}
 \newcommand{\rene}[1]{\textcolor{blue}{Rene: #1}}
+
+\newcommand{\noref}{\textcolor{red}{\small \textsuperscript{[NoRef]}}}
+
+% Math
+\DeclareMathOperator*{\argmax}{arg\,max}
+\newcommand{\cardinality}[1]{|#1|}
 
 \title{\todo{Title}}
 \author{Lukas Schmelzeisen \\ \texttt{lukas@uni-koblenz.de}}
 \date{\today}
 
+\hypersetup{
+  pdfauthor = Lukas Schmelzeisen
+  pdftitle = Title,
+}
+
 \begin{document}
 \maketitle
 
 \section{Abstract}
+
+The quality of a language model is traditionally measured by calculating
+cross-entropy over testing data \noref.
+However it is not clear if language models with lower entropy actually perform
+better in a given application \noref.
+Applications are usually interested in an argmax query \noref.
+However argmax computation is a very time expensive operation.
+This bachelor thesis will research how to efficiently compute argmax queries and
+thus be able to truly measure the quality of a language model.
+It will then research whether lower entropy actually correlates with better
+application.
+
+\section{Introduction}
+
+Language models assign a probability $P(w_1^n)$ to a sequence of $n$
+words $w_1 \ldots w_n$\noref.
+To compute these probabilities the chain rule of probability is applied\noref:
+\begin{equation}
+  P(w_1^n) = P(w_n | w_1^{n-1}) \cdot P(w_{n-1} | w_1^{n-2}) \cdots P(w_1)
+\end{equation}
+Language models are typically specified by giving a formula to calculate
+$P(w_n | w_1^{n-1})$ to compute the conditional probability for a
+\emph{sequence} $w_n$ given a \emph{history} $w_1^{n-1}$.
+
+The quality of a language model is traditionally measured by calculating
+cross-entropy over testing data.
+\begin{equation}
+  H(Q,P) = - \sum_{w_1^n} Q(w_1^n) \log P(w_1^n)
+\end{equation}
+Where $Q$ is the Maximum-Likelihood distribution over testing data and $P$ is
+language model learned on training data\noref.
+Lower entropy is interpreted as a better language model.
+
+However it is not clear if a lower entropy actually correlates with better
+application.
+
+\todo{Why I'm not using existing applications.}
+
+Applications are usually not interested in the probability of a sequence, but
+rather in the most probable sequence $w'$ following a given history
+$w_1^{n-1}$\noref.
+\begin{equation}
+  w' = \argmax_{w \in W} P(w | w_1^{n-1})
+\end{equation}
+\todo{I believe this is not fully correct. Typically the noisy channel model is
+referenced here}.
+
+The trivial solution, calculating the probability for all $w \in W$, is very
+time expensive, and thus not practical.
+\todo{Add time to calculate argmax with trivial solution here.}
+
+This bachelor thesis research will focus on how to calculate the argmax query
+on state-of-the-art language models \footnote{\emph{Modified Kneser-Ney}\noref
+and the \emph{Generalized Language Model}\noref.} in a reasonable amount of
+time.
 
 \section{Research Goals}
 
