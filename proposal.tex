@@ -1,6 +1,7 @@
 \documentclass[11pt,a4paper]{article}
 
 \usepackage{amsmath}
+\usepackage{mathtools}
 
 \usepackage{color}
 
@@ -9,14 +10,30 @@
 \usepackage[parfill]{parskip}
 
 \newcommand{\todo}[1]{\textcolor{red}{\textbf{TODO}: #1}}
-\newcommand{\lukas}[1]{\textcolor{magenta}{Lukas #1}}
+\newcommand{\lukas}[1]{\textcolor{cyan}{Lukas: #1}}
 \newcommand{\rene}[1]{\textcolor{blue}{Rene: #1}}
 
 \newcommand{\noref}{\textcolor{red}{\small \textsuperscript{[NoRef]}}}
+\newcommand{\mbref}[1]{\textcolor{magenta}{\small \textsuperscript{[#1]}}}
 
-% Math
+% Math -------------------------------------------------------------------------
+
+% given
+% see http://tex.stackexchange.com/questions/141570/sizing-for-given-that-symbol-vertical-bar
+\newcommand\givenbase[1][]{\:#1\lvert\:}
+\let\given\givenbase
+\newcommand\sgiven{\givenbase[\delimsize]}
+\DeclarePairedDelimiterX\Basics[1](){\let\given\sgiven #1}
+
+% argmax
 \DeclareMathOperator*{\argmax}{arg\,max}
+
+% cardinality
 \newcommand{\cardinality}[1]{|#1|}
+
+% probability
+\newcommand{\prob}[1]{P(#1)}
+\newcommand{\probCond}[2]{P(#1 \given #2)}
 
 \title{\todo{Title}}
 \author{Lukas Schmelzeisen \\ \texttt{lukas@uni-koblenz.de}}
@@ -27,23 +44,66 @@
   pdftitle = Title,
 }
 
-\begin{document}
+\begin{document}http://tex.stackexchange.com/questions/141570/sizing-for-given-that-symbol-vertical-bar
 \maketitle
 
 \section{Abstract}
 
 The quality of a language model is traditionally measured by calculating
 cross-entropy over testing data \noref.
-However it is not clear if language models with lower entropy actually perform
-better in a given application \noref.
+However it is not clear if language models that score better entropy actually
+perform better in a given application \noref.
 Applications are usually interested in an argmax query \noref.
-However argmax computation is a very time expensive operation.
+However argmax computation is a very time intensive operation.
 This bachelor thesis will research how to efficiently compute argmax queries and
 thus be able to truly measure the quality of a language model.
 It will then research whether lower entropy actually correlates with better
 application.
 
 \section{Introduction}
+
+Statistical Language Modeling has many applications.
+\mbref{Church, 1988; Brown et al, 1990; Hull, 1992; Kernighan et al., 1990;
+Srihari and Baltus, 1992}
+
+The quality of many natural language processing applications depends on the
+quality of language models.
+
+Applications typically have their own metrics to measure quality, so we need a
+method to measure quality of the underlying language models.
+For example word-error-rate.\noref
+\todo{More examples.}
+
+The most commonly used method for measuring the quality of a language model is
+perplexity.\mbref{Gooman, 2001}
+
+Perplexity of a language model is equal to the geometric average of the inverse
+probability of words measured on test data.
+\lukas{Goodman, 2001: A language model that assigned equal probability to 100
+words would have perplexity 100.}
+
+\begin{equation}
+  \sqrt[n]{\prod_{i=1}^n\frac{1}{\probCond{w_i}{w_1 ... w_{i-1}}}}
+\end{equation}
+
+Entropy is $\log_2$ of perplexity. \lukas{Goodman, 2001: What we actually
+measure is the cross entropy of the test data given the model. Since this is by
+far the most common type of entropy measured, we abuse the term by simply saying
+entropy, when what we really mean is a particular cross entropy.}
+
+To get actual entropy / perplexity values we would have to calculate over all
+possible sequences $W^n$, maybe $W^*$.
+
+However it is not clear how improved entropy / perplexity scores correlate with
+better application measure, say word error rate, or if such a correlation even
+exists.\noref
+
+Experiments on Brown corpus or NAB (North American Business news)
+\lukas{(like Goodman, 2001)}.
+
+% ------------------------------------------------------------------------------
+\vspace{1em}
+\hrule
 
 Language models assign a probability $P(w_1^n)$ to a sequence of $n$
 words $w_1 \ldots w_n$\noref.
