@@ -1,5 +1,9 @@
 \documentclass[11pt,a4paper]{article}
 
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{csquotes}
+
 \usepackage{amsmath}
 \usepackage{mathtools}
 
@@ -9,18 +13,23 @@
 
 \usepackage[parfill]{parskip}
 
-\newcommand{\todo}[1]{\textcolor{red}{\textbf{TODO}: #1}}
-\newcommand{\lukas}[1]{\textcolor{cyan}{Lukas: #1}}
-\newcommand{\rene}[1]{\textcolor{blue}{Rene: #1}}
+\usepackage[backend=biber,style=authoryear]{biblatex}
+\addbibresource{langmodels.bib}
 
-\newcommand{\noref}{\textcolor{red}{\small \textsuperscript{[NoRef]}}}
-\newcommand{\mbref}[1]{\textcolor{magenta}{\small \textsuperscript{[#1]}}}
+% ------------------------------------------------------------------------------
 
-% Math -------------------------------------------------------------------------
+\newcommand{\mytitle}{Thesis Proposal: \\
+  Questioning Entropy to measure Language Models using efficient Argmax Queries}
+  %Measuring the Quality of Language Models: Efficiently computing Argmax Queries}
+\newcommand{\myname}{Lukas Schmelzeisen}
+\newcommand{\mymail}{lukas@uni-koblenz.de}
+\newcommand{\mylocation}{University of Koblenz-Landau, Germany}
+
+% -- Math ----------------------------------------------------------------------
 
 % given
 % see http://tex.stackexchange.com/questions/141570/sizing-for-given-that-symbol-vertical-bar
-\newcommand\givenbase[1][]{\:#1\lvert\:}
+\newcommand\givenbase[1][]{\,#1\lvert\,}
 \let\given\givenbase
 \newcommand\sgiven{\givenbase[\delimsize]}
 \DeclarePairedDelimiterX\Basics[1](){\let\given\sgiven #1}
@@ -32,136 +41,188 @@
 \newcommand{\cardinality}[1]{|#1|}
 
 % probability
-\newcommand{\prob}[1]{P(#1)}
-\newcommand{\probCond}[2]{P(#1 \given #2)}
+\newcommand{\probSymbol}[1][]{P_{#1}}
+\newcommand{\prob}[2][]{\probSymbol[#1](#2)}
+\newcommand{\probCond}[3][]{\prob[#1]{#2 \given #3}}
 
-\title{\todo{Title}}
-\author{Lukas Schmelzeisen \\ \texttt{lukas@uni-koblenz.de}}
+% next word prediction
+\newcommand{\nwp}[1]{\operatorname{NWP}(#1)}
+
+% -- Editorial commands --------------------------------------------------------
+
+\newcommand{\todo}[1]{\textcolor{red}{\textbf{TODO}: #1}}
+\newcommand{\lukas}[1]{\textcolor{cyan}{Lukas: #1}}
+\newcommand{\rene}[1]{\textcolor{blue}{Rene: #1}}
+
+\newcommand{\noref}{\textcolor{red}{(NoRef)}}
+\newcommand{\mbref}[1]{\textcolor{magenta}{(#1)}}
+
+% ------------------------------------------------------------------------------
+
+\title{\mytitle}
+\author{\Large{\myname} \\ \mylocation \\ \texttt{\mymail}}
 \date{\today}
 
 \hypersetup{
-  pdfauthor = Lukas Schmelzeisen
-  pdftitle = Title,
+  pdfauthor = \myname,
+  pdftitle = \mytitle,
 }
 
-\begin{document}http://tex.stackexchange.com/questions/141570/sizing-for-given-that-symbol-vertical-bar
+\begin{document}
 \maketitle
 
-\section{Abstract}
+% ==============================================================================
+\section*{Abstract}
 
-The quality of a language model is traditionally measured by calculating
-cross-entropy over testing data \noref.
+The quality of a language model is commonly measured with the entropy of its
+probability distribution.
 However it is not clear if language models that score better entropy actually
-perform better in a given application \noref.
-Applications are usually interested in an argmax query \noref.
+perform better in a given application.
+Applications are usually interested in an argmax query.
 However argmax computation is a very time intensive operation.
-This bachelor thesis will research how to efficiently compute argmax queries and
+This thesis will research how to efficiently compute argmax queries and
 thus be able to truly measure the quality of a language model.
-It will then research whether lower entropy actually correlates with better
+It will then research whether better entropy actually correlates with better
 application.
 
+% ==============================================================================
 \section{Introduction}
 
-Statistical Language Modeling has many applications.
-\mbref{Church, 1988; Brown et al, 1990; Hull, 1992; Kernighan et al., 1990;
-Srihari and Baltus, 1992}
+Statistical language modeling is the task of assigning probabilities $\prob{s}$
+to sequences of tokens ${s = w_1 \ldots w_n}$ by means of a
+probability distribution.
+%This can be thought of as predicting the occurrence of words.
+Many natural language processing applications use language models, like
+part-of-speech tagging or machine translation \parencite{Church1988,Brown1990}.
+\todo{More examples, maybe from: Hull, 1992; Kernighan et al., 1990;
+Srihari and Baltus, 1992.}
 
-The quality of many natural language processing applications depends on the
-quality of language models.
+The quality of these applications usually depends on the quality of the used
+language model.
+Therefore comparison between the qualities of different language models is
+necessary.
+The quality of a language model is defined as its closeness to the ``true''
+model of a language.
+However, since true language models are not available, other measures have to be
+used.
+Applications typically have domain-based metrics available to measure their
+performance, and thus the quality of the employed language model.
+But in order to calculate these metrics, domain-based knowledge has to be
+applied to the language model.
+So these metrics can only be used to measure quality of a language model in the
+context of the application.
+\todo{More Examples and sources.}
 
-Applications typically have their own metrics to measure quality, so we need a
-method to measure quality of the underlying language models.
-For example word-error-rate.\noref
-\todo{More examples.}
-
-The most commonly used method for measuring the quality of a language model is
-perplexity.\mbref{Gooman, 2001}
-
-Perplexity of a language model is equal to the geometric average of the inverse
-probability of words measured on test data.
-\lukas{Goodman, 2001: A language model that assigned equal probability to 100
-words would have perplexity 100.}
-
+Most commonly \emph{entropy} is used to measure the quality of a language
+model\footnote{Another measure often encountered is \emph{perplexity}, which is
+just two to the power of entropy $2^H$.} \parencite{Goodman2001}.
+Entropy is the average amount of information stored in a probability
+distribution and defined as:
 \begin{equation}
-  \sqrt[n]{\prod_{i=1}^n\frac{1}{\probCond{w_i}{w_1 ... w_{i-1}}}}
+  H \coloneqq \sum_{s \in W^*} \prob{s} \log \prob{s}
+\end{equation}
+\todo{Is it correct to use $s \in W^*$ and $\probSymbol$? Would density be
+better?}
+Entropy has the nice property that it is the number of bits per token that would
+be necessary to encode the test data using an optimal encoding
+\mbref{Shannon 19xx}.
+But in order to calculate entropy one would have to sum over all sequences
+$s \in W^*$, the very large set of all sequences of tokens $\probSymbol$ assigns
+a probability to \footnote{$\cardinality{W^*}$ is at least the number of tokens
+to the power of the longest possible sequence.}.
+Thus in practice we usually instead measure cross entropy over test data using
+the language model learned on training data \parencite{Goodman2001}.
+Lower entropy is interpreted as representing a better language model.
+
+\todo{Why is entropy actually used? Because it has a background in information
+theory? Because it is fast and easy to calculate?}
+
+However, to the knowledge of the author, it has not been researched whether
+lower entropy actually results in better application quality.
+Clearly it would be nice to have a measure of quality that is more directly
+related to applications.
+
+Applications typically compute a term of the form:
+\begin{equation}\label{eq:argmaxprod}
+  \argmax_{s \in W^*} \, \probCond[domain]{k}{s} \cdot \prob[LM]{s}
+\end{equation}
+Where $\probCond[domain]{k}{s}$ is a domain-specific probability distribution
+taking domain knowledge $k$ as input, and $\prob[LM]{s}$ is the
+probability distribution of a language model \parencite{Church1988,Brown1990}.
+\todo{More sources.} \todo{Noisy Channel?}
+
+For example, to translate French into English, \cite{Brown1990} devised a
+probability distribution $\probCond[translate]{e}{f}$, that would give the
+probability for each English sentence $e$ to be the result of translating
+the French sentence $f$ into English.
+To obtain the most likely translation, the $e$ that maximizes that probability
+has to be found.
+Using Bayes' Theorem we can write
+$\probCond{e}{f} = {\probCond{f}{e}\cdot\prob{e} \mathbin{/} \prob{f}}$.
+Since the denominator does not depend on $e$ it suffice to find the $e$ that
+optimizes ${\probCond{f}{e} \cdot \prob{e}}$ which is exactly equation
+\eqref{eq:argmaxprod}.
+
+Equation \eqref{eq:argmaxprod} yields better results the higher the quality of our
+used language model $\probSymbol[LM]$.
+Thus a good metric of quality, that is not coupled to any application domain
+knowledge, should be one that only depends on:
+\begin{equation}\label{eq:argmaxlm}
+  \argmax_{s \in W^*} \prob[LM]{s}
 \end{equation}
 
-Entropy is $\log_2$ of perplexity. \lukas{Goodman, 2001: What we actually
-measure is the cross entropy of the test data given the model. Since this is by
-far the most common type of entropy measured, we abuse the term by simply saying
-entropy, when what we really mean is a particular cross entropy.}
-
-To get actual entropy / perplexity values we would have to calculate over all
-possible sequences $W^n$, maybe $W^*$.
-
-However it is not clear how improved entropy / perplexity scores correlate with
-better application measure, say word error rate, or if such a correlation even
-exists.\noref
-
-Experiments on Brown corpus or NAB (North American Business news)
-\lukas{(like Goodman, 2001)}.
-
-% ------------------------------------------------------------------------------
-\vspace{1em}
-\hrule
-
-Language models assign a probability $P(w_1^n)$ to a sequence of $n$
-words $w_1 \ldots w_n$\noref.
-To compute these probabilities the chain rule of probability is applied\noref:
-\begin{equation}
-  P(w_1^n) = P(w_n | w_1^{n-1}) \cdot P(w_{n-1} | w_1^{n-2}) \cdots P(w_1)
+One such metric is \emph{Next Word Prediction} \parencite{Shannon1951}.
+Using the chain rule of conditional probabilities we can write:
+\begin{equation}\label{eq:chainrule}
+  \prob{w_1 \ldots w_n} = \probCond{w_n}{w_{n-1} \ldots w_1} \cdot \ldots
+                          \cdot \probCond{w_2}{w_1} \cdot \prob{w_1}
 \end{equation}
-Language models are typically specified by giving a formula to calculate
-$P(w_n | w_1^{n-1})$ to compute the conditional probability for a
-\emph{sequence} $w_n$ given a \emph{history} $w_1^{n-1}$.
-
-The quality of a language model is traditionally measured by calculating
-cross-entropy over testing data.
-\begin{equation}
-  H(Q,P) = - \sum_{w_1^n} Q(w_1^n) \log P(w_1^n)
+And interpret $\probCond{w_n}{w_{n-1} \dots w_1}$ as the probability of $w_n$
+following the sequence $w_{n-1} \ldots w_1$. Next Word Prediction is defined as
+the task of finding the most likely token following a sequence of tokens:
+\begin{equation}\label{eq:nwp}
+  \nwp{w_1 \dots w_n} \coloneqq w' = \argmax_{w \in W} \probCond{w}{w_1 \ldots w_n}
 \end{equation}
-Where $Q$ is the Maximum-Likelihood distribution over testing data and $P$ is
-language model learned on training data\noref.
-Lower entropy is interpreted as a better language model.
+Using the chain rule \eqref{eq:chainrule} one can easily see that next word
+prediction \eqref{eq:nwp} is a form of equation \eqref{eq:argmaxlm}.
+\todo{Is this correct?}
 
-However it is not clear if a lower entropy actually correlates with better
-application.
+Albeit being a good metric \noref, next word prediction is not used in practice
+because one has to calculate the probability for all $w \in W$, the set of all
+tokens.
+This is a very time intensive operation, and as such faster and easier metrics,
+like entropy, are used instead.
+\todo{Add time to calculate argmax with tirvial solution.}
+\todo{Is this the reason why entropy is used and NWP is not?}
 
-\todo{Why I'm not using existing applications.}
-
-Applications are usually not interested in the probability of a sequence, but
-rather in the most probable sequence $w'$ following a given history
-$w_1^{n-1}$\noref.
-\begin{equation}
-  w' = \argmax_{w \in W} P(w | w_1^{n-1})
-\end{equation}
-\todo{I believe this is not fully correct. Typically the noisy channel model is
-referenced here}.
-
-The trivial solution, calculating the probability for all $w \in W$, is very
-time expensive, and thus not practical.
-\todo{Add time to calculate argmax with trivial solution here.}
-
-This bachelor thesis research will focus on how to calculate the argmax query
-on state-of-the-art language models \footnote{\emph{Modified Kneser-Ney}\noref
-and the \emph{Generalized Language Model}\noref.} in a reasonable amount of
-time.
-
+% ==============================================================================
 \section{Research Goals}
 
+% ==============================================================================
 \section{Related work}
 
+% ==============================================================================
 \section{Preliminary work}
 
+% ==============================================================================
 \section{Description of Work and Expected Outcomes}
 
+% ==============================================================================
 \section{Methodology and Evaluation}
 
+Experiments on Brown corpus or NAB (North American Business news).
+\todo{Why those Corpora? Goodman, 2001 uses them.}
+
+% ==============================================================================
 \section{Conclusion}
 
-\section{References}
+% ==============================================================================
+\section{Timeline}
 
-\section{Timeline?}
+\todo{Is this section necessary?}
+
+% ==============================================================================
+\printbibliography
 
 %\section{Introduction}
 %\section{Problem statement}

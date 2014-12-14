@@ -1,7 +1,11 @@
 *.aux
 *.backup
+*.bbl
+*.bcf
+*.blg
 *.log
 *.out
 *.pdf
+*.run.xml
 *.toc
 workhours
