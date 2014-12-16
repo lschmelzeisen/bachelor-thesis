@@ -7,14 +7,17 @@
 \usepackage{amsmath}
 \usepackage{mathtools}
 
-\usepackage{color}
-
-\usepackage{hyperref}
+\usepackage{enumitem}
 
 \usepackage[parfill]{parskip}
 
 \usepackage[backend=biber,style=authoryear]{biblatex}
 \addbibresource{langmodels.bib}
+
+\usepackage{color}
+
+% Should be included last, to redefine commands
+\usepackage{hyperref}
 
 % ------------------------------------------------------------------------------
 
@@ -23,7 +26,7 @@
   %Measuring the Quality of Language Models: Efficiently computing Argmax Queries}
 \newcommand{\myname}{Lukas Schmelzeisen}
 \newcommand{\mymail}{lukas@uni-koblenz.de}
-\newcommand{\mylocation}{University of Koblenz-Landau, Germany}
+\newcommand{\myaddress}{University of Koblenz-Landau, Germany}
 
 % -- Math ----------------------------------------------------------------------
 
@@ -60,10 +63,15 @@
 % ------------------------------------------------------------------------------
 
 \title{\mytitle}
-\author{\Large{\myname} \\ \mylocation \\ \texttt{\mymail}}
+\author{
+  \myname \\
+  \small{\myaddress} \\
+  \small{\texttt{\href{mailto:\mymail}{\nolinkurl{\mymail}}}}
+}
 \date{\today}
 
 \hypersetup{
+  unicode = true,
   pdfauthor = \myname,
   pdftitle = \mytitle,
 }
@@ -72,18 +80,20 @@
 \maketitle
 
 % ==============================================================================
-\section*{Abstract}
-
-The quality of a language model is commonly measured with the entropy of its
-probability distribution.
-However it is not clear if language models that score better entropy actually
-perform better in a given application.
-Applications are usually interested in an argmax query.
-However argmax computation is a very time intensive operation.
-This thesis will research how to efficiently compute argmax queries and
-thus be able to truly measure the quality of a language model.
-It will then research whether better entropy actually correlates with better
-application.
+\begin{abstract}
+  The quality of a language model is commonly measured with the entropy of its
+  probability distribution.
+  However it is not clear whether language models that score better entropy
+  actually perform better in a given application.
+  Applications' usage of language models can usually be represented as an
+  argmax query.
+  However argmax computation is a very time intensive operation, and therefore
+  no practicable measure of language model quality.
+  This thesis will research how to efficiently compute argmax queries and
+  thus be able to present a measure of quality that is closer to actual
+  applications.
+  It will then explore how this measure compares to entropy.
+\end{abstract}
 
 % ==============================================================================
 \section{Introduction}
@@ -102,34 +112,33 @@ language model.
 Therefore comparison between the qualities of different language models is
 necessary.
 The quality of a language model is defined as its closeness to the ``true''
-model of a language.
+model of a language \noref.
 However, since true language models are not available, other measures have to be
 used.
-Applications typically have domain-based metrics available to measure their
-performance, and thus the quality of the employed language model.
-But in order to calculate these metrics, domain-based knowledge has to be
-applied to the language model.
-So these metrics can only be used to measure quality of a language model in the
-context of the application.
-\todo{More Examples and sources.}
+%Applications typically have domain-based metrics available to measure their
+%performance, and thus the quality of the employed language model.
+%But in order to calculate these metrics, domain-based knowledge has to be
+%applied to the language model.
+%So these metrics can only be used to measure quality of a language model in the
+%context of the application.
+%\todo{More Examples and sources.}
+
+% ------------------------------------------------------------------------------
+\subsection{Entropy as a Measure of Quality for \mbox{Language Models}}
 
 Most commonly \emph{entropy} is used to measure the quality of a language
 model\footnote{Another measure often encountered is \emph{perplexity}, which is
 just two to the power of entropy $2^H$.} \parencite{Goodman2001}.
 Entropy is the average amount of information stored in a probability
-distribution and defined as:
+distribution and defined as \parencite{Shannon1948}:
 \begin{equation}
-  H \coloneqq \sum_{s \in W^*} \prob{s} \log \prob{s}
+  H \coloneqq \sum_{s} \prob{s} \log \prob{s}
 \end{equation}
-\todo{Is it correct to use $s \in W^*$ and $\probSymbol$? Would density be
-better?}
-Entropy has the nice property that it is the number of bits per token that would
-be necessary to encode the test data using an optimal encoding
-\mbref{Shannon 19xx}.
+%Entropy has the nice property that it is the average number of bits per token
+%that would be necessary to encode the test data using an optimal encoding.
+
 But in order to calculate entropy one would have to sum over all sequences
-$s \in W^*$, the very large set of all sequences of tokens $\probSymbol$ assigns
-a probability to \footnote{$\cardinality{W^*}$ is at least the number of tokens
-to the power of the longest possible sequence.}.
+$s$, the very large set of all sequences $\probSymbol$ assigns a probability to.
 Thus in practice we usually instead measure cross entropy over test data using
 the language model learned on training data \parencite{Goodman2001}.
 Lower entropy is interpreted as representing a better language model.
@@ -141,13 +150,22 @@ However, to the knowledge of the author, it has not been researched whether
 lower entropy actually results in better application quality.
 Clearly it would be nice to have a measure of quality that is more directly
 related to applications.
+\todo{Is this a good claim to make?}
+\todo{What are Maximum-Entropy-Language-Models? Would they support my claim?}
+
+% ------------------------------------------------------------------------------
+\subsection{Application-oriented Measures of Quality}
 
 Applications typically compute a term of the form:
 \begin{equation}\label{eq:argmaxprod}
   \argmax_{s \in W^*} \, \probCond[domain]{k}{s} \cdot \prob[LM]{s}
 \end{equation}
-Where $\probCond[domain]{k}{s}$ is a domain-specific probability distribution
-taking domain knowledge $k$ as input, and $\prob[LM]{s}$ is the
+With $W$ being the set of all tokens, and $W^*$ being the set of all possible
+sequences\footnote{$W^*$ is the very large set of all sequences $\probSymbol$
+assigns a probability to. $\cardinality{W^*}$ is at least the
+number of tokens to the power of the longest possible sequence.};
+$\probCond[domain]{k}{s}$ being a domain-specific probability distribution
+taking domain knowledge $k$ as input, and $\prob[LM]{s}$ being the
 probability distribution of a language model \parencite{Church1988,Brown1990}.
 \todo{More sources.} \todo{Noisy Channel?}
 
@@ -157,7 +175,7 @@ probability for each English sentence $e$ to be the result of translating
 the French sentence $f$ into English.
 To obtain the most likely translation, the $e$ that maximizes that probability
 has to be found.
-Using Bayes' Theorem we can write
+Using Bayes' Theorem one can write
 $\probCond{e}{f} = {\probCond{f}{e}\cdot\prob{e} \mathbin{/} \prob{f}}$.
 Since the denominator does not depend on $e$ it suffice to find the $e$ that
 optimizes ${\probCond{f}{e} \cdot \prob{e}}$ which is exactly equation
@@ -171,6 +189,9 @@ knowledge, should be one that only depends on:
   \argmax_{s \in W^*} \prob[LM]{s}
 \end{equation}
 
+% ------------------------------------------------------------------------------
+\subsection{Next Word Prediction}
+
 One such metric is \emph{Next Word Prediction} \parencite{Shannon1951}.
 Using the chain rule of conditional probabilities we can write:
 \begin{equation}\label{eq:chainrule}
@@ -181,10 +202,10 @@ And interpret $\probCond{w_n}{w_{n-1} \dots w_1}$ as the probability of $w_n$
 following the sequence $w_{n-1} \ldots w_1$. Next Word Prediction is defined as
 the task of finding the most likely token following a sequence of tokens:
 \begin{equation}\label{eq:nwp}
-  \nwp{w_1 \dots w_n} \coloneqq w' = \argmax_{w \in W} \probCond{w}{w_1 \ldots w_n}
+  \nwp{w_1 \dots w_n} \coloneqq \argmax_{w \in W} \probCond{w}{w_1 \ldots w_n}
 \end{equation}
 Using the chain rule \eqref{eq:chainrule} one can easily see that next word
-prediction \eqref{eq:nwp} is a form of equation \eqref{eq:argmaxlm}.
+prediction \eqref{eq:nwp} is a modified form of equation \eqref{eq:argmaxlm}.
 \todo{Is this correct?}
 
 Albeit being a good metric \noref, next word prediction is not used in practice
@@ -193,25 +214,71 @@ tokens.
 This is a very time intensive operation, and as such faster and easier metrics,
 like entropy, are used instead.
 \todo{Add time to calculate argmax with tirvial solution.}
-\todo{Is this the reason why entropy is used and NWP is not?}
+\todo{Is this the actually reason why entropy is used and NWP is not?}
 
 % ==============================================================================
 \section{Research Goals}
 
+This thesis' research goals are to:
+\begin{enumerate}[label=(\alph*)]
+  \item
+    Devise an algorithm, that makes it possible to efficiently compute
+    next word prediction \eqref{eq:nwp} and ideally equation
+    \eqref{eq:argmaxlm}, as opposed to the trivial solution of enumerating
+    all possible arguments.
+
+    This algorithm should be applicable to the state-of-the-art language model
+    \emph{Modified Kneser-Ney Smoothing} \parencite{ChenGoodman1999} and its
+    generalization, the \emph{Generalized Language Model}
+    \parencite{Pickhardt2014}.
+
+  \item
+    Research if and how entropy correlates with next word prediction, as a case
+    of application quality, and whether entropy actually is a good measure of
+    quality of language models.
+\end{enumerate}
+
 % ==============================================================================
 \section{Related work}
+
+\todo{Is this section necessary?}
+
+\todo{What will I actually write here?}
 
 % ==============================================================================
 \section{Preliminary work}
 
+\todo{Include this section?}
+
+As part of his work as research assistant at University of Koblenz-Landau,
+the author developed the \emph{Generalized Language Modeling Toolkit}
+(GLMTK)\footnote{\url{https://github.com/renepickhardt/generalized-language-modeling-toolkit/}}.
+A program to learn and evaluate language models, among other things capable of
+calculating \emph{Modified Kneser Ney Smoothing} \parencite{ChenGoodman1999} and
+the \emph{Generalized Language Model} \parencite{Pickhardt2014}.
+
+Research findings of this thesis will be implemented in it, and it will be used
+during evaluation.
+
 % ==============================================================================
 \section{Description of Work and Expected Outcomes}
+
+\todo{Stuff I still have to look at:\\
+\\
+-- Beam search \\
+-- Stack search \\
+-- Top $k$-Join \\
+-- Zipf Distribution and Zipf's Law
+}
 
 % ==============================================================================
 \section{Methodology and Evaluation}
 
 Experiments on Brown corpus or NAB (North American Business news).
 \todo{Why those Corpora? Goodman, 2001 uses them.}
+
+Evaluation will compare next word prediction with entropy, cross-entropy,
+conditional entropy and perplexity.
 
 % ==============================================================================
 \section{Conclusion}
@@ -220,6 +287,23 @@ Experiments on Brown corpus or NAB (North American Business news).
 \section{Timeline}
 
 \todo{Is this section necessary?}
+
+\todo{Is any important part of a proposal missing from this document. Another
+structure for proposal I found online was this :\\
+\\
+-- Introduction \\
+-- Problem Statement \\
+-- Background \\
+-- Purpose \\
+-- Significance \\
+-- Methodology \\
+-- Literature Review \\
+-- Hypotheses \\
+-- Definition of Terms \\
+-- Assumptions \\
+-- Scope and Limitations \\
+-- Long-Range Consequence
+}
 
 % ==============================================================================
 \printbibliography
