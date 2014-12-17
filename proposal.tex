@@ -48,6 +48,10 @@
 \newcommand{\prob}[2][]{\probSymbol[#1](#2)}
 \newcommand{\probCond}[3][]{\prob[#1]{#2 \given #3}}
 
+\newcommand{\probSymbolLower}[1][]{\hat{P}_{#1}}
+\newcommand{\probLower}[2][]{\probSymbolLower[#1](#2)}
+\newcommand{\probCondLower}[3][]{\probLower[#1]{#2 \given #3}}
+
 % next word prediction
 \newcommand{\nwp}[1]{\operatorname{NWP}(#1)}
 
@@ -98,6 +102,8 @@
 % ==============================================================================
 \section{Introduction}
 
+\todo{Check distance, metric and measure.}
+
 Statistical language modeling is the task of assigning probabilities $\prob{s}$
 to sequences of tokens ${s = w_1 \ldots w_n}$ by means of a
 probability distribution.
@@ -129,10 +135,10 @@ used.
 Most commonly \emph{entropy} is used to measure the quality of a language
 model\footnote{Another measure often encountered is \emph{perplexity}, which is
 just two to the power of entropy $2^H$.} \parencite{Goodman2001}.
-Entropy is the average amount of information stored in a probability
+Entropy is the average amount of uncertainty stored in a probability
 distribution and defined as \parencite{Shannon1948}:
 \begin{equation}
-  H \coloneqq \sum_{s} \prob{s} \log \prob{s}
+  H \coloneqq - \sum_{s} \prob{s} \log \prob{s}
 \end{equation}
 %Entropy has the nice property that it is the average number of bits per token
 %that would be necessary to encode the test data using an optimal encoding.
@@ -151,6 +157,7 @@ lower entropy actually results in better application quality.
 Clearly it would be nice to have a measure of quality that is more directly
 related to applications.
 \todo{Is this a good claim to make?}
+\todo{Because smoothing has to increase entropy (has shown in Shannon 1948)?}
 \todo{What are Maximum-Entropy-Language-Models? Would they support my claim?}
 
 % ------------------------------------------------------------------------------
@@ -204,8 +211,8 @@ the task of finding the most likely token following a sequence of tokens:
 \begin{equation}\label{eq:nwp}
   \nwp{w_1 \dots w_n} \coloneqq \argmax_{w \in W} \probCond{w}{w_1 \ldots w_n}
 \end{equation}
-Using the chain rule \eqref{eq:chainrule} one can easily see that next word
-prediction \eqref{eq:nwp} is a modified form of equation \eqref{eq:argmaxlm}.
+Using the chain rule \eqref{eq:chainrule} one can see that next word
+prediction \eqref{eq:nwp} is similar in form to equation \eqref{eq:argmaxlm}.
 \todo{Is this correct?}
 
 Albeit being a good metric \noref, next word prediction is not used in practice
@@ -258,7 +265,7 @@ calculating \emph{Modified Kneser Ney Smoothing} \parencite{ChenGoodman1999} and
 the \emph{Generalized Language Model} \parencite{Pickhardt2014}.
 
 Research findings of this thesis will be implemented in it, and it will be used
-during evaluation.
+during evaluation or just lower $n$-grams.
 
 % ==============================================================================
 \section{Description of Work and Expected Outcomes}
@@ -267,6 +274,7 @@ during evaluation.
 \\
 -- Beam search \\
 -- Stack search \\
+-- Vertibi algorithm \\
 -- Top $k$-Join \\
 -- Zipf Distribution and Zipf's Law
 }
@@ -277,8 +285,14 @@ during evaluation.
 Experiments on Brown corpus or NAB (North American Business news).
 \todo{Why those Corpora? Goodman, 2001 uses them.}
 
+Most $k$-likely following instead of just NWP to have more continuous metric.
+
 Evaluation will compare next word prediction with entropy, cross-entropy,
 conditional entropy and perplexity.
+
+Will plot NWP-Entropy diagram. Since we currently can only measure two language
+models (MKN and GLM) we might have to also use MLE or use some variations like
+abs-MKN or skipdel-GLM.
 
 % ==============================================================================
 \section{Conclusion}
@@ -287,6 +301,10 @@ conditional entropy and perplexity.
 \section{Timeline}
 
 \todo{Is this section necessary?}
+
+\begin{enumerate}
+  \item Implementing trivial solution for NWP.
+\end{enumerate}
 
 \todo{Is any important part of a proposal missing from this document. Another
 structure for proposal I found online was this :\\
@@ -307,6 +325,112 @@ structure for proposal I found online was this :\\
 
 % ==============================================================================
 \printbibliography
+
+% ==============================================================================
+\clearpage
+\section{Notes}
+
+\subsection{Modified Kneser-Ney}
+
+MKN is:
+\begin{align}
+  \begin{split}
+    \probCond[mkn]{w_n}{w_1^{n-1}} =        &\frac{\max{\{c(w_1^n) - D(c(w_1^n)), 0\}}}
+                                                  {c(w_1^{n-1} \bullet)} \\
+                                          + &\frac{  D_1    N_1   (w_1^{n-1} \bullet)
+                                                   + D_2    N_2   (w_1^{n-1} \bullet)
+                                                   + D_{3+} N_{3+}(w_1^{n-1} \bullet)}
+                                             {c(w_1^{n-1} \bullet)}
+                                          \cdot \probCondLower[mkn]{w_n}{w_1^{n-2}}
+  \end{split} \\
+  \begin{split}
+    \probCondLower[mkn]{w_n}{w_1^{n-1}} =   &\frac{\max{\{N_{1+}(w_1^n) - D(N_{1+}(w_1^n)), 0\}}}
+                                                  {N_{1+}(w_1^{n-1} \bullet)} \\
+                                          + &\frac{  D_1    N_1   (w_1^{n-1} \bullet)
+                                                   + D_2    N_2   (w_1^{n-1} \bullet)
+                                                   + D_{3+} N_{3+}(w_1^{n-1} \bullet)}
+                                             {N_{1+}(w_1^{n-1} \bullet)}
+                                          \cdot \probCondLower[mkn]{w_n}{w_1^{n-2}}
+  \end{split}
+\end{align}
+
+We define:
+\begin{align}
+  \alpha(w_1^n)     =& \frac{\max{\{c(w_1^n) - D(c(w_1^n)), 0\}}}{c(w_1^{n-1} \bullet)} \\
+  \gamma(w_1^{n-1}) =& \frac{  D_1    N_1   (w_1^{n-1} \bullet)
+                           + D_2    N_2   (w_1^{n-1} \bullet)
+                           + D_{3+} N_{3+}(w_1^{n-1} \bullet)}
+                          {c(w_1^{n-1} \bullet)} \\
+  \hat\alpha(w_1^n)     =& \frac{\max{\{c(w_1^n) - D(c(w_1^n)), 0\}}}{c(w_1^{n-1} \bullet)} \\
+  \hat\gamma(w_1^{n-1}) =& \frac{  D_1    N_1   (w_1^{n-1} \bullet)
+                           + D_2    N_2   (w_1^{n-1} \bullet)
+                           + D_{3+} N_{3+}(w_1^{n-1} \bullet)}
+                          {N_{1+}(w_1^{n-1} \bullet)}
+\end{align}
+We should be able to calculate these for all $n$-grams beforehand and store
+them permanently.
+
+Using that we can rewrite MKN:
+\begin{align}
+  \probCond[mkn]{w_n}{w_1^{n-1}}      =& \alpha(w_1^n) + \gamma(w_1^{n-1}) \cdot \probCondLower[mkn]{w_n}{w_1^{n-2}} \\
+  \probCondLower[mkn]{w_n}{w_1^{n-1}} =& \hat\alpha(w_1^n) + \hat\gamma(w_1^{n-1}) \cdot \probCondLower[mkn]{w_n}{w_1^{n-2}}
+\end{align}
+
+Example of expansion:
+\begin{equation}
+  \begin{split}
+    &\hspace{-2em}\probCond[mkn]{\text{Br\"ucke}}{\text{ich gehe \"uber die}}\\ =
+      &\alpha(\text{ich gehe \"uber die Br\"ucke}) + \gamma(\text{ich gehe \"uber die}) \cdot (\\
+        &\quad \alpha(\text{gehe \"uber die Br\"ucke}) + \gamma(\text{gehe \"uber die}) \cdot (\\
+        &\quad\quad \alpha(\text{\"uber die Br\"ucke}) + \gamma(\text{\"uber die}) \cdot (\\
+        &\quad\quad\quad \alpha(\text{die Br\"ucke}) + \gamma(\text{die}) \cdot (\\
+        &\quad\quad\quad\quad \alpha(\text{Br\"ucke})))))
+  \end{split}
+\end{equation}
+
+We define:
+\begin{align}
+  \alpha_i(w_1^n) =&
+    \begin{cases}
+      \alpha(w_1^n)     & \text{if } i = 0 \\
+      \hat\alpha(w_1^n) & \text{otherwise}
+    \end{cases} \\
+  \gamma_i(w_1^n) =&
+    \begin{cases}
+      1                                                                & \text{if } i = 0 \\
+      \gamma(w_1^n)                                                    & \text{if } i = 1 \\
+      \gamma_{i-1}(w_1^n) \cdot \hat\gamma(\partial^d_{i-1} w_1^n) & \text{otherwise}
+    \end{cases} \\
+  \partial^d_i(w_1^n) =& \; w_i \ldots w_n
+\end{align}
+Because the argument of $\gamma_i$ is usually given by context, we omit it most
+of the time.
+
+MKN can no be rewritten to the simpler form:
+\begin{equation}
+  \probCond[mkn]{w_n}{w_1^{n-1}} = \sum_{i=0}^n \gamma_i \cdot \alpha_i(\partial^d_i w_1^n)
+\end{equation}
+
+Inequalities of $\gamma_i$:
+\begin{align}
+  \gamma_{i>0} <& \, 1 \\
+  \gamma_i     >& \, \gamma_{i+1}
+\end{align}
+
+\subsection{Generalized Language Model}
+
+We define:
+\begin{align}
+  \partial^s_i(w_1^n) =& \; w_1 \ldots w_{i-1} \bullet w_{i+1} \ldots w_n \\
+  \delta(w_1^n)             =& \bigcup_{i = 1}^n \,\{ \, \partial^s_i(w_1^n) \, \}
+\end{align}
+
+GLM is:
+\begin{align}
+  \probCond[glm]{w_n}{w_1^{n-1}}      =& \alpha(w_1^n) + \gamma(w_1^{n-1}) \cdot \frac{\sum_{\hat h \in \delta(w_1^{n-1})} \probCondLower[glm]{w_n}{\hat h}}{\cardinality{\delta(w_1^{n-1})}} \\
+  \probCondLower[glm]{w_n}{w_1^{n-1}} =& \hat\alpha(w_1^n) + \hat\gamma(w_1^{n-1}) \cdot \frac{\sum_{\hat h \in \delta(w_1^{n-1})} \probCondLower[glm]{w_n}{\hat h}}{\cardinality{\delta(w_1^{n-1})}}
+\end{align}
+
 
 %\section{Introduction}
 %\section{Problem statement}
