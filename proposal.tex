@@ -485,7 +485,7 @@ GLM is:
 \begin{equation}
   \begin{split}
     &\hspace{-2em}\probCond[glm]{\text{Br\"ucke}}{\text{gehe \"uber die}} = \\
-    &\alpha(\text{gehe \"uber die Br\"ucke}) \, + \\
+    &\nicefrac{1}{1} \cdot \alpha(\text{gehe \"uber die Br\"ucke}) \, + \\
     &\nicefrac{1}{3} \cdot \gamma(\text{gehe \"uber die}) \cdot \alpha(\bullet\text{\"uber die Br\"ucke}) \, + \\
     &\nicefrac{1}{6} \cdot \gamma(\text{gehe \"uber die}) \cdot \gamma(\bullet\text{\"uber die}) \cdot \alpha(\bullet\bullet\text{die Br\"ucke}) \, + \\
     &\nicefrac{1}{6} \cdot \gamma(\text{gehe \"uber die}) \cdot \gamma(\bullet\text{\"uber die}) \cdot \gamma(\bullet\bullet\text{die}) \cdot \alpha(\bullet\bullet\bullet\text{Br\"ucke}) \, + \\
@@ -507,7 +507,7 @@ GLM is:
 \begin{equation}
   \begin{split}
     &\hspace{-2em}\probCond[glm]{\text{Br\"ucke}}{\text{gehe \"uber die}} = \\
-    &\alpha(\text{gehe \"uber die Br\"ucke}) \, + \\
+    &\nicefrac{1}{1} \cdot \alpha(\text{gehe \"uber die Bru\"cke}) \, + \\
     &\nicefrac{1}{3} \cdot \gamma(\text{gehe \"uber die}) \cdot \alpha(\bullet\text{\"uber die Br\"ucke}) \, + \\
     &\nicefrac{1}{3} \cdot \gamma(\text{gehe \"uber die}) \cdot \alpha(\text{gehe}\bullet\text{die Br\"ucke}) \, + \\
     &\nicefrac{1}{3} \cdot \gamma(\text{gehe \"uber die}) \cdot \alpha(\text{gehe \"uber}\bullet\text{Br\"ucke}) \, + \\
@@ -517,13 +517,33 @@ GLM is:
     &\nicefrac{1}{6} \cdot \gamma(\text{gehe \"uber die}) \cdot \gamma(\text{gehe}\bullet\text{die}) \cdot \alpha(\text{gehe}\bullet\bullet\text{Br\"ucke}) \, + \\
     &\nicefrac{1}{6} \cdot \gamma(\text{gehe \"uber die}) \cdot \gamma(\text{gehe \"uber}\bullet) \cdot \alpha(\bullet\text{\"uber}\bullet\text{Br\"ucke}) \, + \\
     &\nicefrac{1}{6} \cdot \gamma(\text{gehe \"uber die}) \cdot \gamma(\text{gehe \"uber}\bullet) \cdot \alpha(\text{gehe}\bullet\bullet\text{Br\"ucke}) \, + \\
-    &\nicefrac{1}{6} \cdot \gamma(\text{gehe \"uber die}) \cdot \gamma(\text{gehe}\bullet\text{die}) \cdot \gamma(\bullet\bullet\text{die}) \cdot \alpha(\bullet\bullet\bullet\text{Br\"ucke}) \, + \\
     &\nicefrac{1}{6} \cdot \gamma(\text{gehe \"uber die}) \cdot \gamma(\bullet\text{\"uber die}) \cdot \gamma(\bullet\bullet\text{die}) \cdot \alpha(\bullet\bullet\bullet\text{Br\"ucke}) \, + \\
     &\nicefrac{1}{6} \cdot \gamma(\text{gehe \"uber die}) \cdot \gamma(\bullet\text{\"uber die}) \cdot \gamma(\bullet\text{\"uber}\bullet) \cdot \alpha(\bullet\bullet\bullet\text{Br\"ucke}) \, + \\
+    &\nicefrac{1}{6} \cdot \gamma(\text{gehe \"uber die}) \cdot \gamma(\text{gehe}\bullet\text{die}) \cdot \gamma(\bullet\bullet\text{die}) \cdot \alpha(\bullet\bullet\bullet\text{Br\"ucke}) \, + \\
     &\nicefrac{1}{6} \cdot \gamma(\text{gehe \"uber die}) \cdot \gamma(\text{gehe}\bullet\text{die}) \cdot \gamma(\text{gehe}\bullet\bullet) \cdot \alpha(\bullet\bullet\bullet\text{Br\"ucke}) \, + \\
     &\nicefrac{1}{6} \cdot \gamma(\text{gehe \"uber die}) \cdot \gamma(\text{gehe \"uber}\bullet) \cdot \gamma(\bullet\text{\"uber}\bullet) \cdot \alpha(\bullet\bullet\bullet\text{Br\"ucke}) \, + \\
     &\nicefrac{1}{6} \cdot \gamma(\text{gehe \"uber die}) \cdot \gamma(\text{gehe \"uber}\bullet) \cdot \gamma(\text{gehe}\bullet\bullet) \cdot \alpha(\bullet\bullet\bullet\text{Br\"ucke})
   \end{split}
 \end{equation}
+
+\begin{IEEEeqnarray*}{lll}
+    &\hspace{-2em}\probCond[glm]{\text{Br\"ucke}}{\text{gehe \"uber die}} = &\\
+    &\alpha(\text{gehe \"uber die Br\"ucke})                  &(\nicefrac{1}{1})\, + \\
+    &\alpha(\bullet\text{\"uber die Br\"ucke}) \cdot          &(\nicefrac{1}{3} \cdot \gamma(\text{gehe \"uber die})) \, + \\
+    &\alpha(\text{gehe}\bullet\text{die Br\"ucke}) \cdot      &(\nicefrac{1}{3} \cdot \gamma(\text{gehe \"uber die})) \, + \\
+    &\alpha(\text{gehe \"uber}\bullet\text{Br\"ucke}) \cdot   &(\nicefrac{1}{3} \cdot \gamma(\text{gehe \"uber die})) \, + \\
+    &\alpha(\bullet\bullet\text{die Br\"ucke}) \cdot          &(\nicefrac{1}{6} \cdot \gamma(\text{gehe \"uber die}) \cdot \gamma(\bullet\text{\"uber die}) \, +\\
+    &                                                         &\phantom(\nicefrac{1}{6} \cdot \gamma(\text{gehe \"uber die}) \cdot \gamma(\text{gehe}\bullet\text{die})) \, + \\
+    &\alpha(\bullet\text{\"uber}\bullet\text{Br\"ucke}) \cdot &(\nicefrac{1}{6} \cdot \gamma(\text{gehe \"uber die}) \cdot \gamma(\bullet\text{\"uber die}) \, + \\
+    &                                                         &\phantom(\nicefrac{1}{6} \cdot \gamma(\text{gehe \"uber die}) \cdot \gamma(\text{gehe \"uber}\bullet)) \, + \\
+    &\alpha(\text{gehe}\bullet\bullet\text{Br\"ucke}) \cdot   &(\nicefrac{1}{6} \cdot \gamma(\text{gehe \"uber die}) \cdot \gamma(\text{gehe}\bullet\text{die}) \, + \\
+    &                                                         &\phantom(\nicefrac{1}{6} \cdot \gamma(\text{gehe \"uber die}) \cdot \gamma(\text{gehe \"uber}\bullet)) \, + \\
+    &\alpha(\bullet\bullet\bullet\text{Br\"ucke}) \cdot       &(\nicefrac{1}{6} \cdot \gamma(\text{gehe \"uber die}) \cdot \gamma(\bullet\text{\"uber die}) \cdot \gamma(\bullet\text{\"uber}\bullet) \, + \\
+    &                                                         &\phantom(\nicefrac{1}{6} \cdot \gamma(\text{gehe \"uber die}) \cdot \gamma(\bullet\text{\"uber die}) \cdot \gamma(\bullet\bullet\text{die}) \, + \\
+    &                                                         &\phantom(\nicefrac{1}{6} \cdot \gamma(\text{gehe \"uber die}) \cdot \gamma(\text{gehe}\bullet\text{die}) \cdot \gamma(\text{gehe}\bullet\bullet) \, + \\
+    &                                                         &\phantom(\nicefrac{1}{6} \cdot \gamma(\text{gehe \"uber die}) \cdot \gamma(\text{gehe}\bullet\text{die}) \cdot \gamma(\bullet\bullet\text{die}) \, + \\
+    &                                                         &\phantom(\nicefrac{1}{6} \cdot \gamma(\text{gehe \"uber die}) \cdot \gamma(\text{gehe \"uber}\bullet) \cdot \gamma(\bullet\text{\"uber}\bullet) \, + \\
+    &                                                         &\phantom(\nicefrac{1}{6} \cdot \gamma(\text{gehe \"uber die}) \cdot \gamma(\text{gehe \"uber}\bullet) \cdot \gamma(\text{gehe}\bullet\bullet))
+\end{IEEEeqnarray*}
 
 \end{document}
