@@ -1,0 +1,455 @@
+\documentclass[11pt,a4paper]{report}
+
+\usepackage[utf8]{inputenc}
+\usepackage[german,english]{babel}
+\usepackage{csquotes}
+
+\usepackage{xparse}
+
+\usepackage{amsmath}
+\usepackage{mathtools}
+\usepackage{nicefrac}
+\usepackage{IEEEtrantools}
+
+\usepackage[parfill]{parskip}
+\usepackage{appendix}
+
+% In-paragrap enumerations
+\usepackage{paralist}
+
+% Code listings
+\usepackage{listings}
+
+% Courier as monospace font.
+\usepackage{courier}
+
+\usepackage[backend=biber,style=authoryear]{biblatex}
+\addbibresource{langmodels.bib}
+
+\usepackage{color}
+
+% Should be included last, to redefine commands
+\usepackage{hyperref}
+
+% ------------------------------------------------------------------------------
+
+\newcommand{\mytitle}{Computing Language Model Arg-Max-Queries Using Top-\emph{k}
+  Joining Techniques}
+%\newcommand{\mytitle}{Applying Top-\emph{k} Joining Techniques to
+%  Modified-Kneser-Ney Language Model's and Generalized Language Model's Argmax
+%  Queries}
+\newcommand{\myname}{Lukas Schmelzeisen}
+\newcommand{\mymail}{lukas@uni-koblenz.de}
+\newcommand{\myaddress}{University of Koblenz-Landau, Germany}
+
+% -- Math ----------------------------------------------------------------------
+
+% given
+% see http://tex.stackexchange.com/questions/141570/sizing-for-given-that-symbol-vertical-bar
+\newcommand\givenbase[1][]{\,#1\lvert\,}
+\let\given\givenbase
+\newcommand\sgiven{\givenbase[\delimsize]}
+\DeclarePairedDelimiterX\Basics[1](){\let\given\sgiven #1}
+
+% set
+% see http://tex.stackexchange.com/questions/13634/define-pretty-sets-in-latex-esp-how-to-do-the-condition-separator
+\newcommand\SetSymbol[1][]{
+  \nonscript\,#1\vert\nonscript\,\mathopen{}\allowbreak
+}
+\DeclarePairedDelimiterX\Set[1]{\lbrace}{\rbrace}%
+  { \renewcommand\given{\SetSymbol[\delimsize]} #1 }
+
+% argmax
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+% cardinality
+\newcommand{\cardinality}[1]{|#1|}
+
+% probability
+\NewDocumentCommand{\prob}{s O{} g g}{
+  \IfBooleanT{#1}{\hat}P_{#2}
+  \IfNoValueTF{#3}{}{(\IfNoValueTF{#4}{#3}{#3 \given #4})}
+}
+
+% next word prediction
+\newcommand{\nwp}[1]{\operatorname{NWP}(#1)}
+
+% next keystroke savings
+\newcommand{\nksSymbol}{\operatorname{NKS}}
+\newcommand{\nks}[1]{\nksSymbol(#1)}
+
+% -- Code ----------------------------------------------------------------------
+
+\newcommand{\inlinecode}[1]{\lstinline[columns=fixed]{#1}}
+
+% -- Editiorial Commands -------------------------------------------------------
+
+\newcommand{\todo}[1]{\textcolor{red}{\textbf{TODO}: #1}}
+\newcommand{\lukas}[1]{\textcolor{cyan}{Lukas: #1}}
+\newcommand{\rene}[1]{\textcolor{blue}{Rene: #1}}
+
+\newcommand{\noref}{\textcolor{red}{(NoRef)}}
+\newcommand{\mbref}[1]{\textcolor{magenta}{(#1)}}
+
+% ------------------------------------------------------------------------------
+
+\title{\mytitle}
+\author{
+  \myname \\
+  \small{\myaddress} \\
+  \small{\texttt{\href{mailto:\mymail}{\nolinkurl{\mymail}}}}
+}
+\date{\today}
+\hypersetup{
+  unicode = true,
+  pdfauthor = \myname,
+  pdftitle = \mytitle,
+}
+
+\begin{document}
+
+% ==============================================================================
+\maketitle
+
+% ==============================================================================
+\vspace*{\fill}
+\begin{minipage}{\linewidth} % To have both abstracts on one page
+  \begin{abstract}
+    Abstract.
+  \end{abstract}
+
+  \vspace{5em}
+
+  \selectlanguage{german}
+  \begin{abstract}
+    Diesmal auf deutsch.
+  \end{abstract}
+  \selectlanguage{english}
+\end{minipage}
+\vspace*{\fill}
+
+% ==============================================================================
+\tableofcontents
+
+% ==============================================================================
+\chapter{Introduction}
+
+A statistical \emph{language model} assigns a probability to a sequence of
+words.
+
+Language models are important and used in practice.
+
+State-of-the-art language models are \emph{Modified-Kneser-Ney Language Model}
+and \emph{Generalized Language Model}
+
+Modified-Kneser-Ney Language Model is:
+\begin{equation}
+  \prob[\text{MKN}]{\ldots} = \ldots
+\end{equation}
+
+Genralized Language Model is \parencite{Pickhardt2014}:
+\begin{equation}
+  \prob[\text{GLM}]{\ldots} = \ldots
+\end{equation}
+
+We want to efficiently compute argmax.
+
+We map argmax onto researched problem of top-k joining.
+
+We apply that technique.
+
+Most non-trivial top-\emph{k} joining algorithms require a monotone scoring
+function, some further improvements can be made if using a linear scoring
+function~\parencite{Ilyas2008}.
+
+% ==============================================================================
+\chapter{Related Work}
+
+% ==============================================================================
+\chapter{Language Models}
+
+% ==============================================================================
+\chapter{Formulating Language Models as weighted sums}
+\label{chp-lm-score-func}
+
+% ------------------------------------------------------------------------------
+\section{Modified-Kneser-Ney Language Model}
+
+% ------------------------------------------------------------------------------
+\section{Generalized Language Model}
+
+Binomial Diamond.
+
+\subsection{Bitmagic}
+
+% ==============================================================================
+\chapter{Top-\emph{k} Joining Language Models}
+
+\lstset{
+  language=SQL,
+  basicstyle=\ttfamily,
+  emph={arg,Pattern,Pattern1,PatternN,P_LM},
+  emphstyle=\textit,
+  deletekeywords={count} % Used as column name, don't want to escape it though.
+}
+
+This chapter explains how to efficiently compute arg-max-queries of language
+model $\prob[\text{LM}]$ using top-$k$ joining techniques.
+
+The task is to efficiently compute the following expression:
+\begin{equation}
+  \argmax_{t \in T} \prob[\text{LM}]{t}{h}
+\end{equation}
+Where $t$ is a token in the set of all tokens $T$, $\prob[\text{LM}]$ is a
+language model, that can be expressed as a weighted sum (as described in
+chapter~\ref{chp-lm-score-func}), and $h$ is the conditional history, a sequence
+of tokens.
+
+Given a language model $\prob[\text{LM}]$ as a scoring function, if we
+imagine our input data forming database relations, we can express our
+arg-max-query as a SQL-\texttt{SELECT}-Request.
+
+\begin{lstlisting}[mathescape]
+  SELECT
+    Token.token AS arg,
+    $\prob[\text{LM}]$(Pattern1.count, ..., PatternN.count) AS score
+  FROM Token
+  LEFT OUTER JOIN Pattern1
+    ON history(Pattern1) + arg = Pattern1.sequence
+  ...
+  LEFT OUTER JOIN PatternN
+    ON history(PatternN) + arg = PatternN.sequence
+  ORDER BY score DESC
+  LIMIT k;
+\end{lstlisting}
+
+\todo{Where \inlinecode{history} and plus is concat.}
+\todo{Explain \inlinecode{LEFT OUTER JOIN}.}
+
+Our data model is thus: One input relation \inlinecode{Token} that stores
+all possible tokens \inlinecode{arg}, over which we want to compute:
+\[
+\argmax_{\text{\inlinecode{arg}} \, \in \, \text{\inlinecode{Token}}}
+  \prob[\text{LM}]{\text{\inlinecode{arg}}}{\text{\inlinecode{history}}}
+\]
+Additionally we have $n$ input relations
+\inlinecode{Pattern1} to \inlinecode{PatternN} that contain pairs
+of \inlinecode{sequence}s and the sequence's occurrence \inlinecode{count} as
+columns.
+Each \inlinecode{Pattern} relation contains exactly these sequences that fit the
+relations pattern.
+
+For an example database state and fully expanded SQL-Request see
+appendix~\ref{app-sql-example}.
+
+A naïve method to solve this query would
+\begin{inparaenum}[(1)]
+  \item produce all possible object combinations that satisfy the join
+    condition,
+  \item order results by scoring function $\prob[\text{LM}]$, and
+  \item discard non top-$k$ objects (those that do not have the $k$ largest
+    scores).
+\end{inparaenum}
+
+Considering that in reality only small values of $k$ are queried, this approach
+can be deemed as rather wasteful, as large numbers of objects would have to be
+discarded.
+Optimally we would like to cherry-pick the top-$k$ join results and only
+score and order those.
+Relying on the fact that we are dealing with a \emph{monotone} scoring function
+we approximate this by sorting our input relations by their counts.
+\cite{Ilyas2008} survey a wide number of techniques to produces top-$k$ results
+with a monotone scoring function from sorted relations.
+
+Among other things, top-$k$ joining techniques differ on the type of join
+conditions they can be applied to.
+One particularly optimizable join operation is the \emph{equi-join}:
+the join that checks for equality over a unique key attribute present in all
+relations.
+Equi-joins have the advantage that it is possible to form equivalence classes
+over an object's key attribute to determine which join results an object is
+part of.
+Using this, the \emph{hash join} algorithm can efficiently generate join
+results.
+
+It is possible to view our join operations as an instance of equi-join:
+By filtering each input relation \inlinecode{Pattern} to only contain
+objects whose sequences begin with the requested history, objects'
+sequences only differ on the last token (our argument token \inlinecode{arg}).
+Our join condition thus reduces to
+\inlinecode{arg = lastToken(Pattern.sequence)}.
+
+\todo{Read \textit{``2013 BlanasPatel Memory Footprint Matters Efficient
+Equi-Join Algorithms fro Main Memory Data Processing.pdf''} for possibly better
+join algorithm}.
+
+The technique for obtaining these both sorted and filtered relations is
+explained in section~\ref{sec-sorted-and-filtered-access}.
+
+\todo{Do we want discussion here rather than explanation?}
+
+The algorithm used to produce top-$k$ results is presented in
+section~\ref{sec-algorithm}.
+
+% ------------------------------------------------------------------------------
+\section{Remarks}
+
+\todo{}.
+
+% ------------------------------------------------------------------------------
+\section{Sorted and filtered access}
+\label{sec-sorted-and-filtered-access}
+
+As explained we require a data structure for efficiently retrieving all
+sequences whose first to second to last words match a requested string $h$.
+Additionally we want to specify that the last word has to contain $p$ as a
+prefix, in order to support efficient Next-Keystroke-Savings $\nksSymbol$
+computation.
+\mbox{$\Set{\, w_1^n \: \given \: w_1^{n-1} = h \; \land \; b \:\text{is prefix of}\: w_n \,}$}
+which is equivalent to
+\mbox{$\Set{\, w_1^n \: \given \: \,}$}
+\begin{equation*}
+  \underbracket{\enskip w_1 \qquad w_2 \qquad \ldots \qquad w_{n-1} \enskip}
+    _\text{matches $h$}
+  \quad
+  \underbracket{\enskip w_n \enskip}_\text{starts with $b$}
+\end{equation*}
+
+
+NKSS requires Top-\emph{k} Completion.
+
+Use Completion-Trie \parencite{HsuOttaviano2013}.
+
+\todo{Explain Completion-Trie here?}
+\todo{Can we save all patterns in one trie?}
+
+% ------------------------------------------------------------------------------
+\section{Algorithm}
+\label{sec-algorithm}
+
+\subsection{Requirements}
+
+\begin{enumerate}
+  \item Dataset remains the same.
+  \item Scoring function changes on each query.
+  \item Join condition changes on each query!
+\end{enumerate}
+
+\subsection{Algorithm}
+
+There are several techniques for indexing {Rank Join Indices \mbref{Tsaparas et
+al 2003}, Onion Indices \mbref{Chang et al 2000}) which we don't use as history
+changes to often.
+
+Ranked Join Indicies\mbref{Tsaparas et al 2003})
+
+Algorithms that precompute stuff may be general speed up, but not in our case
+since we never expect the same thing to be queried again.
+
+Rank-Join \parencite{Ilyas2004}.
+
+Evaluate following algorithms:
+
+\begin{enumerate}
+  \item Traditional Rank-Join that generates all possible join combinations
+    after each input.
+  \item Improved version that uses random access for early tuple completion.
+\end{enumerate}
+
+Use observation that if a pattern is seen, it's child patterns' will be seen as
+well.
+
+Clever: How to find T as max of $(p_1^max, p_2^last)$ and $(p_1^last, p_2^max)$.
+
+Clever: Priority-Queue with constant contains and update.
+
+% ==============================================================================
+\chapter{Evaluation}
+
+No comparision with existing auto completion engines, as the goal was to solve
+language model argmax, not fast auto completion.
+
+% ==============================================================================
+\chapter{Conclusion}
+
+% ==============================================================================
+\printbibliography
+
+\begin{appendices}
+
+% ==============================================================================
+\chapter{Example SQL-Request}
+\label{app-sql-example}
+
+\todo{With database examples, and fully expanded SQL code, probably MKN query.}
+
+% ==============================================================================
+\chapter{Notes}
+
+\todo{Remove before releasing.}
+
+% ------------------------------------------------------------------------------
+\section{SQL Query Expansion}
+
+\lstset{
+  language=SQL,
+  emph={token,pattern,pattern1,patternN},
+  emphstyle=\textit,
+  deletekeywords={count} % Used as column name, don't want to escape it though.
+}
+
+\subsection{Modified Kneser Ney Language Model}
+
+\begin{lstlisting}
+  SELECT
+    token.token AS arg,
+    func( 1.count,  11.count, 111.count,
+         x1.count, x11.count)
+      AS score
+  FROM  token
+  LEFT OUTER JOIN    1
+    ON history(  1) + token =   1.sequence
+  LEFT OUTER JOIN   11
+    ON history( 11) + token =  11.sequence
+  LEFT OUTER JOIN  111
+    ON history(111) + token = 111.sequence
+  LEFT OUTER JOIN   x1
+    ON history( x1) + token =  x1.sequence
+  LEFT OUTER JOIN  x11
+    ON history(x11) + token = x11.sequence
+  ORDER BY score DESC;
+  LIMIT k;
+\end{lstlisting}
+
+\clearpage
+\subsection{Generalized Language Model}
+
+\begin{lstlisting}
+  SELECT
+    token.token AS arg,
+    func( 001.count,  011.count,  101.count, 111.count,
+         x001.count, x011.count, x101.count)
+      AS score
+  SELECT token, score
+  FROM token
+  LEFT OUTER JOIN  001
+    ON history( 001) + token =  001.sequence
+  LEFT OUTER JOIN  011
+    ON history( 011) + token =  011.sequence
+  LEFT OUTER JOIN  101
+    ON history( 101) + token =  101.sequence
+  LEFT OUTER JOIN  111
+    ON history( 111) + token =  111.sequence
+  LEFT OUTER JOIN x001
+    ON history(x001) + token = x001.sequence
+  LEFT OUTER JOIN x011
+    ON history(x011) + token = x011.sequence
+  LEFT OUTER JOIN x101
+    ON history(x101) + token = x101.sequence
+  ORDER BY score DESC;
+  LIMIT k;
+\end{lstlisting}
+
+\end{appendices}
+
+\end{document}
