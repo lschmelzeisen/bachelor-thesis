@@ -23,13 +23,30 @@
 % Courier as monospace font.
 \usepackage{courier}
 
-\usepackage[backend=biber,style=authoryear]{biblatex}
-\addbibresource{langmodels.bib}
+\usepackage[
+  backend=biber,
+  style=authoryear-comp,
+  maxcitenames=2,
+  doi=false,
+  isbn=false,
+  url=false,
+]{biblatex} 
+\addbibresource{bibliography.bib}
 
-\usepackage{color}
+% For text colorization
+%\usepackage{color}
+\usepackage[usenames,dvipsnames]{xcolor}
+
 
 % Should be included last, to redefine commands
 \usepackage{hyperref}
+
+% Has to be included even after hyperref
+\usepackage[nameinlink,noabbrev]{cleveref}
+% http://tex.stackexchange.com/questions/119513/cleveref-and-appendix-packages-appendix-referenced-as-section
+\crefname{appsec}{appendix}{appendices}
+
+\usepackage{proba}
 
 % ------------------------------------------------------------------------------
 
@@ -44,39 +61,74 @@
 
 % -- Math ----------------------------------------------------------------------
 
-% given
-% see http://tex.stackexchange.com/questions/141570/sizing-for-given-that-symbol-vertical-bar
-\newcommand\givenbase[1][]{\,#1\lvert\,}
-\let\given\givenbase
-\newcommand\sgiven{\givenbase[\delimsize]}
-\DeclarePairedDelimiterX\Basics[1](){\let\given\sgiven #1}
+% Scale
+% see http://tex.stackexchange.com/questions/60453/reducing-font-size-in-equation
+\newcommand*{\Scale}[2][4]{\scalebox{#1}{$#2$}}%
 
-% set
+% Given
+% see http://tex.stackexchange.com/questions/141570/sizing-for-given-that-symbol-vertical-bar
+\newcommand\Givenbase[1][]{\,#1\lvert\,}
+\let\Given\Givenbase
+\newcommand\Sgiven{\Givenbase[\delimsize]}
+\DeclarePairedDelimiterX\Basics[1](){\let\Given\Sgiven #1}
+
+% Set
 % see http://tex.stackexchange.com/questions/13634/define-pretty-sets-in-latex-esp-how-to-do-the-condition-separator
 \newcommand\SetSymbol[1][]{
   \nonscript\,#1\vert\nonscript\,\mathopen{}\allowbreak
 }
-\DeclarePairedDelimiterX\Set[1]{\lbrace}{\rbrace}%
-  { \renewcommand\given{\SetSymbol[\delimsize]} #1 }
+\DeclarePairedDelimiterX\Set[1]{\{}{\}}%
+  { \renewcommand\Given{\SetSymbol[\delimsize]} #1 }
+  
+\newcommand{\DummyArg}{\cdot}
 
-% argmax
-\DeclareMathOperator*{\argmax}{arg\,max}
+% Argmax
+\DeclareMathOperator*{\Argmax}{arg\,max}
 
-% cardinality
-\newcommand{\cardinality}[1]{|#1|}
+% Cardinality
+\newcommand{\Cardinality}[1]{\left|#1\right|}
 
-% probability
-\NewDocumentCommand{\prob}{s O{} g g}{
-  \IfBooleanT{#1}{\hat}P_{#2}
-  \IfNoValueTF{#3}{}{(\IfNoValueTF{#4}{#3}{#3 \given #4})}
+% Probability
+\NewDocumentCommand{\Prob}{s o g g}{
+  \IfBooleanTF{#1}{\operatorname{\hat P}}{\operatorname{P}}_{\IfNoValueTF{#2}{\,}{#2}}
+  \IfNoValueTF{#3}{}{(\IfNoValueTF{#4}{#3}{#3 \Given #4})}
+}
+\NewDocumentCommand{\ProbMKN}{s g g}{
+  \IfBooleanTF{#1}{\Prob*[\text{MKN}]{#2}{#3}}
+                  {\Prob [\text{MKN}]{#2}{#3}}
+}
+\NewDocumentCommand{\ProbGLM}{s g g}{
+  \IfBooleanTF{#1}{\Prob*[\text{GLM}]{#2}{#3}}
+                  {\Prob [\text{GLM}]{#2}{#3}}
 }
 
-% next word prediction
-\newcommand{\nwp}[1]{\operatorname{NWP}(#1)}
+% Counts
+\DeclareMathOperator{\Count}{c}
+\DeclareMathOperator{\ContCount}{N}
+% roman numbering because numbers are not allowed in commands
+\newcommand{\ContCountIp}  {\ContCount_{\Scale[0.5]{1+}}} 
+\newcommand{\ContCountI}   {\ContCount_{\Scale[0.5]{1 }}}
+\newcommand{\ContCountII}  {\ContCount_{\Scale[0.5]{2 }}}
+\newcommand{\ContCountIIIp}{\ContCount_{\Scale[0.5]{3+}}}
+\DeclareMathOperator{\Discount}{D}
 
-% next keystroke savings
-\newcommand{\nksSymbol}{\operatorname{NKS}}
-\newcommand{\nks}[1]{\nksSymbol(#1)}
+% Absolute Skip
+\newcommand{\Skp}{\ensuremath{\,\Scale[0.7]{\square}\,}}
+% Continuation Skip
+\newcommand{\WSkp}{\ensuremath{\,\bullet\,}}
+
+% Language
+\newcommand{\Language}{\mathcal{L}}
+
+% Next Word Prediction
+\NewDocumentCommand{\NWP}{g}{
+  \operatorname{NWP}\IfNoValueTF{#1}{}{(#1)}
+}
+
+% Next Keystroke Savings
+\NewDocumentCommand{\NKSS}{g}{
+  \operatorname{NKSS}\IfNoValueTF{#1}{}{(#1)}
+}
 
 % -- Code ----------------------------------------------------------------------
 
@@ -84,12 +136,14 @@
 
 % -- Editiorial Commands -------------------------------------------------------
 
-\newcommand{\todo}[1]{\textcolor{red}{\textbf{TODO}: #1}}
-\newcommand{\lukas}[1]{\textcolor{cyan}{Lukas: #1}}
-\newcommand{\rene}[1]{\textcolor{blue}{Rene: #1}}
+\definecolor{draftcolor}{rgb}{.5, .5, .5}
+\newenvironment{draft}{\color{draftcolor}}{}
+\newcommand{\todo}[1]{\textcolor{red}{{\footnotesize\textbf{\texttt{TODO:}}} #1}}
+\newcommand{\lukas}[1]{\textcolor{cyan}{{\footnotesize\textbf{Lukas:}} #1}}
+\newcommand{\rene}[1]{\textcolor{blue}{{\footnotesize\textbf{Rene:}} #1}}
 
-\newcommand{\noref}{\textcolor{red}{(NoRef)}}
-\newcommand{\mbref}[1]{\textcolor{magenta}{(#1)}}
+\newcommand{\noref}{\textcolor{blue}{\footnotesize[Citation needed]}}
+\newcommand{\mbref}[1]{\textcolor{blue}{\footnotesize[Citation: #1?]}}
 
 % ------------------------------------------------------------------------------
 
@@ -115,14 +169,14 @@
 \vspace*{\fill}
 \begin{minipage}{\linewidth} % To have both abstracts on one page
   \begin{abstract}
-    Abstract.
+    \todo{Abstract.}
   \end{abstract}
 
   \vspace{5em}
 
   \selectlanguage{german}
   \begin{abstract}
-    Diesmal auf deutsch.
+    \todo{Übersetzen nach deutsch.}
   \end{abstract}
   \selectlanguage{english}
 \end{minipage}
@@ -134,43 +188,384 @@
 % ==============================================================================
 \chapter{Introduction}
 
-A statistical \emph{language model} assigns a probability to a sequence of
-words.
+\begin{draft}
+Introduction pargraph: We solve noisy channel argmax with Top-$k$ joining
+techniques.
+\end{draft}
 
-Language models are important and used in practice.
+The \emph{noisy channel model} is a commonly applied concept in natural language
+processing.
+As first described by \cite{Shannon1948}, it consists of a transmitter, who
+tries to pass a message over a channel to a receiver.
+The channel is called noisy, because it may distort the message in any way.
+The task is then to reconstruct the original message, from the recieved
+distorted one.
 
-State-of-the-art language models are \emph{Modified-Kneser-Ney Language Model}
-and \emph{Generalized Language Model}
+This metaphor has many applications, such as spelling correction
+\parencite{JurafskyMartin2009,Manning2008,Kernighan1990,Mays1991},
+%          \------------- non-word-errors ------------/    \- real-word-erros
+part-of-speech-tagging \parencite{Church1988}, machine translation
+\parencite{Brown1990}, speech recognition or text compression.
+\todo{Find newer citations. Maybe from \cite{Bickel2005}}
+% JurafskyMartin2009: Chapter 5: Spelling Correction
+%                     Chapter 9: Speech Recognition!
 
-Modified-Kneser-Ney Language Model is:
-\begin{equation}
-  \prob[\text{MKN}]{\ldots} = \ldots
-\end{equation}
+Formalized, this task of the noisy channel model is to find the dispatched
+message~$m$, which is the sequence of words $s = w_1^n = w_1 \ldots w_n$ in a
+langauge~$\Language$ that is most likely to be the source of the received
+distorted observation~$o$:
+\begin{align}
+  \label{eq:noisychannel}
+  m &= \Argmax_{s \in \Language} \Prob{s}{o} \\
+  \intertext{Using Bayes' theorem one can rewrite this to:}
+  \label{eq:noisychannelbayes}
+  \begin{split}
+    m &= \Argmax_{s \in \Language} \frac{\Prob{o}{s} \cdot \Prob{s}}{\Prob{o}} \\
+      &= \Argmax_{s \in \Language} \Prob{o}{s} \cdot \Prob{s}
+  \end{split}
+\end{align}
+With the observation likelihood~$\Prob{o}{s}$ and the prior
+probability~$\Prob{s}$.
+Omitting the denominator~$\Prob{o}$ is valid because it is a constant that does
+not depend on the argument~$s$.
+Most commonly the observation likelihood is some domain specific probability
+distribution $\Prob[\text{Domain}]{o}{s}$, for the prior probability
+\emph{statistical language models} are used.
+They assign a probability $\Prob[\text{LM}]{s}$ to a sequence of words
+$s = w_1^n = w_1 \ldots w_n$ by means of a probability distribution, created
+through statistical analysis of text corpora.
+Thus the noisy channel model is a natural combintion of domain knowledge with
+language information.
 
-Genralized Language Model is \parencite{Pickhardt2014}:
-\begin{equation}
-  \prob[\text{GLM}]{\ldots} = \ldots
-\end{equation}
+For example, to translate French into English, \cite{Brown1990} defined a
+probability distribution $\Prob[\text{Translate}]{e}{f}$, that would give the
+probability for each English sentence $e$ to be the result of translating
+the French sentence $f$ into English.
+To obtain the most likely translation, the $e$ that maximizes that probability
+has to be found.
+With applying Bayes' theorem they combine their distribution with language
+models and arrive at
+$\Argmax_{e} \Prob[\text{Translate}]{f}{e} \cdot \Prob[\text{LM}]{e}$, which is
+just \cref{eq:noisychannelbayes}.
+\\ \lukas{It is possible to omit this paragraph, but I think it provides
+clarification.}
 
-We want to efficiently compute argmax.
+A major problem in creating statistical language models from text corpora, is
+that even for very large corpora, most possible word sequences in a language
+will not be observed in training \noref.
+A common approximation are \emph{$n$-gram models}, in which it is assumed that
+the probability of a word only depdens on the $n\!-\!1$~previous words, thus
+only sequences of length $n$ have to be considered.
 
-We map argmax onto researched problem of top-k joining.
+State-of-the-art language models use $n$-grams with $n$ as large as $5$
+\mbref{JurafskyMartin2009,Goodman2001}.
+\begin{draft}
+\Cref{eq:noisychannel} is hard to calculate for such large $n$.
+So we want to optimize that.
+\end{draft}
+
+\begin{draft}
+We try to use top-$k$ joining.
+
+We are interested in \emph{next word prediction} $\NWP$ and
+\emph{next keystroke savings} $\NKSS$.
+
+So we have to map our problem on the realm of top-$k$ joining.
 
 We apply that technique.
+
+May be good because we do not have to prune, and pruning might be bad
+\parencite{Stolcke2000,Chelba2013,Chelba2010,Siivola2007}.
 
 Most non-trivial top-\emph{k} joining algorithms require a monotone scoring
 function, some further improvements can be made if using a linear scoring
 function~\parencite{Ilyas2008}.
+\end{draft}
+
+\todo{Read \cite{Bickel2005} for introduction to word prediction.}
 
 % ==============================================================================
 \chapter{Related Work}
 
+\begin{draft}
+Commonly to solve the described problem Viterbi or beam search algorithms are
+used \mbref{JurafskyMartin2009}.
+\end{draft}
+
+\todo{Is there some work on expressing language models as weighted sums?}
+
+% ------------------------------------------------------------------------------
+\section{State-of-the-art Language Models}
+
+\begin{draft}
+This section summarizes the state-of-the-art language models considered in this
+work.
+And their origins?
+\end{draft}
+
+The currently most commonly used \parencite{JurafskyMartin2009,Chelba2013}
+technique for estimating language models is \emph{Modified Kneser-Ney Smoothing}
+by \cite{ChenGoodman1996,ChenGoodman1998,ChenGoodman1999}, based on
+\emph{Kneser-Ney Smoothing} by \cite{KneserNey1995}.
+Very recently \cite{Pickhardt2014} provided a generalization of this technique,
+the \emph{Generalized Language Model}.
+
+\begin{draft}
+Justify selection of MKN and GLM over recently popular LMs from
+\parencite{Chelba2013}.
+
+Mention \emph{Nerual Network Language Models} \parencite{Bengio2003,Mikolov2012}
+(do we not use them because they can not be represented as weighted sums).
+\end{draft}
+
+An in-depth summary of Modified Kneser-Ney Smoothing and the Generalized
+Language Model is given in \cref{ch:review-lm}.
+
+% ------------------------------------------------------------------------------
+\section{Top-$k$ joining techniques}
+
+\lukas{I would much rather summarize top-$k$ joining techniques in
+\cref{ch:top-k-joining} as the task is clearly defined there, and we can have
+more in-depth discussion about it.}
+
+\todo{Reference to \cref{ch:top-k-joining}.}
+
 % ==============================================================================
-\chapter{Language Models}
+\chapter{Review of considered language modeling techniques}
+\label{ch:review-lm}
+
+This chapter will recall language modeling techniques considered in this work,
+and introduce the used notation (\cref{sec:summary-notation}).
+Namely, \emph{Modified Kneser-Ney Smoothing} (\cref{sec:summary-lm-mkn})
+and the \emph{Generalized Language Model} (\cref{sec:summary-lm-glm})
+are described.
+
+\begin{itemize}
+  \item \todo{How do I declare citations for this section?}
+  \item \todo{Do I cite Rene or ChenGoodman?}
+  \item \todo{Do I cite once or on every definition?}
+  \item \todo{Some stuff is not published anywhere else yet. (For example new
+    skip notation.)}
+\end{itemize}
+
+% ------------------------------------------------------------------------------
+\section{Notation: Counts and Skips}
+\label{sec:summary-notation}
+
+Let $\Count(w_1^n)$ denote the frequency count of a sequence's
+$w_1^n = w_1 \ldots w_n$ occurence in training data.
+
+Let $\Skp$ be a wildcard (called \emph{``skip''}), that can take the place
+of any word at its location.
+Thus, for example $\Count(\Skp w_1^n)$ is the frequency count of sequences
+in training data who start with any word $x \in \Sigma$ and were the remaining
+words are $w_1^n$.
+\begin{equation}
+  \Count(\Skp w_1^n) = \sum_{x \in \Sigma} \Count(x \: w_1^n)
+\end{equation}
+Where $\Sigma$ is the set of all words in a language
+$\Language \subseteq \Sigma^{*}$.
+It is easy to extend this definition to sequences with multiple skips:
+\begin{equation}
+  \Count(w_1 \Skp \Skp w_2) = \sum_{x, y \in \Sigma} \Count(w_1 \: x \: y \: w_2)
+\end{equation}
+
+Additionally we define continuation counts $\ContCount_k(\DummyArg)$ as the
+number of sequences from the training data that occur exactly $k$ times and can
+be constructed by replacing $\WSkp$ (called \emph{``continuation skip''}) with
+any word $x \in \Sigma$.
+For example $\ContCountII(\WSkp w_1^n)$ denotes the number of words that can
+precede $w_1^n$ in training data, and occur exactly $2$ times:
+\begin{equation}
+  \ContCountII(\WSkp w_1^n) =
+    \Cardinality{\left\{ x \in \Sigma \,\middle|\, \Count(x \: w_1^n) = 2 \right\}}
+\end{equation}
+Further let $\ContCount_{k+}(\DummyArg)$ count sequences that occur $k$ or more
+times:
+\begin{equation}
+  \ContCountIp(\WSkp w_1^n) =
+    \Cardinality{\left\{ x \in \Sigma \,\middle|\, \Count(x \: w_1^n) \geq 1 \right\}}
+\end{equation}
+
+In continuation counts regular skips and continuation skips can be mixed, for
+example:
+\todo{Check this equation!}
+\begin{equation}
+  \ContCountIp(\WSkp w \Skp \WSkp) =
+    \Cardinality{\left\{ x, y \in \Sigma \,\middle|\, c(x \: w \Skp y) \geq 1 \right\}}
+\end{equation}
+
+% ------------------------------------------------------------------------------
+\section{Modified Kneser-Ney Smoothing}
+\label{sec:summary-lm-mkn}
+
+\begin{draft}
+Modified Kneser-Ney smoothed language models are computed by interpolating
+between higher and lower order $n$-gram language models.
+The highest order distribution is interpolated with lower order distirbutions
+as follows:
+\todo{(Copied from Rene)}
+\end{draft}
+\begin{equation}
+  \label{eq:mkn-high}
+  \ProbMKN{w_n}{w_1^{n-1}} =
+    \frac{\alpha(w_1^n) + \gamma(w_1^{n-1}) \ProbMKN*{w_n}{w_1^{n-2}}}
+         {\Count(w_1^{n-1} \Skp)} \\
+\end{equation}
+\begin{equation}
+  \alpha(w_1^n) = \max\Set{\Count(w_1^n) - \Discount(\Count(w_1^n)), 0} \\
+\end{equation}
+
+The exact definitions of $D(\DummyArg)$ and $\gamma(w_1^{n-1})$ are not
+important in our context, however for the sake of completeness they are given 
+in \cref{sec:discounts-interpolation-weights}.
+
+\begin{draft}
+Essentially, interpolation with a lower order model corresponds to leaving out
+the first word in the considered sequence.
+\todo{(Copied from Rene)}
+\end{draft}
+Lower order models are computed differently, and in turn interpolated with
+further lower orders:
+\begin{equation}
+  \ProbMKN*{w_n}{w_1^{n-1}} =
+    \frac{\hat\alpha(w_1^n) + \gamma(w_1^{n-1}) \ProbMKN*{w_n}{w_1^{n-2}}}
+         {\ContCountIp(\WSkp w_1^{n-1} \WSkp)} \\
+\end{equation}
+\begin{equation}
+  \hat\alpha(w_1^n) = \max\Set{ \ContCountIp(\WSkp w_1^n) - \Discount(\Count(w_1^n)), 0 }
+\end{equation}
+
+Of course \cref{eq:mkn-high} is only defined if the denominator
+$\Count(w_1^{n-1} \Skp) > 0$, that is if the history $w_1^{n-1} \Skp$ was seen
+in training.
+If $w_1^{n-1} \Skp$ was not seen, we perform a so called \emph{``backoff''}
+and set:
+\begin{align}
+  \ProbMKN{w_n}{w_1^{n-1}} = \ProbMKN{w_n}{w_1^{n-2}}
+      && \small{(\text{if} \: \Count(w_1^{n-1} \Skp) = 0)}
+\end{align}
+It is common to perform multiple backoffs until the history was actually seen.
+Backing off on lower orders is not necessary, because
+if history $w_1^n$ was seen, $w_1^{n-1}$ was seen as well.
+
+The lowest order (the probability of a single word) can not be further
+interpolated and we use the relative continuation frequency of that word.
+Similarly if we only want to compute the probability of a single word on the
+highest order, we compute it as the relative frequency of that word:
+\begin{subequations}
+  \begin{align}
+    \ProbMKN {w} &= \frac{\Count(w)}{\Count(\Skp)} \\
+    \ProbMKN*{w} &= \frac{\ContCountIp(\WSkp w)}{\ContCountIp(\WSkp \WSkp)}
+  \end{align}
+\end{subequations}
+
+% ------------------------------------------------------------------------------
+\section{Generalized Language Model}
+\label{sec:summary-lm-glm}
+
+The Generalized Language Model is a natural extension to Modified Kneser-Ney
+Smoothing.
+It is again based on interpolation, though it differs in which way lower order
+models are interpolated.
+The highest order is computed as:
+\begin{equation}
+  \label{eq:glm-high}
+  \ProbGLM{w_n}{w_1^{n-1}} =
+    \frac{\alpha(w_1^n) + \frac{\gamma(w_1^{n-1})}{\#_\partial(w_1^{n-1})}
+                          \sum_{j=1}^{\#_\partial(w_1^{n-1})} \ProbGLM*{w_n}{\partial_j w_1^{n-1}}}
+         {\Count(w_1^{n-1} \Skp)}
+\end{equation}
+Definitions of auxiliary functions $\alpha, \hat\alpha, \gamma$ are the same as
+for Modified Kneser-Ney Smoothing and given in \cref{sec:summary-lm-mkn}.
+
+The skip operator $\partial_j w_1^{n-1}$ can be any mapping that relates
+$w_1^{n-1}$ to exactly $\#_\partial(w_1^{n-1})$ many derived sequences.
+It is easy to see that for $\#_\partial(w_1^{n-1}) = 1$ and
+$\partial_1 w_1^{n-1} = w_1^{n-2}$ \cref{eq:glm-high} is an
+instantiation of \cref{eq:mkn-high} (Modified Kneser-Ney Smoothing), and thus
+a true generalization.
+
+In practice only one definition for $\partial$ is used though.
+That is $\#_\partial(w_1^{n-1})$ is set to the number of non-skip words in
+$w_1^{n-1}$ and $\partial_j(w_1^{n-1})$ replaces the $j$th non-skip word with
+a skip.
+For instance: $\partial_2(w_1^3) = w_1 \Skp w_3$.
+
+Again as with Modified Kneser-Ney Smoothing, \cref{eq:glm-high} is not
+defined if $w_1^{n-1}$ is unseen and thus our denominator would be zero.
+The backoff step is then performed as:
+\begin{equation}
+  \begin{split}
+    \ProbGLM{w_n}{w_1^{n-1}} = \frac{1}{\#_\partial(w_1^{n-1})}
+                               \sum_{j=1}^{\#_\partial(w_1^{n-1})} \ProbGLM{w_n}{\partial_j w_1^{n-1}} \\
+      \hfill \small{(\text{if} \: \Count(w_1^{n-1} \Skp) = 0)}
+  \end{split}
+\end{equation}
+
+Subsequently lower order models are computed as:
+\begin{equation}
+  \ProbGLM*{w_n}{w_1^{n-1}} =
+    \frac{\hat\alpha(w_1^n) + \frac{\gamma(w_1^{n-1})}{\#_\partial(w_1^{n-1})}
+                              \sum_{j=1}^{\#_\partial(w_1^{n-1})} \ProbGLM*{w_n}{\partial_j w_1^{n-1}}}
+         {\ContCountIp(\WSkp w_1^{n-1} \WSkp)}
+\end{equation}
+
+The case of the lowest order occurs when $\#_\partial(w_1^{n-1}) = 0$ and is
+handled similarly to Modified Kneser-Ney Smoothing.
+In practice this is the case when $w_1^{n-1}$ only consists of skips.
+\begin{subequations}
+  \begin{align}
+    \ProbGLM {w_n}{w_1^{n-1}} &= \frac{\Count(w_1^n)}{\Count(w_1^{n-1} \Skp)}
+      & \small{(\text{if} \: \#_\partial(w_1^{n-1}) = 0)} \\
+    \ProbMKN*{w_n}{w_1^{n-1}} &= \frac{\ContCountIp(\WSkp w_1^n)}{\ContCountIp(\WSkp w_1^{n-1} \WSkp)}
+      & \small{(\text{if} \: \#_\partial(w_1^{n-1}) = 0)}
+  \end{align}
+\end{subequations}
+
+\todo{Replace \Skp with \WSkp in $\ContCountIp$ in GLM?}
+
+\todo{\WSkp at end of $\ContCountIp$ correct?}
+
+% ------------------------------------------------------------------------------
+\section{Discounting and Interpolation Weights}
+\label{sec:discounts-interpolation-weights}
+
+\begin{equation}
+  \Discount(c) =
+    \begin{dcases*}
+      0      & if $c = 0$ \\
+      D_1    & if $c = 1$ \\
+      D_2    & if $c = 2$ \\
+      D_{3+} & if $c \geq 3$ \\
+    \end{dcases*}
+\end{equation}
+
+\begin{subequations}
+  \begin{align}
+    D_1    &= 1 - 2 Y \frac{n_2}{n_1} \\
+    D_2    &= 2 - 3 Y \frac{n_3}{n_2} \\
+    D_{3+} &= 3 - 4 Y \frac{n_4}{n_3}
+  \end{align}
+\end{subequations}
+
+\begin{equation}
+  Y = \frac{n_1}{n_1 + n_2}
+\end{equation}
+
+\begin{equation}
+  \gamma(w_1^{n-1}) =   D_1    \ContCountI    (w_1^{n-1} \WSkp)
+                      + D_2    \ContCountII   (w_1^{n-1} \WSkp)
+                      + D_{3+} \ContCountIIIp (w_1^{n-1} \WSkp)
+\end{equation}
 
 % ==============================================================================
 \chapter{Formulating Language Models as weighted sums}
-\label{chp-lm-score-func}
+\label{ch:lm-score-func}
+
+Note that $w_n$ is only needed in $\alpha$-terms.
+
+See \cref{app:expansion} for examples.
 
 % ------------------------------------------------------------------------------
 \section{Modified-Kneser-Ney Language Model}
@@ -184,6 +579,7 @@ Binomial Diamond.
 
 % ==============================================================================
 \chapter{Top-\emph{k} Joining Language Models}
+\label{ch:top-k-joining}
 
 \lstset{
   language=SQL,
@@ -194,25 +590,25 @@ Binomial Diamond.
 }
 
 This chapter explains how to efficiently compute arg-max-queries of language
-model $\prob[\text{LM}]$ using top-$k$ joining techniques.
+model $\Prob[\text{LM}]$ using top-$k$ joining techniques.
 
 The task is to efficiently compute the following expression:
 \begin{equation}
-  \argmax_{t \in T} \prob[\text{LM}]{t}{h}
+  \Argmax_{t \in T} \Prob[\text{LM}]{t}{h}
 \end{equation}
-Where $t$ is a token in the set of all tokens $T$, $\prob[\text{LM}]$ is a
+Where $t$ is a token in the set of all tokens $T$, $\Prob[\text{LM}]$ is a
 language model, that can be expressed as a weighted sum (as described in
-chapter~\ref{chp-lm-score-func}), and $h$ is the conditional history, a sequence
+\cref{ch:lm-score-func}), and $h$ is the conditional history, a sequence
 of tokens.
 
-Given a language model $\prob[\text{LM}]$ as a scoring function, if we
+Given a language model $\Prob[\text{LM}]$ as a scoring function, if we
 imagine our input data forming database relations, we can express our
 arg-max-query as a SQL-\texttt{SELECT}-Request.
 
 \begin{lstlisting}[mathescape]
   SELECT
     Token.token AS arg,
-    $\prob[\text{LM}]$(Pattern1.count, ..., PatternN.count) AS score
+    $\Prob[\text{LM}]$(Pattern1.count, ..., PatternN.count) AS score
   FROM Token
   LEFT OUTER JOIN Pattern1
     ON history(Pattern1) + arg = Pattern1.sequence
@@ -228,10 +624,10 @@ arg-max-query as a SQL-\texttt{SELECT}-Request.
 
 Our data model is thus: One input relation \inlinecode{Token} that stores
 all possible tokens \inlinecode{arg}, over which we want to compute:
-\[
-\argmax_{\text{\inlinecode{arg}} \, \in \, \text{\inlinecode{Token}}}
-  \prob[\text{LM}]{\text{\inlinecode{arg}}}{\text{\inlinecode{history}}}
-\]
+\begin{equation}
+  \Argmax_{\text{\inlinecode{arg}} \, \in \, \text{\inlinecode{Token}}}
+    \Prob[\text{LM}]{\text{\inlinecode{arg}}}{\text{\inlinecode{history}}}
+\end{equation}
 Additionally we have $n$ input relations
 \inlinecode{Pattern1} to \inlinecode{PatternN} that contain pairs
 of \inlinecode{sequence}s and the sequence's occurrence \inlinecode{count} as
@@ -240,13 +636,13 @@ Each \inlinecode{Pattern} relation contains exactly these sequences that fit the
 relations pattern.
 
 For an example database state and fully expanded SQL-Request see
-appendix~\ref{app-sql-example}.
+\cref{app:sql-example}.
 
 A naïve method to solve this query would
 \begin{inparaenum}[(1)]
   \item produce all possible object combinations that satisfy the join
     condition,
-  \item order results by scoring function $\prob[\text{LM}]$, and
+  \item order results by scoring function $\Prob[\text{LM}]$, and
   \item discard non top-$k$ objects (those that do not have the $k$ largest
     scores).
 \end{inparaenum}
@@ -284,12 +680,12 @@ Equi-Join Algorithms fro Main Memory Data Processing.pdf''} for possibly better
 join algorithm}.
 
 The technique for obtaining these both sorted and filtered relations is
-explained in section~\ref{sec-sorted-and-filtered-access}.
+explained in \cref{sec:sorted-and-filtered-access}.
 
 \todo{Do we want discussion here rather than explanation?}
 
 The algorithm used to produce top-$k$ results is presented in
-section~\ref{sec-algorithm}.
+\cref{sec:algorithm}.
 
 % ------------------------------------------------------------------------------
 \section{Remarks}
@@ -298,23 +694,22 @@ section~\ref{sec-algorithm}.
 
 % ------------------------------------------------------------------------------
 \section{Sorted and filtered access}
-\label{sec-sorted-and-filtered-access}
+\label{sec:sorted-and-filtered-access}
 
 As explained we require a data structure for efficiently retrieving all
 sequences whose first to second to last words match a requested string $h$.
 Additionally we want to specify that the last word has to contain $p$ as a
-prefix, in order to support efficient Next-Keystroke-Savings $\nksSymbol$
+prefix, in order to support efficient Next-Keystroke-Savings $\NKSS$
 computation.
-\mbox{$\Set{\, w_1^n \: \given \: w_1^{n-1} = h \; \land \; b \:\text{is prefix of}\: w_n \,}$}
+\mbox{$\Set{\, w_1^n \: \Given \: w_1^{n-1} = h \; \land \; b \:\text{is prefix of}\: w_n \,}$}
 which is equivalent to
-\mbox{$\Set{\, w_1^n \: \given \: \,}$}
+\mbox{$\Set{\, w_1^n \: \Given \: \,}$}
 \begin{equation*}
   \underbracket{\enskip w_1 \qquad w_2 \qquad \ldots \qquad w_{n-1} \enskip}
     _\text{matches $h$}
   \quad
   \underbracket{\enskip w_n \enskip}_\text{starts with $b$}
 \end{equation*}
-
 
 NKSS requires Top-\emph{k} Completion.
 
@@ -325,7 +720,7 @@ Use Completion-Trie \parencite{HsuOttaviano2013}.
 
 % ------------------------------------------------------------------------------
 \section{Algorithm}
-\label{sec-algorithm}
+\label{sec:algorithm}
 
 \subsection{Requirements}
 
@@ -345,6 +740,8 @@ Ranked Join Indicies\mbref{Tsaparas et al 2003})
 
 Algorithms that precompute stuff may be general speed up, but not in our case
 since we never expect the same thing to be queried again.
+
+TA \parencite{Fagin2001}.
 
 Rank-Join \parencite{Ilyas2004}.
 
@@ -369,6 +766,9 @@ Clever: Priority-Queue with constant contains and update.
 No comparision with existing auto completion engines, as the goal was to solve
 language model argmax, not fast auto completion.
 
+Comparision with viterbi algorithm (speech recognition)?
+Most implementations of viterbi are beam search or time-synchonous beam search.
+
 % ==============================================================================
 \chapter{Conclusion}
 
@@ -376,10 +776,86 @@ language model argmax, not fast auto completion.
 \printbibliography
 
 \begin{appendices}
+\crefalias{chapter}{appsec}
+
+% ==============================================================================
+\chapter{Expansion}
+\label{app:expansion}
+
+Examples for \cref{ch:lm-score-func}.
+
+\section{Modified-Kneser-Ney}
+
+\newcommand{\ProbMKNcab}[1]
+  {\frac{\alpha(\text{a b c}) + \gamma(\text{a b}) #1}{\Count(\text{a b \Skp})}}
+\newcommand{\ProbMKNcb}[1]
+  {\frac{\hat\alpha(\text{b c}) + \gamma(\text{b}) #1}{\ContCountIp(\text{\WSkp b \WSkp})}}
+\newcommand{\ProbMKNc}
+  {\frac{\ContCountIp(\text{\WSkp c})}{\ContCountIp(\text{\WSkp \WSkp})}}
+
+Sample expansion for $\ProbMKN{\text{c}}{\text{a b}}$, assuming the sequence
+``$\text{a b c}$'' was seen:
+\begin{align}
+  \ProbMKN {\text{c}}{\text{a b}} &= \ProbMKNcab{\ProbMKN*{\text{c}}{\text{b}}} \\
+  \ProbMKN*{\text{c}}{\text{b}}   &= \ProbMKNcb{\ProbMKN*{\text{c}}} \\
+  \ProbMKN*{\text{c}}             &= \ProbMKNc
+\end{align}
+
+Together:
+\begin{equation}
+  \ProbMKN {\text{c}}{\text{a b}} = \ProbMKNcab{\ProbMKNcb{\ProbMKNc}}
+\end{equation}
+
+By using the distributive property:
+\begin{eqnarray}
+  \ProbGLM {\text{c}}{\text{a b}} =
+    &\phantom{+} \; \hspace{0.2em}   \alpha(\text{a b c}) & \hspace{-0.5em} \cdot\ \frac{1}{\Count(\text{a b \Skp})} \\
+    &         +  \; \hspace{1em} \hat\alpha(\text{b c})   & \hspace{-0.5em} \cdot\ \frac{\gamma(\text{a b})}{\Count(\text{a b \Skp}) \ContCountIp(\text{\WSkp b \WSkp})} \nonumber \\
+    &         +  \; \ContCountIp(\text{\WSkp c})          & \hspace{-0.5em} \cdot\ \frac{\gamma(\text{a b}) \gamma(\text{b})}{\Count(\text{a b \Skp}) \ContCountIp(\text{\WSkp b \WSkp}) \ContCountIp(\text{\WSkp \WSkp})} \nonumber
+\end{eqnarray}
+
+
+\clearpage
+\section{Generalized Language Model}
+
+\newcommand{\ProbGLMcab}[2]
+  {\frac{\alpha(\text{a b c}) + \frac{\gamma(\text{a b})}{2}\left(#1 + #2\right)}{\Count(\text{a b \Skp})}}
+\newcommand{\ProbGLMcsb}[1]
+  {\frac{\hat\alpha(\text{\Skp b c}) + \frac{\gamma(\text{\Skp b})}{1} #1}{\ContCountIp(\text{\WSkp \Skp b \WSkp})}}
+\newcommand{\ProbGLMcas}[1]
+  {\frac{\hat\alpha(\text{a \Skp c}) + \frac{\gamma(\text{a \Skp})}{1} #1}{\ContCountIp(\text{\WSkp a \Skp \WSkp})}}
+\newcommand{\ProbGLMcss}
+  {\frac{\ContCountIp(\text{\WSkp \Skp \Skp c})}{\ContCountIp(\text{\WSkp \Skp \Skp \WSkp})}}
+
+Sample expansion for $\ProbGLM{\text{c}}{\text{a b}}$, assuming the sequence
+``$\text{\text{a b c}}$'' was seen:
+\begin{align}
+  \ProbGLM {\text{c}}{\text{a b}}       &= \ProbGLMcab{\ProbGLM*{\text{c}}{\text{\Skp b}}}{\ProbGLM*{\text{c}}{\text{a \Skp}}} \\
+  \ProbGLM*{\text{c}}{\text{\Skp b}}    &= \ProbGLMcsb{\ProbGLM*{\text{c}}{\text{\Skp \Skp}}} \\
+  \ProbGLM*{\text{c}}{\text{a \Skp}}    &= \ProbGLMcas{\ProbGLM*{\text{c}}{\text{\Skp \Skp}}} \\
+  \ProbGLM*{\text{c}}{\text{\Skp \Skp}} &= \ProbGLMcss
+\end{align}
+
+Together:
+\begin{align}
+  &\ProbGLM{\text{c}}{\text{a b}} =\\
+  &\qquad \ProbGLMcab{\ProbGLMcsb{\ProbGLMcss}}
+                                 {\ProbGLMcas{\ProbGLMcss}} \nonumber
+\end{align}
+
+By using the distributive property:
+\begin{eqnarray}
+  \ProbGLM {\text{c}}{\text{a b}} =
+    &\phantom{+} \; \hspace{2.0em}     \alpha(\text{a b c})    & \hspace{-0.5em} \cdot\  \frac{1}{\Count(\text{a b \Skp})} \\
+    &         +  \; \hspace{2.0em} \hat\alpha(\text{\Skp b c}) & \hspace{-0.5em} \cdot\  \frac{\gamma(\text{a b})}{2 \Count(\text{a b \Skp}) \ContCountIp(\text{\WSkp \Skp b \WSkp})} \nonumber \\
+    &         +  \; \hspace{2.0em} \hat\alpha(\text{a \Skp c}) & \hspace{-0.5em} \cdot\  \frac{\gamma(\text{a b})}{2 \Count(\text{a b \Skp}) \ContCountIp(\text{\WSkp a \Skp \WSkp})} \nonumber \\
+    &         +  \; \ContCountIp(\text{\WSkp\Skp \Skp c})      & \hspace{-0.5em} \cdot\  \frac{\gamma(\text{a b})}{2 \cdot 1 \Count(\text{a b \Skp})} \Big(\frac{\gamma(\text{\Skp b})}{\ContCountIp(\text{\WSkp \Skp b \WSkp}) \ContCountIp(\text{\WSkp \Skp \Skp \WSkp})} \: + \nonumber \\
+    &                                                          & \hspace{6.8em}                                                                            \frac{\gamma(\text{a \Skp})}{\ContCountIp(\text{\WSkp a \Skp \WSkp}) \ContCountIp(\text{\WSkp \Skp \Skp \WSkp})} \ \Big) \nonumber
+\end{eqnarray}
 
 % ==============================================================================
 \chapter{Example SQL-Request}
-\label{app-sql-example}
+\label{app:sql-example}
 
 \todo{With database examples, and fully expanded SQL code, probably MKN query.}
 
