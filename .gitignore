@@ -10,4 +10,6 @@
 *.toc
 *.kilepr
 *.synctex.gz
+*.fdb_latexmk
+*.fls
 workhours

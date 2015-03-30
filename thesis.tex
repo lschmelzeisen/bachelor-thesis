@@ -1,7 +1,8 @@
-\documentclass[11pt,a4paper]{report}
+\documentclass[m,bachelor,binding]{WeSTthesis}
 
 \usepackage[utf8]{inputenc}
-\usepackage[german,english]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[ngerman,english]{babel}
 \usepackage{csquotes}
 
 \usepackage{xparse}
@@ -12,31 +13,52 @@
 \usepackage{IEEEtrantools}
 
 \usepackage[parfill]{parskip}
-\usepackage{appendix}
+
+\usepackage[toc]{appendix}
 
 % In-paragrap enumerations
 \usepackage{paralist}
 
+% Pseudocode
+\usepackage{algpseudocode}
+\usepackage[chapter]{algorithm}  % Have algorithm numbering per chapter
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+
 % Code listings
 \usepackage{listings}
+
+% Drawing figures
+\usepackage{tikz}
 
 % Courier as monospace font.
 \usepackage{courier}
 
+\usepackage{pdflscape}
+
 \usepackage[
   backend=biber,
   style=authoryear-comp,
+  %style=alphabetic,
+  maxbibnames=10,
   maxcitenames=2,
+  backref=true,
+  backrefstyle=three+,
   doi=false,
   isbn=false,
   url=false,
 ]{biblatex} 
 \addbibresource{bibliography.bib}
+\setlength{\bibitemsep}{0.5em}  % vertical space between bibliography entries
+\setlength{\bibhang}{1em}       % indent after first line on bibliography entries
+% http://tex.stackexchange.com/questions/67153/bibliography-not-in-toc-when-using-biblatex-biber
+\DefineBibliographyStrings{english}{%
+  bibliography = {References},
+}
 
 % For text colorization
 %\usepackage{color}
-\usepackage[usenames,dvipsnames]{xcolor}
-
+%\usepackage[usenames,dvipsnames]{xcolor}
 
 % Should be included last, to redefine commands
 \usepackage{hyperref}
@@ -45,25 +67,20 @@
 \usepackage[nameinlink,noabbrev]{cleveref}
 % http://tex.stackexchange.com/questions/119513/cleveref-and-appendix-packages-appendix-referenced-as-section
 \crefname{appsec}{appendix}{appendices}
+% Capitalize all references, regardless of command used.
+% We use different commands, to allow easy disabling of this.
+\renewcommand\cref{\Cref}
 
 \usepackage{proba}
-
-% ------------------------------------------------------------------------------
-
-\newcommand{\mytitle}{Computing Language Model Arg-Max-Queries Using Top-\emph{k}
-  Joining Techniques}
-%\newcommand{\mytitle}{Applying Top-\emph{k} Joining Techniques to
-%  Modified-Kneser-Ney Language Model's and Generalized Language Model's Argmax
-%  Queries}
-\newcommand{\myname}{Lukas Schmelzeisen}
-\newcommand{\mymail}{lukas@uni-koblenz.de}
-\newcommand{\myaddress}{University of Koblenz-Landau, Germany}
 
 % -- Math ----------------------------------------------------------------------
 
 % Scale
 % see http://tex.stackexchange.com/questions/60453/reducing-font-size-in-equation
 \newcommand*{\Scale}[2][4]{\scalebox{#1}{$#2$}}%
+
+% For conditions after equations
+\newcommand{\Condition}[1]{\Scale[0.85]{(\text{if} \: #1)}}
 
 % Given
 % see http://tex.stackexchange.com/questions/141570/sizing-for-given-that-symbol-vertical-bar
@@ -81,12 +98,16 @@
   { \renewcommand\Given{\SetSymbol[\delimsize]} #1 }
   
 \newcommand{\DummyArg}{\cdot}
+\newcommand{\DummyIndex}{\bullet}
 
 % Argmax
 \DeclareMathOperator*{\Argmax}{arg\,max}
 
 % Cardinality
 \newcommand{\Cardinality}[1]{\left|#1\right|}
+
+% String Length
+\newcommand{\StringLength}[1]{\left|#1\right|}
 
 % Probability
 \NewDocumentCommand{\Prob}{s o g g}{
@@ -111,6 +132,9 @@
 \newcommand{\ContCountII}  {\ContCount_{\Scale[0.5]{2 }}}
 \newcommand{\ContCountIIIp}{\ContCount_{\Scale[0.5]{3+}}}
 \DeclareMathOperator{\Discount}{D}
+\NewDocumentCommand{\DiscountedCount}{s}{
+  \operatorname{\IfBooleanTF{#1}{\ContCountIp}{\Count}^d}
+}
 
 % Absolute Skip
 \newcommand{\Skp}{\ensuremath{\,\Scale[0.7]{\square}\,}}
@@ -130,6 +154,14 @@
   \operatorname{NKSS}\IfNoValueTF{#1}{}{(#1)}
 }
 
+% Weighted Sum
+\DeclareMathOperator{\SumWeight}{\lambda}
+\DeclareMathOperator{\SumArg}{\alpha}
+
+\newcommand{\SeenHistory}{h^\prime}
+
+\DeclareMathOperator{\History}{\eta}
+
 % -- Code ----------------------------------------------------------------------
 
 \newcommand{\inlinecode}[1]{\lstinline[columns=fixed]{#1}}
@@ -143,16 +175,35 @@
 \newcommand{\rene}[1]{\textcolor{blue}{{\footnotesize\textbf{Rene:}} #1}}
 
 \newcommand{\noref}{\textcolor{blue}{\footnotesize[Citation needed]}}
-\newcommand{\mbref}[1]{\textcolor{blue}{\footnotesize[Citation: #1?]}}
+\newcommand{\mbref}[1]{\textcolor{blue}{\footnotesize[Citation: #1?]}} 
+
+% ------------------------------------------------------------------------------
+
+\newcommand{\mytitle}{Computing Language Model ArgMax-Queries Using Top-\emph{k}
+  Joining Techniques}
+%\newcommand{\mytitle}{Applying Top-\emph{k} Joining Techniques to
+%  Modified-Kneser-Ney Language Model's and Generalized Language Model's Argmax
+%  Queries}
+\newcommand{\myname}{Lukas Schmelzeisen}
+\newcommand{\mymail}{lukas@uni-koblenz.de}
 
 % ------------------------------------------------------------------------------
 
 \title{\mytitle}
+
 \author{
   \myname \\
-  \small{\myaddress} \\
   \small{\texttt{\href{mailto:\mymail}{\nolinkurl{\mymail}}}}
 }
+
+\degreecourse{Informatik}
+
+\firstreviewer{Prof.~Dr.~Steffen Staab}
+\firstreviewerinfo{Institute for Web Science and Technologies}
+
+\secondreviewer{Ren{\'e} Pickhardt}
+\secondreviewerinfo{Institute for Web Science and Technologies}
+
 \date{\today}
 \hypersetup{
   unicode = true,
@@ -163,10 +214,14 @@
 \begin{document}
 
 % ==============================================================================
+\pagenumbering{roman}
+\selectlanguage{ngerman}
 \maketitle
+\selectlanguage{english}
 
 % ==============================================================================
 \vspace*{\fill}
+
 \begin{minipage}{\linewidth} % To have both abstracts on one page
   \begin{abstract}
     \todo{Abstract.}
@@ -174,16 +229,37 @@
 
   \vspace{5em}
 
-  \selectlanguage{german}
+  \selectlanguage{ngerman}
   \begin{abstract}
     \todo{Übersetzen nach deutsch.}
   \end{abstract}
   \selectlanguage{english}
 \end{minipage}
+
 \vspace*{\fill}
+\todo{Page numbering on abstract page.}
+\clearpage
+
+% ==============================================================================
+\todo{License!}
+
+\todo{Discussion with Ren{\'e}:}
+\begin{itemize}
+  \item Is ``we'' ok, when single author?
+  \item Are chapters ok?
+  \item Capitalize in document reference?
+  \item Citation style?
+  \item Conditions after Equations ok as in \cref{ch:review-lm}?
+  \item Scope ok? Not too long or short?
+  \item Terminology: Probability event? Interpolation weight/argument?
+\end{itemize}
+
+\clearpage
 
 % ==============================================================================
 \tableofcontents
+\clearpage
+\pagenumbering{arabic}
 
 % ==============================================================================
 \chapter{Introduction}
@@ -284,6 +360,8 @@ function~\parencite{Ilyas2008}.
 
 \todo{Read \cite{Bickel2005} for introduction to word prediction.}
 
+\todo{Overview of following chapters.}
+
 % ==============================================================================
 \chapter{Related Work}
 
@@ -322,7 +400,7 @@ An in-depth summary of Modified Kneser-Ney Smoothing and the Generalized
 Language Model is given in \cref{ch:review-lm}.
 
 % ------------------------------------------------------------------------------
-\section{Top-$k$ joining techniques}
+\section{Top-\emph{k} Joining Techniques}
 
 \lukas{I would much rather summarize top-$k$ joining techniques in
 \cref{ch:top-k-joining} as the task is clearly defined there, and we can have
@@ -331,13 +409,13 @@ more in-depth discussion about it.}
 \todo{Reference to \cref{ch:top-k-joining}.}
 
 % ==============================================================================
-\chapter{Review of considered language modeling techniques}
+\chapter{Review of Considered Language Modeling Techniques}
 \label{ch:review-lm}
 
 This chapter will recall language modeling techniques considered in this work,
-and introduce the used notation (\cref{sec:summary-notation}).
-Namely, \emph{Modified Kneser-Ney Smoothing} (\cref{sec:summary-lm-mkn})
-and the \emph{Generalized Language Model} (\cref{sec:summary-lm-glm})
+and introduce the used notation (\cref{sec:review-notation}).
+Namely, \emph{Modified Kneser-Ney Smoothing} (\cref{sec:review-lm-mkn})
+and the \emph{Generalized Language Model} (\cref{sec:review-lm-glm})
 are described.
 
 \begin{itemize}
@@ -345,12 +423,12 @@ are described.
   \item \todo{Do I cite Rene or ChenGoodman?}
   \item \todo{Do I cite once or on every definition?}
   \item \todo{Some stuff is not published anywhere else yet. (For example new
-    skip notation.)}
+    skip notation or new glm notation)}
 \end{itemize}
 
 % ------------------------------------------------------------------------------
 \section{Notation: Counts and Skips}
-\label{sec:summary-notation}
+\label{sec:review-notation}
 
 Let $\Count(w_1^n)$ denote the frequency count of a sequence's
 $w_1^n = w_1 \ldots w_n$ occurence in training data.
@@ -359,7 +437,7 @@ Let $\Skp$ be a wildcard (called \emph{``skip''}), that can take the place
 of any word at its location.
 Thus, for example $\Count(\Skp w_1^n)$ is the frequency count of sequences
 in training data who start with any word $x \in \Sigma$ and were the remaining
-words are $w_1^n$.
+words are $w_1^n$:
 \begin{equation}
   \Count(\Skp w_1^n) = \sum_{x \in \Sigma} \Count(x \: w_1^n)
 \end{equation}
@@ -370,10 +448,13 @@ It is easy to extend this definition to sequences with multiple skips:
   \Count(w_1 \Skp \Skp w_2) = \sum_{x, y \in \Sigma} \Count(w_1 \: x \: y \: w_2)
 \end{equation}
 
-Additionally we define continuation counts $\ContCount_k(\DummyArg)$ as the
-number of sequences from the training data that occur exactly $k$ times and can
-be constructed by replacing $\WSkp$ (called \emph{``continuation skip''}) with
-any word $x \in \Sigma$.
+\todo{Do we mention the difference of $\Count(\Skp w_1^n)$ to $\Count(w_1^N)$
+in absence of Beginning of Sentence tags?}
+
+Additionally we define \emph{continuation} counts $\ContCount_k(\DummyArg)$ as
+the number of sequences from the training data that occur exactly $k$ times and
+can be constructed by replacing $\WSkp$ (called \emph{``continuation skip''})
+with any word $x \in \Sigma$.
 For example $\ContCountII(\WSkp w_1^n)$ denotes the number of words that can
 precede $w_1^n$ in training data, and occur exactly $2$ times:
 \begin{equation}
@@ -395,9 +476,13 @@ example:
     \Cardinality{\left\{ x, y \in \Sigma \,\middle|\, c(x \: w \Skp y) \geq 1 \right\}}
 \end{equation}
 
+To make a clear distinction between ``normal'' counts $\Count(\DummyArg)$ and
+continuation counts $\ContCount_{\DummyIndex}(\DummyArg)$, we
+sometimes call the former \emph{absolute} counts.
+
 % ------------------------------------------------------------------------------
 \section{Modified Kneser-Ney Smoothing}
-\label{sec:summary-lm-mkn}
+\label{sec:review-lm-mkn}
 
 \begin{draft}
 Modified Kneser-Ney smoothed language models are computed by interpolating
@@ -409,12 +494,16 @@ as follows:
 \begin{equation}
   \label{eq:mkn-high}
   \ProbMKN{w_n}{w_1^{n-1}} =
-    \frac{\alpha(w_1^n) + \gamma(w_1^{n-1}) \ProbMKN*{w_n}{w_1^{n-2}}}
+    \frac{\DiscountedCount(w_1^n) + \gamma(w_1^{n-1}) \ProbMKN*{w_n}{w_1^{n-2}}}
          {\Count(w_1^{n-1} \Skp)} \\
 \end{equation}
-\begin{equation}
-  \alpha(w_1^n) = \max\Set{\Count(w_1^n) - \Discount(\Count(w_1^n)), 0} \\
-\end{equation}
+
+With the \emph{discounted} count
+$\DiscountedCount(w_1^n) = \max\Set{\Count(w_1^n) - \Discount(\Count(w_1^n)), 0}$.
+%Where the \emph{discounted} count $\DiscountedCount(w_1^n)$ is:
+%\begin{equation}
+%  \DiscountedCount(w_1^n) = \max\Set{\Count(w_1^n) - \Discount(\Count(w_1^n)), 0} \\
+%\end{equation}
 
 The exact definitions of $D(\DummyArg)$ and $\gamma(w_1^{n-1})$ are not
 important in our context, however for the sake of completeness they are given 
@@ -428,13 +517,17 @@ the first word in the considered sequence.
 Lower order models are computed differently, and in turn interpolated with
 further lower orders:
 \begin{equation}
+  \label{eq:mkn-low}
   \ProbMKN*{w_n}{w_1^{n-1}} =
-    \frac{\hat\alpha(w_1^n) + \gamma(w_1^{n-1}) \ProbMKN*{w_n}{w_1^{n-2}}}
+    \frac{\DiscountedCount*(w_1^n) + \gamma(w_1^{n-1}) \ProbMKN*{w_n}{w_1^{n-2}}}
          {\ContCountIp(\WSkp w_1^{n-1} \WSkp)} \\
 \end{equation}
-\begin{equation}
-  \hat\alpha(w_1^n) = \max\Set{ \ContCountIp(\WSkp w_1^n) - \Discount(\Count(w_1^n)), 0 }
-\end{equation}
+
+With the \emph{discounted} continuation count
+$\DiscountedCount*(w_1^n) = \max\Set{ \ContCountIp(\WSkp w_1^n) - \Discount(\Count(w_1^n)), 0 }$.
+%\begin{equation}
+%  \DiscountedCount*(w_1^n) = \max\Set{ \ContCountIp(\WSkp w_1^n) - \Discount(\Count(w_1^n)), 0 }
+%\end{equation}
 
 Of course \cref{eq:mkn-high} is only defined if the denominator
 $\Count(w_1^{n-1} \Skp) > 0$, that is if the history $w_1^{n-1} \Skp$ was seen
@@ -442,11 +535,12 @@ in training.
 If $w_1^{n-1} \Skp$ was not seen, we perform a so called \emph{``backoff''}
 and set:
 \begin{align}
+  \label{eq:mkn-backoff}
   \ProbMKN{w_n}{w_1^{n-1}} = \ProbMKN{w_n}{w_1^{n-2}}
-      && \small{(\text{if} \: \Count(w_1^{n-1} \Skp) = 0)}
+      & & \Condition{\Count(w_1^{n-1} \Skp) = 0}
 \end{align}
 It is common to perform multiple backoffs until the history was actually seen.
-Backing off on lower orders is not necessary, because
+Backing off for computing lower orders is never necessary, because
 if history $w_1^n$ was seen, $w_1^{n-1}$ was seen as well.
 
 The lowest order (the probability of a single word) can not be further
@@ -454,6 +548,7 @@ interpolated and we use the relative continuation frequency of that word.
 Similarly if we only want to compute the probability of a single word on the
 highest order, we compute it as the relative frequency of that word:
 \begin{subequations}
+  \label{eq:mkn-lowest}
   \begin{align}
     \ProbMKN {w} &= \frac{\Count(w)}{\Count(\Skp)} \\
     \ProbMKN*{w} &= \frac{\ContCountIp(\WSkp w)}{\ContCountIp(\WSkp \WSkp)}
@@ -462,27 +557,27 @@ highest order, we compute it as the relative frequency of that word:
 
 % ------------------------------------------------------------------------------
 \section{Generalized Language Model}
-\label{sec:summary-lm-glm}
+\label{sec:review-lm-glm}
 
 The Generalized Language Model is a natural extension to Modified Kneser-Ney
 Smoothing.
-It is again based on interpolation, though it differs in which way lower order
+It is again based on interpolation, though it differs in the way lower order
 models are interpolated.
 The highest order is computed as:
 \begin{equation}
   \label{eq:glm-high}
   \ProbGLM{w_n}{w_1^{n-1}} =
-    \frac{\alpha(w_1^n) + \frac{\gamma(w_1^{n-1})}{\#_\partial(w_1^{n-1})}
-                          \sum_{j=1}^{\#_\partial(w_1^{n-1})} \ProbGLM*{w_n}{\partial_j w_1^{n-1}}}
+    \frac{\DiscountedCount(w_1^n) + \frac{\gamma(w_1^{n-1})}{\#_\partial(w_1^{n-1})}
+                                    \sum_{j=1}^{\#_\partial(w_1^{n-1})} \ProbGLM*{w_n}{\partial_j w_1^{n-1}}}
          {\Count(w_1^{n-1} \Skp)}
 \end{equation}
-Definitions of auxiliary functions $\alpha, \hat\alpha, \gamma$ are the same as
-for Modified Kneser-Ney Smoothing and given in \cref{sec:summary-lm-mkn}.
+Auxiliary definitions $\DiscountedCount, \DiscountedCount*, \gamma$ are the same
+as for Modified Kneser-Ney Smoothing and given in \cref{sec:review-lm-mkn}.
 
 The skip operator $\partial_j w_1^{n-1}$ can be any mapping that relates
 $w_1^{n-1}$ to exactly $\#_\partial(w_1^{n-1})$ many derived sequences.
 It is easy to see that for $\#_\partial(w_1^{n-1}) = 1$ and
-$\partial_1 w_1^{n-1} = w_1^{n-2}$ \cref{eq:glm-high} is an
+$\partial_1 w_1^{n-1} = w_2^{n-1}$ \cref{eq:glm-high} is an
 instantiation of \cref{eq:mkn-high} (Modified Kneser-Ney Smoothing), and thus
 a true generalization.
 
@@ -496,18 +591,20 @@ Again as with Modified Kneser-Ney Smoothing, \cref{eq:glm-high} is not
 defined if $w_1^{n-1}$ is unseen and thus our denominator would be zero.
 The backoff step is then performed as:
 \begin{equation}
+  \label{eq:glm-backoff}
   \begin{split}
     \ProbGLM{w_n}{w_1^{n-1}} = \frac{1}{\#_\partial(w_1^{n-1})}
                                \sum_{j=1}^{\#_\partial(w_1^{n-1})} \ProbGLM{w_n}{\partial_j w_1^{n-1}} \\
-      \hfill \small{(\text{if} \: \Count(w_1^{n-1} \Skp) = 0)}
+      \hfill \Condition{\Count(w_1^{n-1} \Skp) = 0}
   \end{split}
 \end{equation}
 
 Subsequently lower order models are computed as:
 \begin{equation}
+  \label{eq:glm-low}
   \ProbGLM*{w_n}{w_1^{n-1}} =
-    \frac{\hat\alpha(w_1^n) + \frac{\gamma(w_1^{n-1})}{\#_\partial(w_1^{n-1})}
-                              \sum_{j=1}^{\#_\partial(w_1^{n-1})} \ProbGLM*{w_n}{\partial_j w_1^{n-1}}}
+    \frac{\DiscountedCount*(w_1^n) + \frac{\gamma(w_1^{n-1})}{\#_\partial(w_1^{n-1})}
+                                     \sum_{j=1}^{\#_\partial(w_1^{n-1})} \ProbGLM*{w_n}{\partial_j w_1^{n-1}}}
          {\ContCountIp(\WSkp w_1^{n-1} \WSkp)}
 \end{equation}
 
@@ -515,11 +612,12 @@ The case of the lowest order occurs when $\#_\partial(w_1^{n-1}) = 0$ and is
 handled similarly to Modified Kneser-Ney Smoothing.
 In practice this is the case when $w_1^{n-1}$ only consists of skips.
 \begin{subequations}
+  \label{eq:glm-lowest}
   \begin{align}
     \ProbGLM {w_n}{w_1^{n-1}} &= \frac{\Count(w_1^n)}{\Count(w_1^{n-1} \Skp)}
-      & \small{(\text{if} \: \#_\partial(w_1^{n-1}) = 0)} \\
+      & \Condition{\#_\partial(w_1^{n-1}) = 0} \\
     \ProbMKN*{w_n}{w_1^{n-1}} &= \frac{\ContCountIp(\WSkp w_1^n)}{\ContCountIp(\WSkp w_1^{n-1} \WSkp)}
-      & \small{(\text{if} \: \#_\partial(w_1^{n-1}) = 0)}
+      & \Condition{\#_\partial(w_1^{n-1}) = 0}
   \end{align}
 \end{subequations}
 
@@ -531,13 +629,16 @@ In practice this is the case when $w_1^{n-1}$ only consists of skips.
 \section{Discounting and Interpolation Weights}
 \label{sec:discounts-interpolation-weights}
 
+\todo{Explain Discounting and Smoothing.}
+
+\begin{draft}
 \begin{equation}
   \Discount(c) =
     \begin{dcases*}
       0      & if $c = 0$ \\
       D_1    & if $c = 1$ \\
       D_2    & if $c = 2$ \\
-      D_{3+} & if $c \geq 3$ \\
+      D_{3+} & if $c \geq 3$
     \end{dcases*}
 \end{equation}
 
@@ -558,24 +659,204 @@ In practice this is the case when $w_1^{n-1}$ only consists of skips.
                       + D_2    \ContCountII   (w_1^{n-1} \WSkp)
                       + D_{3+} \ContCountIIIp (w_1^{n-1} \WSkp)
 \end{equation}
+\end{draft}
 
 % ==============================================================================
-\chapter{Formulating Language Models as weighted sums}
-\label{ch:lm-score-func}
+\chapter{Formulating Language Models as Weighted Sums}
+\label{ch:weightedsum}
 
-Note that $w_n$ is only needed in $\alpha$-terms.
+This chapter will show how to represent  $\ProbMKN{w_n}{w_1^{n-1}}$ and
+$\ProbGLM{w_n}{w_1^{n-1}}$ as weighted sums of terms depending on $w_n$ for a
+fixed history $h = w_1^{n-1}$ and an  arbitrary argument $w = w_n$.
+In other words we will express the formulas given in \cref{ch:review-lm} as
+equations of the following form:
+\begin{equation}
+  \Prob{w}{h} = \sum_{i = 1}^{N} \SumWeight_i^h \cdot \SumArg_i^h(w_n)
+\end{equation}
 
-See \cref{app:expansion} for examples.
+Using this it is possible to calculate queries of type ``Noisy Channel Argmax''
+(\cref{eq:noisychannel}) much more efficiently, as it is possible to perform the
+(potentially expensive) calculation of $\SumWeight_i^h$ in advance.
+To compute every $\Prob{w}{h}$ we now just have to calculate the
+$\SumArg_i^h(w)$.
+
+Another benefit of this representation is that it is a prerequisite of Top-$k$
+joining to supply a monotone scoring function, which only depends on the
+joined arguments.
+Weighted sums are trivially monotone \todo{really?} and we will be able to
+select our join arguments to exactly match $\SumArg_i^h$.
+In addition further optimized top-$k$ joining algorithms exists, that require
+weighted sum scoring functions.
+However we will not use these algorithms in this work.
+For a detailed discussion see \cref{ch:top-k-joining}.
+
+In the case of Generalized Language Models our solution will also have a
+considerably better computational complexity to calculate probabilities than the
+na{\"\i}ve approach of just computing the formulas given in
+\cref{sec:review-lm-glm}.
+\begin{draft}
+This will counter biggest disadvantage of GLM.
+\end{draft}
+
+We will now present the basic idea of how to transform $\Prob{w_n}{w_1^{n-1}}$
+into weighted sums, that applies to both Modified Kneser-Ney Smoothing and
+the Generalized Language Model as well:
+
+Note that in all \cref{eq:mkn-high,eq:mkn-low,eq:glm-high,eq:glm-low} the
+probability event $w_n$ only appears in the argument terms of
+$\DiscountedCount$ or $\DiscountedCount*$.
+Additionally $w_n$ occurs as arguments for $\Count$ and $\ContCountIp$ in the
+lowest order \cref{eq:mkn-lowest,eq:glm-lowest}.
+
+Our general idea is thus, to first expand recursive calls to
+$\Prob(\DummyArg)$ or $\Prob*(\DummyArg)$, and second to factor
+out those terms that do not depend on $w_n$ by the distributive property.
+Examples of this idea are given in \cref{app:expansion}.
+However they assume the history to be seen in training.
+Forfeiting this assumption will add considerable complexity in the case
+of Generalized Language Models.
 
 % ------------------------------------------------------------------------------
-\section{Modified-Kneser-Ney Language Model}
+\section{Modified Kneser-Ney Smoothing}
+
+The first step in computing $\ProbMKN{w}{h}$ is backing off the history $h$
+until $h \Skp$ is seen for the first time (\cref{eq:mkn-backoff}).
+After this one pair of frequency counts $\Count(h \: w)$ and $\Count(h \Skp)$
+are taken (\cref{eq:mkn-high}) and we shorten the
+history by one word.
+We continue this process with continuation counts $\ContCountIp(\WSkp h \: w)$
+and $\ContCountIp(\WSkp h \WSkp)$ (\cref{eq:mkn-low}) until our history is
+empty.
+Lastly we take the frequency counts of the lowest order
+(\cref{eq:mkn-lowest})
+All but the lowest order are interpolated with the next lower order via the
+interpolation weight $\gamma(h)$.
+
+Let $\SeenHistory$ be the first seen history that may be the result of backing
+off given history $h$ a number of times.
+The count $N$ of interpolation weights is then the number of words in 
+the first seen history $\SeenHistory$ plus one.
+\begin{equation}
+  N = \StringLength{\SeenHistory} + 1
+\end{equation}
+
+We define a helper function $\History_i(w_1^n)$ that gives the history for the
+$i$th order model:
+\begin{equation}
+  \History_i(w_1^n) = w_i^n
+\end{equation}
+
+Building on this we can define:
+\begin{align}
+  \SumArg_i^h(w) &= 
+    \begin{dcases*}
+      \Count(w)                                              & if $N = 1$ \\
+      \DiscountedCount(\SeenHistory \: w)                    & if $N \neq 1 \land i = 1$ \\
+      \DiscountedCount*(\WSkp \History_i(\SeenHistory) \: w) & if $N \neq 1 \land 1 < i < N$ \\
+      \ContCountIp(\WSkp w)                                  & if $N \neq 1 \land i = N$
+    \end{dcases*} \\
+  \SumWeight_i^h &= \frac{\prod_{j = 1}^{i - 1} \gamma(\History_j(\SeenHistory))}
+                        {\Count(\SeenHistory \Skp) \prod_{k = 2}^{i} \ContCountIp(\WSkp \History_k(\SeenHistory) \WSkp)}
+\end{align}
+
+In other words, $\SumArg_i^h(w)$ is the respective frequency count that we take
+on the $i$th order of interpolation.
+The coefficient $\SumWeight_i^h$ weights each $\SumArg$ with the interpolation
+weight $\gamma$ of all higher orders divided by the denominator frequencies of
+all yet encountered orders.
+\todo{Rene: wording ok?}
+
+\todo{Do we prove that this is actually MKN?}
+
+Specifying an algorithm to compute interpolation weights $\SumWeight_i^h$ that
+minimizes frequency count lookup is straightforward and given in
+\cref{alg:weightedsum-mkn}.
+
+\begin{algorithm}
+  \caption{\todo{Weighted Sum MKN Caption}}
+  \label{alg:weightedsum-mkn}
+  \begin{algorithmic}[1]
+    \Require $h$
+      \Comment{History for which to determinate interpolation weights}
+    \Ensure $\SumWeight_i^h$
+      \Comment{Array of interpolation weights}
+    
+    \State $\SeenHistory \gets h$
+      \Comment{Find first seen history $\SeenHistory$}
+    \While{$\Count(\SeenHistory \Skp) = 0$}
+      \State $\SeenHistory \gets \SeenHistory\text{.backoff()}$
+        \Comment{\todo{Better notation for backoff}}
+    \EndWhile
+    \State $N = \StringLength{\SeenHistory} + 1$
+    \State $\SumWeight^h \gets$ new array of size $N$
+    %\State
+    \State $nominator \gets 1$
+    \State $denominator \gets \Count(\SeenHistory \Skp)$
+    \State $\SumWeight_1^h \gets \frac{1}{denominator}$
+    %\State
+    \State $\History \gets \SeenHistory$
+    \For{$i \gets 2, N$}
+      \State $nominator \gets \gamma(\History) \frac{nominator}{denominator}$
+      \State $\History \gets \History\text{.backoff()}$
+      \State $denominator \gets \ContCountIp(\WSkp \History \WSkp)$
+      \State $\SumWeight_i^h \gets \frac{nominator}{denominator}$
+    \EndFor
+    \State \todo{This can probably be simplified considerably (better check with source)}
+  \end{algorithmic}
+\end{algorithm}
+
+\todo{Do we specify algorithm for MKN weighted sum (as it is rather simple)?}
 
 % ------------------------------------------------------------------------------
 \section{Generalized Language Model}
 
+\begin{draft}
 Binomial Diamond.
+\end{draft}
+
+\begin{figure}
+  \centering
+  \begin{tikzpicture}[
+    node distance = 6em,
+    seq/.style = {draw, circle, align=center, text centered, text width=3.5em},
+  ]
+    \node [seq] (000)                {$w_1 \: w_2 \: w_3$};
+    
+    \node [seq] (010) [below of=000] {$w_1 \: \Skp \: w_3$};
+    \node [seq] (001) [left  of=010] {$w_1 \: w_2 \: \Skp$};
+    \node [seq] (100) [right of=010] {$\Skp \: w_2 \: w_3$};
+    
+    \node [seq] (101) [below of=010] {$\Skp \: w_2 \: \Skp$};
+    \node [seq] (011) [left  of=101] {$w_1 \: \Skp \: \Skp$};
+    \node [seq] (110) [right of=101] {$\Skp \: \Skp \: w_3$};
+    
+    \node [seq] (111) [below of=101] {$\Skp \: \Skp \: \Skp$};
+    
+    \path[->, >=latex, thick]
+      (000) edge (001)
+      (000) edge (010)
+      (000) edge (100)
+      
+      (001) edge (011)
+      (001) edge (101)
+      (010) edge (011)
+      (010) edge (110)
+      (100) edge (101)
+      (100) edge (110)
+      
+      (011) edge (111)
+      (101) edge (111)
+      (110) edge (111);
+  \end{tikzpicture}
+  \caption{\todo{Binomial Diamond Caption}}
+\end{figure}
+
+\clearpage
+
 
 \subsection{Bitmagic}
+
+\subsection{Computational Complexity}
 
 % ==============================================================================
 \chapter{Top-\emph{k} Joining Language Models}
@@ -598,7 +879,7 @@ The task is to efficiently compute the following expression:
 \end{equation}
 Where $t$ is a token in the set of all tokens $T$, $\Prob[\text{LM}]$ is a
 language model, that can be expressed as a weighted sum (as described in
-\cref{ch:lm-score-func}), and $h$ is the conditional history, a sequence
+\cref{ch:weightedsum}), and $h$ is the conditional history, a sequence
 of tokens.
 
 Given a language model $\Prob[\text{LM}]$ as a scoring function, if we
@@ -690,10 +971,8 @@ The algorithm used to produce top-$k$ results is presented in
 % ------------------------------------------------------------------------------
 \section{Remarks}
 
-\todo{}.
-
 % ------------------------------------------------------------------------------
-\section{Sorted and filtered access}
+\section{Sorted and Filtered Access}
 \label{sec:sorted-and-filtered-access}
 
 As explained we require a data structure for efficiently retrieving all
@@ -773,7 +1052,7 @@ Most implementations of viterbi are beam search or time-synchonous beam search.
 \chapter{Conclusion}
 
 % ==============================================================================
-\printbibliography
+\printbibliography[heading=bibintoc]
 
 \begin{appendices}
 \crefalias{chapter}{appsec}
@@ -782,14 +1061,14 @@ Most implementations of viterbi are beam search or time-synchonous beam search.
 \chapter{Expansion}
 \label{app:expansion}
 
-Examples for \cref{ch:lm-score-func}.
+Examples for \cref{ch:weightedsum}.
 
 \section{Modified-Kneser-Ney}
 
 \newcommand{\ProbMKNcab}[1]
-  {\frac{\alpha(\text{a b c}) + \gamma(\text{a b}) #1}{\Count(\text{a b \Skp})}}
+  {\frac{\DiscountedCount(\text{a b c}) + \gamma(\text{a b}) #1}{\Count(\text{a b \Skp})}}
 \newcommand{\ProbMKNcb}[1]
-  {\frac{\hat\alpha(\text{b c}) + \gamma(\text{b}) #1}{\ContCountIp(\text{\WSkp b \WSkp})}}
+  {\frac{\DiscountedCount*(\text{b c}) + \gamma(\text{b}) #1}{\ContCountIp(\text{\WSkp b \WSkp})}}
 \newcommand{\ProbMKNc}
   {\frac{\ContCountIp(\text{\WSkp c})}{\ContCountIp(\text{\WSkp \WSkp})}}
 
@@ -809,8 +1088,8 @@ Together:
 By using the distributive property:
 \begin{eqnarray}
   \ProbGLM {\text{c}}{\text{a b}} =
-    &\phantom{+} \; \hspace{0.2em}   \alpha(\text{a b c}) & \hspace{-0.5em} \cdot\ \frac{1}{\Count(\text{a b \Skp})} \\
-    &         +  \; \hspace{1em} \hat\alpha(\text{b c})   & \hspace{-0.5em} \cdot\ \frac{\gamma(\text{a b})}{\Count(\text{a b \Skp}) \ContCountIp(\text{\WSkp b \WSkp})} \nonumber \\
+    &\phantom{+} \; \hspace{0.2em}   \DiscountedCount (\text{a b c}) & \hspace{-0.5em} \cdot\ \frac{1}{\Count(\text{a b \Skp})} \\
+    &         +  \; \hspace{1em}     \DiscountedCount*(\text{b c})   & \hspace{-0.5em} \cdot\ \frac{\gamma(\text{a b})}{\Count(\text{a b \Skp}) \ContCountIp(\text{\WSkp b \WSkp})} \nonumber \\
     &         +  \; \ContCountIp(\text{\WSkp c})          & \hspace{-0.5em} \cdot\ \frac{\gamma(\text{a b}) \gamma(\text{b})}{\Count(\text{a b \Skp}) \ContCountIp(\text{\WSkp b \WSkp}) \ContCountIp(\text{\WSkp \WSkp})} \nonumber
 \end{eqnarray}
 
@@ -819,11 +1098,11 @@ By using the distributive property:
 \section{Generalized Language Model}
 
 \newcommand{\ProbGLMcab}[2]
-  {\frac{\alpha(\text{a b c}) + \frac{\gamma(\text{a b})}{2}\left(#1 + #2\right)}{\Count(\text{a b \Skp})}}
+  {\frac{\DiscountedCount(\text{a b c}) + \frac{\gamma(\text{a b})}{2}\left(#1 + #2\right)}{\Count(\text{a b \Skp})}}
 \newcommand{\ProbGLMcsb}[1]
-  {\frac{\hat\alpha(\text{\Skp b c}) + \frac{\gamma(\text{\Skp b})}{1} #1}{\ContCountIp(\text{\WSkp \Skp b \WSkp})}}
+  {\frac{\DiscountedCount*(\text{\Skp b c}) + \frac{\gamma(\text{\Skp b})}{1} #1}{\ContCountIp(\text{\WSkp \Skp b \WSkp})}}
 \newcommand{\ProbGLMcas}[1]
-  {\frac{\hat\alpha(\text{a \Skp c}) + \frac{\gamma(\text{a \Skp})}{1} #1}{\ContCountIp(\text{\WSkp a \Skp \WSkp})}}
+  {\frac{\DiscountedCount*(\text{a \Skp c}) + \frac{\gamma(\text{a \Skp})}{1} #1}{\ContCountIp(\text{\WSkp a \Skp \WSkp})}}
 \newcommand{\ProbGLMcss}
   {\frac{\ContCountIp(\text{\WSkp \Skp \Skp c})}{\ContCountIp(\text{\WSkp \Skp \Skp \WSkp})}}
 
@@ -840,15 +1119,15 @@ Together:
 \begin{align}
   &\ProbGLM{\text{c}}{\text{a b}} =\\
   &\qquad \ProbGLMcab{\ProbGLMcsb{\ProbGLMcss}}
-                                 {\ProbGLMcas{\ProbGLMcss}} \nonumber
+                     {\ProbGLMcas{\ProbGLMcss}} \nonumber
 \end{align}
 
 By using the distributive property:
 \begin{eqnarray}
   \ProbGLM {\text{c}}{\text{a b}} =
-    &\phantom{+} \; \hspace{2.0em}     \alpha(\text{a b c})    & \hspace{-0.5em} \cdot\  \frac{1}{\Count(\text{a b \Skp})} \\
-    &         +  \; \hspace{2.0em} \hat\alpha(\text{\Skp b c}) & \hspace{-0.5em} \cdot\  \frac{\gamma(\text{a b})}{2 \Count(\text{a b \Skp}) \ContCountIp(\text{\WSkp \Skp b \WSkp})} \nonumber \\
-    &         +  \; \hspace{2.0em} \hat\alpha(\text{a \Skp c}) & \hspace{-0.5em} \cdot\  \frac{\gamma(\text{a b})}{2 \Count(\text{a b \Skp}) \ContCountIp(\text{\WSkp a \Skp \WSkp})} \nonumber \\
+    &\phantom{+} \; \hspace{2.0em} \DiscountedCount (\text{a b c})    & \hspace{-0.5em} \cdot\  \frac{1}{\Count(\text{a b \Skp})} \\
+    &         +  \; \hspace{2.0em} \DiscountedCount*(\text{\Skp b c}) & \hspace{-0.5em} \cdot\  \frac{\gamma(\text{a b})}{2 \Count(\text{a b \Skp}) \ContCountIp(\text{\WSkp \Skp b \WSkp})} \nonumber \\
+    &         +  \; \hspace{2.0em} \DiscountedCount*(\text{a \Skp c}) & \hspace{-0.5em} \cdot\  \frac{\gamma(\text{a b})}{2 \Count(\text{a b \Skp}) \ContCountIp(\text{\WSkp a \Skp \WSkp})} \nonumber \\
     &         +  \; \ContCountIp(\text{\WSkp\Skp \Skp c})      & \hspace{-0.5em} \cdot\  \frac{\gamma(\text{a b})}{2 \cdot 1 \Count(\text{a b \Skp})} \Big(\frac{\gamma(\text{\Skp b})}{\ContCountIp(\text{\WSkp \Skp b \WSkp}) \ContCountIp(\text{\WSkp \Skp \Skp \WSkp})} \: + \nonumber \\
     &                                                          & \hspace{6.8em}                                                                            \frac{\gamma(\text{a \Skp})}{\ContCountIp(\text{\WSkp a \Skp \WSkp}) \ContCountIp(\text{\WSkp \Skp \Skp \WSkp})} \ \Big) \nonumber
 \end{eqnarray}
@@ -863,6 +1142,76 @@ By using the distributive property:
 \chapter{Notes}
 
 \todo{Remove before releasing.}
+
+% ------------------------------------------------------------------------------
+\begin{landscape}
+  \section{Binomial Diamond}
+  \begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[
+      node distance = 8.2em,
+      seq/.style = {draw, circle, align=center, text centered, text width=4.8em},
+    ]
+      \node [seq] (0000) {$w_1 \: w_2 \: w_3 \: w_4$};
+    
+      \node [seq] (0010) [below left  of=0000] {$w_1 \: w_2 \: \Skp \: w_4$};
+      \node [seq] (0100) [below right of=0000] {$w_1 \: \Skp \: w_3 \: w_4$};
+      \node [seq] (0001) [      left  of=0010] {$w_1 \: w_2 \: w_3 \: \Skp$};
+      \node [seq] (1000) [      right of=0100] {$\Skp \: w_2 \: w_3 \: w_4$};
+    
+      \node [seq] (0101) [below       of=0001] {$w_1 \: \Skp \: w_2 \: \Skp$};
+      \node [seq] (0110) [below       of=0010] {$w_1 \: \Skp \: \Skp \: w_4$};
+      \node [seq] (1001) [below       of=0100] {$\Skp \: w_2 \: w_3 \: \Skp$};
+      \node [seq] (1010) [below       of=1000] {$\Skp \: w_2 \: \Skp \: w_4$};
+      \node [seq] (0011) [      left  of=0101] {$w_1 \: w_2 \: \Skp \: \Skp$};
+      \node [seq] (1100) [      right of=1010] {$\Skp \: \Skp \: w_3 \: w_4$};
+    
+      \node [seq] (0111) [below       of=0101] {$w_1 \: \Skp \: \Skp \: \Skp$};
+      \node [seq] (1011) [below       of=0110] {$\Skp \: w_2 \: \Skp \: \Skp$};
+      \node [seq] (1101) [below       of=1001] {$\Skp \: \Skp \: w_3 \: \Skp$};
+      \node [seq] (1110) [below       of=1010] {$\Skp \: \Skp \: \Skp \: w_4$};
+    
+      \node [seq] (1111) [below right of=1011] {$\Skp \: \Skp \: \Skp \: \Skp$};
+    
+      \path[->, >=latex, thick]
+        (0000) edge (0001)
+        (0000) edge (0010)
+        (0000) edge (0100)
+        (0000) edge (1000)
+      
+        (0001) edge (0011)
+        (0001) edge (0101)
+        (0001) edge (1001)
+        (0010) edge (0011)
+        (0010) edge (0110)
+        (0010) edge (1010)
+        (0100) edge (0101)
+        (0100) edge (0110)
+        (0100) edge (1100)
+        (1000) edge (1001)
+        (1000) edge (1010)
+        (1000) edge (1100)
+      
+        (0011) edge (0111)
+        (0011) edge (1011)
+        (0101) edge (0111)
+        (0101) edge (1101)
+        (0110) edge (0111)
+        (0110) edge (1110)
+        (1001) edge (1011)
+        (1001) edge (1101)
+        (1010) edge (1011)
+        (1010) edge (1110)
+        (1100) edge (1101)
+        (1100) edge (1110)
+      
+        (0111) edge (1111)
+        (1011) edge (1111)
+        (1101) edge (1111)
+        (1110) edge (1111);
+    \end{tikzpicture}
+  \end{figure}
+\end{landscape}
 
 % ------------------------------------------------------------------------------
 \section{SQL Query Expansion}
