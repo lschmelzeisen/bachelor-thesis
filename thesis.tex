@@ -1,4 +1,6 @@
-\documentclass[m,bachelor,binding]{WeSTthesis}
+\RequirePackage[l2tabu, orthodox]{nag}
+
+\documentclass[m,bachelor,binding,palatino]{WeSTthesis}
 
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
@@ -8,6 +10,7 @@
 \usepackage{xparse}
 
 \usepackage{amsmath}
+\usepackage{amssymb}
 \usepackage{mathtools}
 \usepackage{nicefrac}
 \usepackage{IEEEtrantools}
@@ -19,17 +22,48 @@
 % In-paragrap enumerations
 \usepackage{paralist}
 
+% Drawing figures
+\usepackage{tikz}
+
+% For text colorization (included by tikz)
+%\usepackage{color}
+%\usepackage[usenames,dvipsnames]{xcolor}
+
 % Pseudocode
-\usepackage{algpseudocode}
-\usepackage[chapter]{algorithm}  % Have algorithm numbering per chapter
+\usepackage[noend]{algpseudocode} % Omits end statements in algorithms
+\usepackage[chapter]{algorithm}   % Have algorithm numbering per chapter
 \renewcommand{\algorithmicrequire}{\textbf{Input:}}
 \renewcommand{\algorithmicensure}{\textbf{Output:}}
+% Make comments gray
+\definecolor{comment}{rgb}{0.4, 0.4, 0.4}
+\algrenewcomment[1]{\hfill\textcolor{comment}{\(\triangleright\) #1}}
+% http://tex.stackexchange.com/questions/74880/algorithmicx-package-comments-on-a-single-line
+\algnewcommand{\LineComment}[1]{\State \textcolor{comment}{\(\triangleright\) #1}}
+
+% Style captions
+\usepackage{caption}
+\usepackage{subcaption}
 
 % Code listings
 \usepackage{listings}
-
-% Drawing figures
-\usepackage{tikz}
+% http://tex.stackexchange.com/questions/73392/how-to-make-lstlisting-look-exactly-like-the-algorithm-environment
+\lstset{
+  basicstyle = \small\ttfamily,
+  numbers = left,
+  numbersep = 5pt,
+  xleftmargin = 20pt,
+  frame = tb,
+  framexleftmargin = 20pt,
+  mathescape,
+}
+\renewcommand*{\thelstnumber}{\arabic{lstnumber}:}
+\DeclareCaptionFormat{listing}{\hrule#1#2#3}
+\captionsetup[lstlisting]{
+  format = listing,
+  labelfont = bf,
+  singlelinecheck = off,
+  labelsep = space,
+}
 
 % Courier as monospace font.
 \usepackage{courier}
@@ -47,7 +81,7 @@
   doi=false,
   isbn=false,
   url=false,
-]{biblatex} 
+]{biblatex}
 \addbibresource{bibliography.bib}
 \setlength{\bibitemsep}{0.5em}  % vertical space between bibliography entries
 \setlength{\bibhang}{1em}       % indent after first line on bibliography entries
@@ -55,10 +89,6 @@
 \DefineBibliographyStrings{english}{%
   bibliography = {References},
 }
-
-% For text colorization
-%\usepackage{color}
-%\usepackage[usenames,dvipsnames]{xcolor}
 
 % Should be included last, to redefine commands
 \usepackage{hyperref}
@@ -96,7 +126,7 @@
 }
 \DeclarePairedDelimiterX\Set[1]{\{}{\}}%
   { \renewcommand\Given{\SetSymbol[\delimsize]} #1 }
-  
+
 \newcommand{\DummyArg}{\cdot}
 \newcommand{\DummyIndex}{\bullet}
 
@@ -127,7 +157,7 @@
 \DeclareMathOperator{\Count}{c}
 \DeclareMathOperator{\ContCount}{N}
 % roman numbering because numbers are not allowed in commands
-\newcommand{\ContCountIp}  {\ContCount_{\Scale[0.5]{1+}}} 
+\newcommand{\ContCountIp}  {\ContCount_{\Scale[0.5]{1+}}}
 \newcommand{\ContCountI}   {\ContCount_{\Scale[0.5]{1 }}}
 \newcommand{\ContCountII}  {\ContCount_{\Scale[0.5]{2 }}}
 \newcommand{\ContCountIIIp}{\ContCount_{\Scale[0.5]{3+}}}
@@ -175,7 +205,7 @@
 \newcommand{\rene}[1]{\textcolor{blue}{{\footnotesize\textbf{Rene:}} #1}}
 
 \newcommand{\noref}{\textcolor{blue}{\footnotesize[Citation needed]}}
-\newcommand{\mbref}[1]{\textcolor{blue}{\footnotesize[Citation: #1?]}} 
+\newcommand{\mbref}[1]{\textcolor{blue}{\footnotesize[Citation: #1?]}}
 
 % ------------------------------------------------------------------------------
 
@@ -448,7 +478,7 @@ It is easy to extend this definition to sequences with multiple skips:
   \Count(w_1 \Skp \Skp w_2) = \sum_{x, y \in \Sigma} \Count(w_1 \: x \: y \: w_2)
 \end{equation}
 
-\todo{Do we mention the difference of $\Count(\Skp w_1^n)$ to $\Count(w_1^N)$
+\todo{Do we mention the difference of $\Count(\Skp w_1^n)$ to $\Count(w_1^n)$
 in absence of Beginning of Sentence tags?}
 
 Additionally we define \emph{continuation} counts $\ContCount_k(\DummyArg)$ as
@@ -500,13 +530,9 @@ as follows:
 
 With the \emph{discounted} count
 $\DiscountedCount(w_1^n) = \max\Set{\Count(w_1^n) - \Discount(\Count(w_1^n)), 0}$.
-%Where the \emph{discounted} count $\DiscountedCount(w_1^n)$ is:
-%\begin{equation}
-%  \DiscountedCount(w_1^n) = \max\Set{\Count(w_1^n) - \Discount(\Count(w_1^n)), 0} \\
-%\end{equation}
 
 The exact definitions of $D(\DummyArg)$ and $\gamma(w_1^{n-1})$ are not
-important in our context, however for the sake of completeness they are given 
+important in our context, however for the sake of completeness they are given
 in \cref{sec:discounts-interpolation-weights}.
 
 \begin{draft}
@@ -519,17 +545,14 @@ further lower orders:
 \begin{equation}
   \label{eq:mkn-low}
   \ProbMKN*{w_n}{w_1^{n-1}} =
-    \frac{\DiscountedCount*(w_1^n) + \gamma(w_1^{n-1}) \ProbMKN*{w_n}{w_1^{n-2}}}
+    \frac{\DiscountedCount*(\WSkp w_1^n) + \gamma(w_1^{n-1}) \ProbMKN*{w_n}{w_1^{n-2}}}
          {\ContCountIp(\WSkp w_1^{n-1} \WSkp)} \\
 \end{equation}
 
 With the \emph{discounted} continuation count
-$\DiscountedCount*(w_1^n) = \max\Set{ \ContCountIp(\WSkp w_1^n) - \Discount(\Count(w_1^n)), 0 }$.
-%\begin{equation}
-%  \DiscountedCount*(w_1^n) = \max\Set{ \ContCountIp(\WSkp w_1^n) - \Discount(\Count(w_1^n)), 0 }
-%\end{equation}
+$\DiscountedCount*(\WSkp w_1^n) = \max\Set{ \ContCountIp(\WSkp w_1^n) - \Discount(\Count(w_1^n)), 0 }$.
 
-Of course \cref{eq:mkn-high} is only defined if the denominator
+Naturally \cref{eq:mkn-high} is only defined if the denominator
 $\Count(w_1^{n-1} \Skp) > 0$, that is if the history $w_1^{n-1} \Skp$ was seen
 in training.
 If $w_1^{n-1} \Skp$ was not seen, we perform a so called \emph{``backoff''}
@@ -542,6 +565,8 @@ and set:
 It is common to perform multiple backoffs until the history was actually seen.
 Backing off for computing lower orders is never necessary, because
 if history $w_1^n$ was seen, $w_1^{n-1}$ was seen as well.
+\todo{This should actually not be true, because we increase n-gram length for
+first lower order. How do we handle this in current implementation?}
 
 The lowest order (the probability of a single word) can not be further
 interpolated and we use the relative continuation frequency of that word.
@@ -603,7 +628,7 @@ Subsequently lower order models are computed as:
 \begin{equation}
   \label{eq:glm-low}
   \ProbGLM*{w_n}{w_1^{n-1}} =
-    \frac{\DiscountedCount*(w_1^n) + \frac{\gamma(w_1^{n-1})}{\#_\partial(w_1^{n-1})}
+    \frac{\DiscountedCount*(\WSkp w_1^n) + \frac{\gamma(w_1^{n-1})}{\#_\partial(w_1^{n-1})}
                                      \sum_{j=1}^{\#_\partial(w_1^{n-1})} \ProbGLM*{w_n}{\partial_j w_1^{n-1}}}
          {\ContCountIp(\WSkp w_1^{n-1} \WSkp)}
 \end{equation}
@@ -728,13 +753,13 @@ We continue this process with continuation counts $\ContCountIp(\WSkp h \: w)$
 and $\ContCountIp(\WSkp h \WSkp)$ (\cref{eq:mkn-low}) until our history is
 empty.
 Lastly we take the frequency counts of the lowest order
-(\cref{eq:mkn-lowest})
+(\cref{eq:mkn-lowest}).
 All but the lowest order are interpolated with the next lower order via the
 interpolation weight $\gamma(h)$.
 
 Let $\SeenHistory$ be the first seen history that may be the result of backing
 off given history $h$ a number of times.
-The count $N$ of interpolation weights is then the number of words in 
+The count $N$ of interpolation weights is then the number of words in
 the first seen history $\SeenHistory$ plus one.
 \begin{equation}
   N = \StringLength{\SeenHistory} + 1
@@ -748,7 +773,7 @@ $i$th order model:
 
 Building on this we can define:
 \begin{align}
-  \SumArg_i^h(w) &= 
+  \SumArg_i^h(w) &=
     \begin{dcases*}
       \Count(w)                                              & if $N = 1$ \\
       \DiscountedCount(\SeenHistory \: w)                    & if $N \neq 1 \land i = 1$ \\
@@ -757,7 +782,10 @@ Building on this we can define:
     \end{dcases*} \\
   \SumWeight_i^h &= \frac{\prod_{j = 1}^{i - 1} \gamma(\History_j(\SeenHistory))}
                         {\Count(\SeenHistory \Skp) \prod_{k = 2}^{i} \ContCountIp(\WSkp \History_k(\SeenHistory) \WSkp)}
+  \intertext{\todo{Or alternatively?}}
+  \SumWeight_i^h &= \frac{1}{\Count(\SeenHistory \Skp)} \prod_{j = 2}^i \frac{\gamma(\History_{j-1}(\SeenHistory))}{\ContCountIp(\WSkp \History_j(\SeenHistory) \WSkp)}
 \end{align}
+\todo{Or $\SumWeight$ better recursively?}
 
 In other words, $\SumArg_i^h(w)$ is the respective frequency count that we take
 on the $i$th order of interpolation.
@@ -769,8 +797,8 @@ all yet encountered orders.
 \todo{Do we prove that this is actually MKN?}
 
 Specifying an algorithm to compute interpolation weights $\SumWeight_i^h$ that
-minimizes frequency count lookup is straightforward and given in
-\cref{alg:weightedsum-mkn}.
+minimizes frequency count lookup (using the iterative definition of
+$\SumWeight_i^h$) is straightforward and given in \cref{alg:weightedsum-mkn}.
 
 \begin{algorithm}
   \caption{\todo{Weighted Sum MKN Caption}}
@@ -780,9 +808,9 @@ minimizes frequency count lookup is straightforward and given in
       \Comment{History for which to determinate interpolation weights}
     \Ensure $\SumWeight_i^h$
       \Comment{Array of interpolation weights}
-    
+
+    \LineComment{Find first seen history $\SeenHistory$}
     \State $\SeenHistory \gets h$
-      \Comment{Find first seen history $\SeenHistory$}
     \While{$\Count(\SeenHistory \Skp) = 0$}
       \State $\SeenHistory \gets \SeenHistory\text{.backoff()}$
         \Comment{\todo{Better notation for backoff}}
@@ -801,54 +829,131 @@ minimizes frequency count lookup is straightforward and given in
       \State $denominator \gets \ContCountIp(\WSkp \History \WSkp)$
       \State $\SumWeight_i^h \gets \frac{nominator}{denominator}$
     \EndFor
-    \State \todo{This can probably be simplified considerably (better check with source)}
+    \LineComment{\todo{This can probably be simplified considerably (better check with source)}}
   \end{algorithmic}
 \end{algorithm}
+\begin{algorithm}
+  \caption{Computing Modified Kneser-Ney sum weights}
+  \begin{algorithmic}[1]
+    \Require $h$
+      \Comment{History for which to determinate interpolation weights}
+    \Ensure $\SumWeight_i^h$
+      \Comment{List of interpolation weights}
+
+      \State $\SeenHistory \gets h$
+        \Comment{Find first seen history $\SeenHistory$}
+      \While{$\Count(\SeenHistory \Skp) = 0$}
+        \State $\SeenHistory \gets \SeenHistory\text{.backoff()}$
+          \Comment{\todo{Better notation for backoff}}
+      \EndWhile
+      \State $N = \StringLength{\SeenHistory} + 1$
+      \State $\SumWeight^h \gets$ new List of size $N$
+      \State $\SumWeight_1^h \gets \frac{1}{\Count(\SeenHistory \Skp)}$
+        \Comment{Set highest order weight}
+      \For{$i \gets 2 \mathinner{\ldotp \ldotp} N$}
+        %\State $\gamma^\prime \gets \gamma(\History)$
+        %\State $\History \gets \History\text{.backoff()}$
+        \State $\SumWeight_i^h \gets \SumWeight_{i-1}^h \frac{\gamma(\History_{i-1}(\SeenHistory))}{\ContCountIp(\WSkp \History_i(\SeenHistory) \WSkp)}$
+          \Comment{Compute lower orders using last order}
+      \EndFor
+      \State \todo{Replace fraction with $x^{-1}$ for better visual?}
+  \end{algorithmic}
+\end{algorithm}
+
 
 \todo{Do we specify algorithm for MKN weighted sum (as it is rather simple)?}
 
 % ------------------------------------------------------------------------------
 \section{Generalized Language Model}
 
+The Generalized Language Models interpolates with lower orders differently
+than Modified Kneser-Ney, as described in \cref{sec:review-lm-glm}.
+This section will only consider the definition of the skip operator
+$\partial$ that we use in practice.
+That is, $\partial_j(w_1^{n-1})$ replaces the $j$th non-skip word with a skip.
+\begin{draft}
+The  case of an arbitrary $\partial$ would be to complex.
+\end{draft}
+
+The case of Generalized Language Models is related to the Modified-Kneser Ney
+case, although much more complex.
+In a fully expanded Modified-Kneser-Ney term
+
 \begin{draft}
 Binomial Diamond.
 \end{draft}
 
 \begin{figure}
-  \centering
+  \begin{subfigure}{0.5\textwidth}
   \begin{tikzpicture}[
     node distance = 6em,
     seq/.style = {draw, circle, align=center, text centered, text width=3.5em},
   ]
     \node [seq] (000)                {$w_1 \: w_2 \: w_3$};
-    
+
     \node [seq] (010) [below of=000] {$w_1 \: \Skp \: w_3$};
     \node [seq] (001) [left  of=010] {$w_1 \: w_2 \: \Skp$};
     \node [seq] (100) [right of=010] {$\Skp \: w_2 \: w_3$};
-    
+
     \node [seq] (101) [below of=010] {$\Skp \: w_2 \: \Skp$};
     \node [seq] (011) [left  of=101] {$w_1 \: \Skp \: \Skp$};
     \node [seq] (110) [right of=101] {$\Skp \: \Skp \: w_3$};
-    
+
     \node [seq] (111) [below of=101] {$\Skp \: \Skp \: \Skp$};
-    
+
     \path[->, >=latex, thick]
       (000) edge (001)
       (000) edge (010)
       (000) edge (100)
-      
+
       (001) edge (011)
       (001) edge (101)
       (010) edge (011)
       (010) edge (110)
       (100) edge (101)
       (100) edge (110)
-      
+
       (011) edge (111)
       (101) edge (111)
       (110) edge (111);
   \end{tikzpicture}
-  \caption{\todo{Binomial Diamond Caption}}
+  \end{subfigure}
+  \begin{subfigure}{0.5\textwidth}
+  \begin{tikzpicture}[
+    node distance = 6em,
+    seq/.style = {draw, circle, align=center, text centered, text width=3.5em},
+  ]
+    \node [seq] (000)                {$w_1 \: w_2 \: w_3$};
+
+    \node [seq] (010) [right of=000] {$w_1 \: \Skp \: w_3$};
+    \node [seq] (001) [above of=010] {$w_1 \: w_2 \: \Skp$};
+    \node [seq] (100) [below of=010] {$\Skp \: w_2 \: w_3$};
+
+    \node [seq] (101) [right of=010] {$\Skp \: w_2 \: \Skp$};
+    \node [seq] (011) [above of=101] {$w_1 \: \Skp \: \Skp$};
+    \node [seq] (110) [below of=101] {$\Skp \: \Skp \: w_3$};
+
+    \node [seq] (111) [right of=101] {$\Skp \: \Skp \: \Skp$};
+
+    \path[->, >=latex, thick]
+      (000) edge (001)
+      (000) edge (010)
+      (000) edge (100)
+
+      (001) edge (011)
+      (001) edge (101)
+      (010) edge (011)
+      (010) edge (110)
+      (100) edge (101)
+      (100) edge (110)
+
+      (011) edge (111)
+      (101) edge (111)
+      (110) edge (111);
+  \end{tikzpicture}
+  \end{subfigure}
+  \caption{\todo{Binomial Diamond Caption} \\
+           \todo{Decide on graph layout}}
 \end{figure}
 
 \clearpage
@@ -884,9 +989,13 @@ of tokens.
 
 Given a language model $\Prob[\text{LM}]$ as a scoring function, if we
 imagine our input data forming database relations, we can express our
-arg-max-query as a SQL-\texttt{SELECT}-Request.
+arg-max-query as a SQL-\texttt{SELECT}-Request, as given in \cref{lst:topksql}.
 
-\begin{lstlisting}[mathescape]
+\begin{lstlisting}[
+  label = {lst:topksql},
+  float,
+  caption = {\todo{Example SQL-Request Caption}},
+]
   SELECT
     Token.token AS arg,
     $\Prob[\text{LM}]$(Pattern1.count, ..., PatternN.count) AS score
@@ -1068,7 +1177,7 @@ Examples for \cref{ch:weightedsum}.
 \newcommand{\ProbMKNcab}[1]
   {\frac{\DiscountedCount(\text{a b c}) + \gamma(\text{a b}) #1}{\Count(\text{a b \Skp})}}
 \newcommand{\ProbMKNcb}[1]
-  {\frac{\DiscountedCount*(\text{b c}) + \gamma(\text{b}) #1}{\ContCountIp(\text{\WSkp b \WSkp})}}
+  {\frac{\DiscountedCount*(\text{\WSkp b c}) + \gamma(\text{b}) #1}{\ContCountIp(\text{\WSkp b \WSkp})}}
 \newcommand{\ProbMKNc}
   {\frac{\ContCountIp(\text{\WSkp c})}{\ContCountIp(\text{\WSkp \WSkp})}}
 
@@ -1086,13 +1195,12 @@ Together:
 \end{equation}
 
 By using the distributive property:
-\begin{eqnarray}
-  \ProbGLM {\text{c}}{\text{a b}} =
-    &\phantom{+} \; \hspace{0.2em}   \DiscountedCount (\text{a b c}) & \hspace{-0.5em} \cdot\ \frac{1}{\Count(\text{a b \Skp})} \\
-    &         +  \; \hspace{1em}     \DiscountedCount*(\text{b c})   & \hspace{-0.5em} \cdot\ \frac{\gamma(\text{a b})}{\Count(\text{a b \Skp}) \ContCountIp(\text{\WSkp b \WSkp})} \nonumber \\
-    &         +  \; \ContCountIp(\text{\WSkp c})          & \hspace{-0.5em} \cdot\ \frac{\gamma(\text{a b}) \gamma(\text{b})}{\Count(\text{a b \Skp}) \ContCountIp(\text{\WSkp b \WSkp}) \ContCountIp(\text{\WSkp \WSkp})} \nonumber
-\end{eqnarray}
-
+\begin{align}
+  \ProbGLM {\text{c}}{\text{a b}} = {}
+    & & \DiscountedCount (\text{a b c})     & \cdot\ \frac{1}{\Count(\text{a b \Skp})} \\
+    &+& \DiscountedCount*(\text{\WSkp b c}) & \cdot\ \frac{\gamma(\text{a b})}{\Count(\text{a b \Skp}) \ContCountIp(\text{\WSkp b \WSkp})} \nonumber \\
+    &+& \ContCountIp(\text{\WSkp c})        & \cdot\ \frac{\gamma(\text{a b}) \gamma(\text{b})}{\Count(\text{a b \Skp}) \ContCountIp(\text{\WSkp b \WSkp}) \ContCountIp(\text{\WSkp \WSkp})} \nonumber
+\end{align}
 
 \clearpage
 \section{Generalized Language Model}
@@ -1100,17 +1208,16 @@ By using the distributive property:
 \newcommand{\ProbGLMcab}[2]
   {\frac{\DiscountedCount(\text{a b c}) + \frac{\gamma(\text{a b})}{2}\left(#1 + #2\right)}{\Count(\text{a b \Skp})}}
 \newcommand{\ProbGLMcsb}[1]
-  {\frac{\DiscountedCount*(\text{\Skp b c}) + \frac{\gamma(\text{\Skp b})}{1} #1}{\ContCountIp(\text{\WSkp \Skp b \WSkp})}}
+  {\frac{\DiscountedCount*(\text{\WSkp \Skp b c}) + \frac{\gamma(\text{\Skp b})}{1} #1}{\ContCountIp(\text{\WSkp \Skp b \WSkp})}}
 \newcommand{\ProbGLMcas}[1]
-  {\frac{\DiscountedCount*(\text{a \Skp c}) + \frac{\gamma(\text{a \Skp})}{1} #1}{\ContCountIp(\text{\WSkp a \Skp \WSkp})}}
+  {\frac{\DiscountedCount*(\text{\WSkp a \Skp c}) + \frac{\gamma(\text{a \Skp})}{1} #1}{\ContCountIp(\text{\WSkp a \Skp \WSkp})}}
 \newcommand{\ProbGLMcss}
   {\frac{\ContCountIp(\text{\WSkp \Skp \Skp c})}{\ContCountIp(\text{\WSkp \Skp \Skp \WSkp})}}
 
 Sample expansion for $\ProbGLM{\text{c}}{\text{a b}}$, assuming the sequence
 ``$\text{\text{a b c}}$'' was seen:
 \begin{align}
-  \ProbGLM {\text{c}}{\text{a b}}       &= \ProbGLMcab{\ProbGLM*{\text{c}}{\text{\Skp b}}}{\ProbGLM*{\text{c}}{\text{a \Skp}}} \\
-  \ProbGLM*{\text{c}}{\text{\Skp b}}    &= \ProbGLMcsb{\ProbGLM*{\text{c}}{\text{\Skp \Skp}}} \\
+  \ProbGLM {\text{c}}{\text{a b}}       &= \ProbGLMcab{\ProbGLM*{\text{c}}{\text{\Skp b}}}{\ProbGLM*{\text{c}}{\text{a \Skp}}} \\ \ProbGLM*{\text{c}}{\text{\Skp b}}    &= \ProbGLMcsb{\ProbGLM*{\text{c}}{\text{\Skp \Skp}}} \\
   \ProbGLM*{\text{c}}{\text{a \Skp}}    &= \ProbGLMcas{\ProbGLM*{\text{c}}{\text{\Skp \Skp}}} \\
   \ProbGLM*{\text{c}}{\text{\Skp \Skp}} &= \ProbGLMcss
 \end{align}
@@ -1123,14 +1230,14 @@ Together:
 \end{align}
 
 By using the distributive property:
-\begin{eqnarray}
+\begin{align}
   \ProbGLM {\text{c}}{\text{a b}} =
-    &\phantom{+} \; \hspace{2.0em} \DiscountedCount (\text{a b c})    & \hspace{-0.5em} \cdot\  \frac{1}{\Count(\text{a b \Skp})} \\
-    &         +  \; \hspace{2.0em} \DiscountedCount*(\text{\Skp b c}) & \hspace{-0.5em} \cdot\  \frac{\gamma(\text{a b})}{2 \Count(\text{a b \Skp}) \ContCountIp(\text{\WSkp \Skp b \WSkp})} \nonumber \\
-    &         +  \; \hspace{2.0em} \DiscountedCount*(\text{a \Skp c}) & \hspace{-0.5em} \cdot\  \frac{\gamma(\text{a b})}{2 \Count(\text{a b \Skp}) \ContCountIp(\text{\WSkp a \Skp \WSkp})} \nonumber \\
-    &         +  \; \ContCountIp(\text{\WSkp\Skp \Skp c})      & \hspace{-0.5em} \cdot\  \frac{\gamma(\text{a b})}{2 \cdot 1 \Count(\text{a b \Skp})} \Big(\frac{\gamma(\text{\Skp b})}{\ContCountIp(\text{\WSkp \Skp b \WSkp}) \ContCountIp(\text{\WSkp \Skp \Skp \WSkp})} \: + \nonumber \\
-    &                                                          & \hspace{6.8em}                                                                            \frac{\gamma(\text{a \Skp})}{\ContCountIp(\text{\WSkp a \Skp \WSkp}) \ContCountIp(\text{\WSkp \Skp \Skp \WSkp})} \ \Big) \nonumber
-\end{eqnarray}
+    & & \DiscountedCount (\text{a b c})          &             \cdot\  \frac{1}{\Count(\text{a b \Skp})} \\
+    &+& \DiscountedCount*(\text{\WSkp \Skp b c}) &             \cdot\  \frac{\gamma(\text{a b})}{2 \Count(\text{a b \Skp}) \ContCountIp(\text{\WSkp \Skp b \WSkp})} \nonumber \\
+    &+& \DiscountedCount*(\text{\WSkp a \Skp c}) &             \cdot\  \frac{\gamma(\text{a b})}{2 \Count(\text{a b \Skp}) \ContCountIp(\text{\WSkp a \Skp \WSkp})} \nonumber \\
+    &+& \ContCountIp(\text{\WSkp\Skp \Skp c})    &             \cdot\  \frac{\gamma(\text{a b})}{2 \cdot 1 \Count(\text{a b \Skp})} \Big(  \frac{\gamma(\text{\Skp b})}{\ContCountIp(\text{\WSkp \Skp b \WSkp}) \ContCountIp(\text{\WSkp \Skp \Skp \WSkp})} \: + \nonumber \\
+    & &                                          & \phantom{{} \cdot\  \frac{\gamma(\text{a b})}{2 \cdot 1 \Count(\text{a b \Skp})} \Big(} \frac{\gamma(\text{a \Skp})}{\ContCountIp(\text{\WSkp a \Skp \WSkp}) \ContCountIp(\text{\WSkp \Skp \Skp \WSkp})} \ \Big) \nonumber
+\end{align}
 
 % ==============================================================================
 \chapter{Example SQL-Request}
@@ -1153,32 +1260,32 @@ By using the distributive property:
       seq/.style = {draw, circle, align=center, text centered, text width=4.8em},
     ]
       \node [seq] (0000) {$w_1 \: w_2 \: w_3 \: w_4$};
-    
+
       \node [seq] (0010) [below left  of=0000] {$w_1 \: w_2 \: \Skp \: w_4$};
       \node [seq] (0100) [below right of=0000] {$w_1 \: \Skp \: w_3 \: w_4$};
       \node [seq] (0001) [      left  of=0010] {$w_1 \: w_2 \: w_3 \: \Skp$};
       \node [seq] (1000) [      right of=0100] {$\Skp \: w_2 \: w_3 \: w_4$};
-    
+
       \node [seq] (0101) [below       of=0001] {$w_1 \: \Skp \: w_2 \: \Skp$};
       \node [seq] (0110) [below       of=0010] {$w_1 \: \Skp \: \Skp \: w_4$};
       \node [seq] (1001) [below       of=0100] {$\Skp \: w_2 \: w_3 \: \Skp$};
       \node [seq] (1010) [below       of=1000] {$\Skp \: w_2 \: \Skp \: w_4$};
       \node [seq] (0011) [      left  of=0101] {$w_1 \: w_2 \: \Skp \: \Skp$};
       \node [seq] (1100) [      right of=1010] {$\Skp \: \Skp \: w_3 \: w_4$};
-    
+
       \node [seq] (0111) [below       of=0101] {$w_1 \: \Skp \: \Skp \: \Skp$};
       \node [seq] (1011) [below       of=0110] {$\Skp \: w_2 \: \Skp \: \Skp$};
       \node [seq] (1101) [below       of=1001] {$\Skp \: \Skp \: w_3 \: \Skp$};
       \node [seq] (1110) [below       of=1010] {$\Skp \: \Skp \: \Skp \: w_4$};
-    
+
       \node [seq] (1111) [below right of=1011] {$\Skp \: \Skp \: \Skp \: \Skp$};
-    
+
       \path[->, >=latex, thick]
         (0000) edge (0001)
         (0000) edge (0010)
         (0000) edge (0100)
         (0000) edge (1000)
-      
+
         (0001) edge (0011)
         (0001) edge (0101)
         (0001) edge (1001)
@@ -1191,7 +1298,7 @@ By using the distributive property:
         (1000) edge (1001)
         (1000) edge (1010)
         (1000) edge (1100)
-      
+
         (0011) edge (0111)
         (0011) edge (1011)
         (0101) edge (0111)
@@ -1204,7 +1311,7 @@ By using the distributive property:
         (1010) edge (1110)
         (1100) edge (1101)
         (1100) edge (1110)
-      
+
         (0111) edge (1111)
         (1011) edge (1111)
         (1101) edge (1111)
