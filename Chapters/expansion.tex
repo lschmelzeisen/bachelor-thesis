@@ -1,0 +1,71 @@
+\chapter{Example Language Model Expansion}
+\label{app:expansion}
+
+Examples for \cref{ch:weightedsum}.
+
+\section{Modified-Kneser-Ney}
+
+\newcommand{\ProbMKNcab}[1]
+  {\frac{\DiscountedCount(\text{a b c}) + \gamma(\text{a b}) #1}{\Count(\text{a b \Skp})}}
+\newcommand{\ProbMKNcb}[1]
+  {\frac{\DiscountedCount*(\text{\WSkp b c}) + \gamma(\text{b}) #1}{\ContCountIp(\text{\WSkp b \WSkp})}}
+\newcommand{\ProbMKNc}
+  {\frac{\ContCountIp(\text{\WSkp c})}{\ContCountIp(\text{\WSkp \WSkp})}}
+
+Sample expansion for $\ProbMKN{\text{c}}{\text{a b}}$, assuming the sequence
+``$\text{a b c}$'' was seen:
+\begin{align}
+  \ProbMKN {\text{c}}{\text{a b}} &= \ProbMKNcab{\ProbMKN*{\text{c}}{\text{b}}} \\
+  \ProbMKN*{\text{c}}{\text{b}}   &= \ProbMKNcb{\ProbMKN*{\text{c}}} \\
+  \ProbMKN*{\text{c}}             &= \ProbMKNc
+\end{align}
+
+Together:
+\begin{equation}
+  \ProbMKN {\text{c}}{\text{a b}} = \ProbMKNcab{\ProbMKNcb{\ProbMKNc}}
+\end{equation}
+
+By using the distributive property:
+\begin{align}
+  \ProbGLM {\text{c}}{\text{a b}} = {}
+    & & \DiscountedCount (\text{a b c})     & \cdot\ \frac{1}{\Count(\text{a b \Skp})} \\
+    &+& \DiscountedCount*(\text{\WSkp b c}) & \cdot\ \frac{\gamma(\text{a b})}{\Count(\text{a b \Skp}) \ContCountIp(\text{\WSkp b \WSkp})} \nonumber \\
+    &+& \ContCountIp(\text{\WSkp c})        & \cdot\ \frac{\gamma(\text{a b}) \gamma(\text{b})}{\Count(\text{a b \Skp}) \ContCountIp(\text{\WSkp b \WSkp}) \ContCountIp(\text{\WSkp \WSkp})} \nonumber
+\end{align}
+
+\clearpage
+\section{Generalized Language Model}
+
+\newcommand{\ProbGLMcab}[2]
+  {\frac{\DiscountedCount(\text{a b c}) + \frac{\gamma(\text{a b})}{2}\left(#1 + #2\right)}{\Count(\text{a b \Skp})}}
+\newcommand{\ProbGLMcsb}[1]
+  {\frac{\DiscountedCount*(\text{\WSkp \Skp b c}) + \frac{\gamma(\text{\Skp b})}{1} #1}{\ContCountIp(\text{\WSkp \Skp b \WSkp})}}
+\newcommand{\ProbGLMcas}[1]
+  {\frac{\DiscountedCount*(\text{\WSkp a \Skp c}) + \frac{\gamma(\text{a \Skp})}{1} #1}{\ContCountIp(\text{\WSkp a \Skp \WSkp})}}
+\newcommand{\ProbGLMcss}
+  {\frac{\ContCountIp(\text{\WSkp \Skp \Skp c})}{\ContCountIp(\text{\WSkp \Skp \Skp \WSkp})}}
+
+Sample expansion for $\ProbGLM{\text{c}}{\text{a b}}$, assuming the sequence
+``$\text{\text{a b c}}$'' was seen:
+\begin{align}
+  \ProbGLM {\text{c}}{\text{a b}}       &= \ProbGLMcab{\ProbGLM*{\text{c}}{\text{\Skp b}}}{\ProbGLM*{\text{c}}{\text{a \Skp}}} \\ \ProbGLM*{\text{c}}{\text{\Skp b}}    &= \ProbGLMcsb{\ProbGLM*{\text{c}}{\text{\Skp \Skp}}} \\
+  \ProbGLM*{\text{c}}{\text{a \Skp}}    &= \ProbGLMcas{\ProbGLM*{\text{c}}{\text{\Skp \Skp}}} \\
+  \ProbGLM*{\text{c}}{\text{\Skp \Skp}} &= \ProbGLMcss
+\end{align}
+
+Together:
+\begin{align}
+  &\ProbGLM{\text{c}}{\text{a b}} =\\
+  &\qquad \ProbGLMcab{\ProbGLMcsb{\ProbGLMcss}}
+                     {\ProbGLMcas{\ProbGLMcss}} \nonumber
+\end{align}
+
+By using the distributive property:
+\begin{align}
+  \ProbGLM {\text{c}}{\text{a b}} =
+    & & \DiscountedCount (\text{a b c})          &             \cdot\  \frac{1}{\Count(\text{a b \Skp})} \\
+    &+& \DiscountedCount*(\text{\WSkp \Skp b c}) &             \cdot\  \frac{\gamma(\text{a b})}{2 \Count(\text{a b \Skp}) \ContCountIp(\text{\WSkp \Skp b \WSkp})} \nonumber \\
+    &+& \DiscountedCount*(\text{\WSkp a \Skp c}) &             \cdot\  \frac{\gamma(\text{a b})}{2 \Count(\text{a b \Skp}) \ContCountIp(\text{\WSkp a \Skp \WSkp})} \nonumber \\
+    &+& \ContCountIp(\text{\WSkp\Skp \Skp c})    &             \cdot\  \frac{\gamma(\text{a b})}{2 \cdot 1 \Count(\text{a b \Skp})} \Big(  \frac{\gamma(\text{\Skp b})}{\ContCountIp(\text{\WSkp \Skp b \WSkp}) \ContCountIp(\text{\WSkp \Skp \Skp \WSkp})} \: + \nonumber \\
+    & &                                          & \phantom{{} \cdot\  \frac{\gamma(\text{a b})}{2 \cdot 1 \Count(\text{a b \Skp})} \Big(} \frac{\gamma(\text{a \Skp})}{\ContCountIp(\text{\WSkp a \Skp \WSkp}) \ContCountIp(\text{\WSkp \Skp \Skp \WSkp})} \ \Big) \nonumber
+\end{align}

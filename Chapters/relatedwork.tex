@@ -1,0 +1,46 @@
+\chapter{Related Work}
+
+\begin{draft}
+Commonly to solve the described problem Viterbi or beam search algorithms are
+used \mbref{JurafskyMartin2009}.
+\end{draft}
+
+\todo[inline]{Is there some work on expressing language models as weighted sums?}
+
+% ------------------------------------------------------------------------------
+\section{State-of-the-art Language Models}
+
+\begin{draft}
+This section summarizes the state-of-the-art language models considered in this
+work.
+And their origins?
+\end{draft}
+
+The currently most commonly used \parencite{JurafskyMartin2009,Chelba2013}
+technique for estimating language models is \emph{Modified Kneser-Ney Smoothing}
+by \cite{ChenGoodman1996,ChenGoodman1998,ChenGoodman1999}, based on
+\emph{Kneser-Ney Smoothing} by \cite{KneserNey1995}.
+Very recently \cite{Pickhardt2014} provided a generalization of this technique,
+the \emph{Generalized Language Model}.
+
+\begin{draft}
+Justify selection of MKN and GLM over recently popular LMs from
+\parencite{Chelba2013}.
+
+Mention \emph{Nerual Network Language Models} \parencite{Bengio2003,Mikolov2012}
+(do we not use them because they can not be represented as weighted sums).
+\end{draft}
+
+An in-depth summary of Modified Kneser-Ney Smoothing and the Generalized
+Language Model is given in \cref{ch:review-lm}.
+
+% ------------------------------------------------------------------------------
+\section{Top-\emph{k} Joining Techniques}
+
+\Lukas[inline]{I would much rather summarize top-$k$ joining techniques in
+\cref{ch:top-k-joining} as the task is clearly defined there, and we can have
+more in-depth discussion about it.}
+
+\begin{draft}
+Reference to \cref{ch:top-k-joining}.
+\end{draft}

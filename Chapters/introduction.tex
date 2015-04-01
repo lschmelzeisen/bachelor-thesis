@@ -1,0 +1,104 @@
+\chapter{Introduction}
+
+\begin{draft}
+Introduction pargraph: We solve noisy channel argmax with Top-$k$ joining
+techniques.
+\end{draft}
+
+The \emph{noisy channel model} is a commonly applied concept in natural language
+processing.
+As first described by \cite{Shannon1948}, it consists of a transmitter, who
+tries to pass a message over a channel to a receiver.
+The channel is called noisy, because it may distort the message in any way.
+The task is then to reconstruct the original message, from the recieved
+distorted one.
+
+This metaphor has many applications, such as spelling correction
+\parencite{JurafskyMartin2009,Manning2008,Kernighan1990,Mays1991},
+%          \------------- non-word-errors ------------/    \- real-word-erros
+part-of-speech-tagging \parencite{Church1988}, machine translation
+\parencite{Brown1990}, speech recognition or text compression.
+\todo{Find newer citations. Maybe from \cite{Bickel2005}}
+% JurafskyMartin2009: Chapter 5: Spelling Correction
+%                     Chapter 9: Speech Recognition!
+
+Formalized, this task of the noisy channel model is to find the dispatched
+message~$m$, which is the sequence of words $s = w_1^n = w_1 \ldots w_n$ in a
+langauge~$\Language$ that is most likely to be the source of the received
+distorted observation~$o$:
+\begin{align}
+  \label{eq:noisychannel}
+  m &= \Argmax_{s \in \Language} \Prob{s}{o} \\
+  \intertext{Using Bayes' theorem one can rewrite this to:}
+  \label{eq:noisychannelbayes}
+  \begin{split}
+    m &= \Argmax_{s \in \Language} \frac{\Prob{o}{s} \cdot \Prob{s}}{\Prob{o}} \\
+      &= \Argmax_{s \in \Language} \Prob{o}{s} \cdot \Prob{s}
+  \end{split}
+\end{align}
+With the observation likelihood~$\Prob{o}{s}$ and the prior
+probability~$\Prob{s}$.
+Omitting the denominator~$\Prob{o}$ is valid because it is a constant that does
+not depend on the argument~$s$.
+Most commonly the observation likelihood is some domain specific probability
+distribution $\Prob[\text{Domain}]{o}{s}$, for the prior probability
+\emph{statistical language models} are used.
+They assign a probability $\Prob[\text{LM}]{s}$ to a sequence of words
+$s = w_1^n = w_1 \ldots w_n$ by means of a probability distribution, created
+through statistical analysis of text corpora.
+Thus the noisy channel model is a natural combintion of domain knowledge with
+language information.
+
+\Lukas{It is possible to omit this paragraph, but I think it provides
+clarification.}
+For example, to translate French into English, \cite{Brown1990} defined a
+probability distribution $\Prob[\text{Translate}]{e}{f}$, that would give the
+probability for each English sentence $e$ to be the result of translating
+the French sentence $f$ into English.
+To obtain the most likely translation, the $e$ that maximizes that probability
+has to be found.
+With applying Bayes' theorem they combine their distribution with language
+models and arrive at
+$\Argmax_{e} \Prob[\text{Translate}]{f}{e} \cdot \Prob[\text{LM}]{e}$, which is
+just \cref{eq:noisychannelbayes}.
+
+A major problem in creating statistical language models from text corpora, is
+that even for very large corpora, most possible word sequences in a language
+will not be observed in training \noref.
+A common approximation are \emph{$n$-gram models}, in which it is assumed that
+the probability of a word only depdens on the $n\!-\!1$~previous words, thus
+only sequences of length $n$ have to be considered.
+
+State-of-the-art language models use $n$-grams with $n$ as large as $5$
+\mbref{JurafskyMartin2009,Goodman2001}.
+\begin{draft}
+\Cref{eq:noisychannel} is hard to calculate for such large $n$.
+So we want to optimize that.
+\end{draft}
+
+\begin{draft}
+We try to use top-$k$ joining.
+
+We are interested in \emph{next word prediction} $\NWP$ and
+\emph{next keystroke savings} $\NKSS$.
+
+So we have to map our problem on the realm of top-$k$ joining.
+
+We apply that technique.
+
+May be good because we do not have to prune, and pruning might be bad
+\parencite{Stolcke2000,Chelba2013,Chelba2010,Siivola2007}.
+
+Most non-trivial top-\emph{k} joining algorithms require a monotone scoring
+function, some further improvements can be made if using a linear scoring
+function~\parencite{Ilyas2008}.
+\end{draft}
+
+\begin{draft}
+Introduction to next word predition.
+\todo{Read \cite{Bickel2005} for info.}
+\end{draft}
+
+\begin{draft}
+Overview of following chapters.
+\end{draft}

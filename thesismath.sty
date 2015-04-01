@@ -1,0 +1,89 @@
+% Scale
+% see http://tex.stackexchange.com/questions/60453/reducing-font-size-in-equation
+\newcommand*{\Scale}[2][4]{\scalebox{#1}{$#2$}}%
+
+% For conditions after equations
+\newcommand{\Condition}[1]{\Scale[0.85]{(\text{if} \: #1)}}
+
+% Given
+% see http://tex.stackexchange.com/questions/141570/sizing-for-given-that-symbol-vertical-bar
+\newcommand\Givenbase[1][]{\,#1\lvert\,}
+\let\Given\Givenbase
+\newcommand\Sgiven{\Givenbase[\delimsize]}
+\DeclarePairedDelimiterX\Basics[1](){\let\Given\Sgiven #1}
+
+% Set
+% see http://tex.stackexchange.com/questions/13634/define-pretty-sets-in-latex-esp-how-to-do-the-condition-separator
+\newcommand\SetSymbol[1][]{
+  \nonscript\,#1\vert\nonscript\,\mathopen{}\allowbreak
+}
+\DeclarePairedDelimiterX\Set[1]{\{}{\}}%
+  { \renewcommand\Given{\SetSymbol[\delimsize]} #1 }
+
+\newcommand{\DummyArg}{\cdot}
+\newcommand{\DummyIndex}{\bullet}
+
+% Argmax
+\DeclareMathOperator*{\Argmax}{arg\,max}
+
+% Cardinality
+\newcommand{\Cardinality}[1]{\left|#1\right|}
+
+% String Length
+\newcommand{\StringLength}[1]{\left|#1\right|}
+
+% Probability
+\NewDocumentCommand{\Prob}{s o g g}{
+  \IfBooleanTF{#1}{\operatorname{\hat P}}{\operatorname{P}}_{\IfNoValueTF{#2}{\,}{#2}}
+  \IfNoValueTF{#3}{}{(\IfNoValueTF{#4}{#3}{#3 \Given #4})}
+}
+\NewDocumentCommand{\ProbMKN}{s g g}{
+  \IfBooleanTF{#1}{\Prob*[\text{MKN}]{#2}{#3}}
+                  {\Prob [\text{MKN}]{#2}{#3}}
+}
+\NewDocumentCommand{\ProbGLM}{s g g}{
+  \IfBooleanTF{#1}{\Prob*[\text{GLM}]{#2}{#3}}
+                  {\Prob [\text{GLM}]{#2}{#3}}
+}
+
+% Counts
+\DeclareMathOperator{\Count}{c}
+\DeclareMathOperator{\ContCount}{N}
+% roman numbering because numbers are not allowed in commands
+\newcommand{\ContCountIp}  {\ContCount_{\Scale[0.5]{1+}}}
+\newcommand{\ContCountI}   {\ContCount_{\Scale[0.5]{1 }}}
+\newcommand{\ContCountII}  {\ContCount_{\Scale[0.5]{2 }}}
+\newcommand{\ContCountIIIp}{\ContCount_{\Scale[0.5]{3+}}}
+\DeclareMathOperator{\Discount}{D}
+\NewDocumentCommand{\DiscountedCount}{s}{
+  \operatorname{\IfBooleanTF{#1}{\ContCountIp}{\Count}^d}
+}
+
+% Absolute Skip
+\newcommand{\Skp}{\ensuremath{\,\Scale[0.7]{\square}\,}}
+% Continuation Skip
+\newcommand{\WSkp}{\ensuremath{\,\bullet\,}}
+
+% Language
+\newcommand{\Language}{\mathcal{L}}
+
+% Next Word Prediction
+\NewDocumentCommand{\NWP}{g}{
+  \operatorname{NWP}\IfNoValueTF{#1}{}{(#1)}
+}
+
+% Next Keystroke Savings
+\NewDocumentCommand{\NKSS}{g}{
+  \operatorname{NKSS}\IfNoValueTF{#1}{}{(#1)}
+}
+
+% Weighted Sum
+%\DeclareMathOperator\SumWeight{\lambda}
+\newcommand*\SumWeight{\lambda}
+%\DeclareMathOperator\SumArg{\alpha}
+\newcommand*\SumArg{\alpha}
+
+\newcommand{\SeenHistory}{h^\prime}
+
+%\DeclareMathOperator\History{\eta}
+\newcommand*\History{\eta}

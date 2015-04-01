@@ -1,0 +1,183 @@
+\chapter{Top-\emph{k} Joining Language Models}
+\label{ch:top-k-joining}
+
+\lstset{
+  language=SQL,
+  %basicstyle=\ttfamily,
+  emph={arg,Pattern,Pattern1,PatternN,P_LM},
+  emphstyle=\textit,
+  deletekeywords={count} % Used as column name, don't want to escape it though.
+}
+
+This chapter explains how to efficiently compute arg-max-queries of language
+model $\Prob[\text{LM}]$ using top-$k$ joining techniques.
+
+The task is to efficiently compute the following expression:
+\begin{equation}
+  \Argmax_{t \in T} \Prob[\text{LM}]{t}{h}
+\end{equation}
+Where $t$ is a token in the set of all tokens $T$, $\Prob[\text{LM}]$ is a
+language model, that can be expressed as a weighted sum (as described in
+\cref{ch:weightedsum}), and $h$ is the conditional history, a sequence
+of tokens.
+
+Given a language model $\Prob[\text{LM}]$ as a scoring function, if we
+imagine our input data forming database relations, we can express our
+arg-max-query as a SQL-\texttt{SELECT}-Request, as given in \cref{lst:topksql}.
+
+\begin{lstlisting}[
+  label = {lst:topksql},
+  float,
+  caption = {\todo[inline]{Example SQL-Request Caption}},
+]
+  SELECT
+    Token.token AS arg,
+    $\Prob[\text{LM}]$(Pattern1.count, ..., PatternN.count) AS score
+  FROM Token
+  LEFT OUTER JOIN Pattern1
+    ON history(Pattern1) + arg = Pattern1.sequence
+  ...
+  LEFT OUTER JOIN PatternN
+    ON history(PatternN) + arg = PatternN.sequence
+  ORDER BY score DESC
+  LIMIT k;
+\end{lstlisting}
+
+\todo[inline]{Where \inlinecode{history} and plus is concat.}
+\todo[inline]{Explain \inlinecode{LEFT OUTER JOIN}.}
+
+Our data model is thus: One input relation \inlinecode{Token} that stores
+all possible tokens \inlinecode{arg}, over which we want to compute:
+\begin{equation}
+  \Argmax_{\text{\inlinecode{arg}} \, \in \, \text{\inlinecode{Token}}}
+    \Prob[\text{LM}]{\text{\inlinecode{arg}}}{\text{\inlinecode{history}}}
+\end{equation}
+Additionally we have $n$ input relations
+\inlinecode{Pattern1} to \inlinecode{PatternN} that contain pairs
+of \inlinecode{sequence}s and the sequence's occurrence \inlinecode{count} as
+columns.
+Each \inlinecode{Pattern} relation contains exactly these sequences that fit the
+relations pattern.
+
+For an example database state and fully expanded SQL-Request see
+\cref{app:sql-example}.
+
+A naïve method to solve this query would
+\begin{inparaenum}[(1)]
+  \item produce all possible object combinations that satisfy the join
+    condition,
+  \item order results by scoring function $\Prob[\text{LM}]$, and
+  \item discard non top-$k$ objects (those that do not have the $k$ largest
+    scores).
+\end{inparaenum}
+
+Considering that in reality only small values of $k$ are queried, this approach
+can be deemed as rather wasteful, as large numbers of objects would have to be
+discarded.
+Optimally we would like to cherry-pick the top-$k$ join results and only
+score and order those.
+Relying on the fact that we are dealing with a \emph{monotone} scoring function
+we approximate this by sorting our input relations by their counts.
+\cite{Ilyas2008} survey a wide number of techniques to produces top-$k$ results
+with a monotone scoring function from sorted relations.
+
+Among other things, top-$k$ joining techniques differ on the type of join
+conditions they can be applied to.
+One particularly optimizable join operation is the \emph{equi-join}:
+the join that checks for equality over a unique key attribute present in all
+relations.
+Equi-joins have the advantage that it is possible to form equivalence classes
+over an object's key attribute to determine which join results an object is
+part of.
+Using this, the \emph{hash join} algorithm can efficiently generate join
+results.
+
+It is possible to view our join operations as an instance of equi-join:
+By filtering each input relation \inlinecode{Pattern} to only contain
+objects whose sequences begin with the requested history, objects'
+sequences only differ on the last token (our argument token \inlinecode{arg}).
+Our join condition thus reduces to
+\inlinecode{arg = lastToken(Pattern.sequence)}.
+
+\todo[inline]{Read \textit{``2013 BlanasPatel Memory Footprint Matters Efficient
+Equi-Join Algorithms fro Main Memory Data Processing.pdf''} for possibly better
+join algorithm}.
+
+The technique for obtaining these both sorted and filtered relations is
+explained in \cref{sec:sorted-and-filtered-access}.
+
+\todo[inline]{Do we want discussion here rather than explanation?}
+
+The algorithm used to produce top-$k$ results is presented in
+\cref{sec:algorithm}.
+
+% ------------------------------------------------------------------------------
+\section{Remarks}
+
+% ------------------------------------------------------------------------------
+\section{Sorted and Filtered Access}
+\label{sec:sorted-and-filtered-access}
+
+As explained we require a data structure for efficiently retrieving all
+sequences whose first to second to last words match a requested string $h$.
+Additionally we want to specify that the last word has to contain $p$ as a
+prefix, in order to support efficient Next-Keystroke-Savings $\NKSS$
+computation.
+\mbox{$\Set{\, w_1^n \: \Given \: w_1^{n-1} = h \; \land \; b \:\text{is prefix of}\: w_n \,}$}
+which is equivalent to
+\mbox{$\Set{\, w_1^n \: \Given \: \,}$}
+\begin{equation*}
+  \underbracket{\enskip w_1 \qquad w_2 \qquad \ldots \qquad w_{n-1} \enskip}
+    _\text{matches $h$}
+  \quad
+  \underbracket{\enskip w_n \enskip}_\text{starts with $b$}
+\end{equation*}
+
+NKSS requires Top-\emph{k} Completion.
+
+Use Completion-Trie \parencite{HsuOttaviano2013}.
+
+\todo[inline]{Explain Completion-Trie here?}
+\todo[inline]{Can we save all patterns in one trie?}
+
+% ------------------------------------------------------------------------------
+\section{Algorithm}
+\label{sec:algorithm}
+
+\subsection{Requirements}
+
+\begin{enumerate}
+  \item Dataset remains the same.
+  \item Scoring function changes on each query.
+  \item Join condition changes on each query!
+\end{enumerate}
+
+\subsection{Algorithm}
+
+There are several techniques for indexing {Rank Join Indices \mbref{Tsaparas et
+al 2003}, Onion Indices \mbref{Chang et al 2000}) which we don't use as history
+changes to often.
+
+Ranked Join Indicies\mbref{Tsaparas et al 2003})
+
+Algorithms that precompute stuff may be general speed up, but not in our case
+since we never expect the same thing to be queried again.
+
+TA \parencite{Fagin2001}.
+
+Rank-Join \parencite{Ilyas2004}.
+
+Evaluate following algorithms:
+
+\begin{enumerate}
+  \item Traditional Rank-Join that generates all possible join combinations
+    after each input.
+  \item Improved version that uses random access for early tuple completion.
+\end{enumerate}
+
+Use observation that if a pattern is seen, it's child patterns' will be seen as
+well.
+
+Clever: How to find T as max of $(p_1^max, p_2^last)$ and $(p_1^last, p_2^max)$.
+
+Clever: Priority-Queue with constant contains and update.
