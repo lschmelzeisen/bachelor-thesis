@@ -78,7 +78,7 @@ Optimally we would like to cherry-pick the top-$k$ join results and only
 score and order those.
 Relying on the fact that we are dealing with a \emph{monotone} scoring function
 we approximate this by sorting our input relations by their counts.
-\cite{Ilyas2008} survey a wide number of techniques to produces top-$k$ results
+\textcite{Ilyas2008} survey a wide number of techniques to produces top-$k$ results
 with a monotone scoring function from sorted relations.
 
 Among other things, top-$k$ joining techniques differ on the type of join
@@ -178,6 +178,7 @@ Evaluate following algorithms:
 Use observation that if a pattern is seen, it's child patterns' will be seen as
 well.
 
-Clever: How to find T as max of $(p_1^max, p_2^last)$ and $(p_1^last, p_2^max)$.
+Clever: How to find T as max of $(p_1^{max}, p_2^{last})$ and
+$(p_1^{last}, p_2^{max})$.
 
 Clever: Priority-Queue with constant contains and update.

@@ -61,10 +61,10 @@ times:
 
 In continuation counts regular skips and continuation skips can be mixed, for
 example:
+\todo{Check this equation!}
 \begin{equation}
   \ContCountIp(\WSkp w \Skp \WSkp) =
     \Cardinality{\left\{ x, y \in \Sigma \,\middle|\, c(x \: w \Skp y) \geq 1 \right\}}
-  \vadjust{\todo{Check this equation!}}
 \end{equation}
 
 To make a clear distinction between ``normal'' counts $\Count(\DummyArg)$ and
@@ -156,7 +156,6 @@ The highest order is computed as:
     \frac{\DiscountedCount(w_1^n) + \frac{\gamma(w_1^{n-1})}{\#_\partial(w_1^{n-1})}
                                     \sum_{j=1}^{\#_\partial(w_1^{n-1})} \ProbGLM*{w_n}{\partial_j w_1^{n-1}}}
          {\Count(w_1^{n-1} \Skp)}
-  \vadjust{\todo{Replace \Skp with \WSkp in $\ContCountIp$ in GLM?}}
 \end{equation}
 Auxiliary definitions $\DiscountedCount, \DiscountedCount*, \gamma$ are the same
 as for Modified Kneser-Ney Smoothing and given in \cref{sec:review-lm-mkn}.
@@ -193,8 +192,9 @@ Subsequently lower order models are computed as:
     \frac{\DiscountedCount*(\WSkp w_1^n) + \frac{\gamma(w_1^{n-1})}{\#_\partial(w_1^{n-1})}
                                      \sum_{j=1}^{\#_\partial(w_1^{n-1})} \ProbGLM*{w_n}{\partial_j w_1^{n-1}}}
          {\ContCountIp(\WSkp w_1^{n-1} \WSkp)}
-  \vadjust{\todo{\WSkp at end of $\ContCountIp$ correct?}}
 \end{equation}
+\todo[inline]{Replace \Skp with \WSkp in $\ContCountIp$ in GLM?}
+\todo[inline]{\WSkp at end of $\ContCountIp$ correct?}
 
 The case of the lowest order occurs when $\#_\partial(w_1^{n-1}) = 0$ and is
 handled similarly to Modified Kneser-Ney Smoothing.

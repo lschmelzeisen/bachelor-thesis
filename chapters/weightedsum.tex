@@ -94,9 +94,9 @@ Building on this we can define:
   \SumWeight_i^h &= \frac{\prod_{j = 1}^{i - 1} \gamma(\History_j(\SeenHistory))}
                         {\Count(\SeenHistory \Skp) \prod_{k = 2}^{i} \ContCountIp(\WSkp \History_k(\SeenHistory) \WSkp)}
 \end{align}
+\todo[inline]{Or better recursively? Or alternatively?}
 \begin{equation}
   \SumWeight_i^h = \frac{1}{\Count(\SeenHistory \Skp)} \prod_{j = 2}^i \frac{\gamma(\History_{j-1}(\SeenHistory))}{\ContCountIp(\WSkp \History_j(\SeenHistory) \WSkp)}
-  \vadjust{\todo{Or alternatively? Or better recursively?}}
 \end{equation}
 
 In other words, $\SumArg_i^h(w)$ is the respective frequency count that we take
@@ -125,7 +125,7 @@ $\SumWeight_i^h$) is straightforward and given in \cref{alg:weightedsum-mkn}.
     \State $\SeenHistory \gets h$
     \While{$\Count(\SeenHistory \Skp) = 0$}
       \State $\SeenHistory \gets \SeenHistory\text{.backoff()}$
-             \todo[inline]{Better notation for backoff} 
+             \todo[inline]{Better notation for backoff}
     \EndWhile
     \State $N = \StringLength{\SeenHistory} + 1$
     \State $\SumWeight^h \gets$ new array of size $N$
@@ -155,7 +155,7 @@ $\SumWeight_i^h$) is straightforward and given in \cref{alg:weightedsum-mkn}.
       \Comment{Find first seen history $\SeenHistory$}
     \While{$\Count(\SeenHistory \Skp) = 0$}
       \State $\SeenHistory \gets \SeenHistory\text{.backoff()}$
-             \todo[inline]{Better notation for backoff} 
+             \todo[inline]{Better notation for backoff}
     \EndWhile
     \State $N = \StringLength{\SeenHistory} + 1$
     \State $\SumWeight^h \gets$ new List of size $N$

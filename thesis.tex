@@ -1,17 +1,23 @@
 % Enable warnings about problematic code
 \RequirePackage[l2tabu, orthodox]{nag}
 
-\newcommand*\ThesisTitle{Computing Language Model Arg-Max-Queries Using Top-\emph{k} Joining Techniques\xspace}
-\newcommand*\ThesisName{Lukas Schmelzeisen\xspace}
-\newcommand*\ThesisMail{lukas@uni-koblenz.de\xspace}
-\newcommand*\ThesisDate{\today}
-
 \PassOptionsToPackage{utf8}{inputenc}
 \PassOptionsToPackage{T1}{fontenc}
+\PassOptionsToPackage{ngerman, american}{babel}
 
-\documentclass{thesis}
+\title{Computing Language Model Arg-Max-Queries Using Top-\emph{k} Joining Techniques}
+\author{Lukas Schmelzeisen}
+\date{\today}
 
-\usepackage[ngerman, american]{babel}
+\documentclass[m,bachelor,classicthesis,classicthesistitle]{thesis}
+
+\authormail{lukas@uni-koblenz.de}
+\degreecourse{Informatik}
+\firstreviewer{Prof.~Dr.~Steffen Staab}
+\firstreviewerinfo{Institute for Web Science and Technologies}
+\secondreviewer{Ren{\'e} Pickhardt}
+\secondreviewerinfo{Institute for Web Science and Technologies}
+
 \usepackage{pdflscape}
 \usepackage{tikz}
 
@@ -43,14 +49,10 @@
   \todo[linecolor = Blue, bordercolor = Blue, #1]{Rene: #2}
 }
 
-\newcommand{\noref}{\textcolor{blue}{\footnotesize[Citation needed]}}
-\newcommand{\mbref}[1]{\textcolor{blue}{\footnotesize[Citation: #1?]}}
+\newcommand{\noref}{\textcolor{RoyalBlue}{\footnotesize[Citation needed]}}
+\newcommand{\mbref}[1]{\textcolor{RoyalBlue}{\footnotesize[Citation: #1?]}}
 
 % ==============================================================================
-
-\title{\ThesisTitle}
-\author{\ThesisName}
-\date{\ThesisDate}
 
 \begin{document}
 \frenchspacing
@@ -81,14 +83,16 @@
     \item Terminology: Probability event? Interpolation weight/argument?
   \end{itemize}
 }
+\todo[inline]{Use standalone documents for figures.}
+\todo[inline]{Use etoolbox for ifthenelse in class.}
 
-\pagestyle{scrheadings}
 \tableofcontents
 
 % Mainmatter ===================================================================
 
 \cleardoublepage
 \pagenumbering{arabic}
+\pagestyle{scrheadings}
 
 \include{chapters/introduction}
 \include{chapters/relatedwork}
