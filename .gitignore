@@ -8,7 +8,8 @@
 *.kilepr
 *.log
 *.out
-*.pdf
+thesis.pdf
+proposal.pdf
 *.run.xml
 *.synctex.gz
 *.tdo
