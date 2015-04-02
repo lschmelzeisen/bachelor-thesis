@@ -1,6 +1,12 @@
 \chapter{Formulating Language Models as Weighted Sums}
 \label{ch:weightedsum}
 
+\tikzset{
+  state/.style = {draw, circle, align = center, text centered, text width = 4.2em},
+  invis/.style = {text width = 4.2em},
+  order/.style = {align = center, text centered, text width = 3em, text = Maroon},
+}
+
 This chapter will show how to represent  $\ProbMKN{w_n}{w_1^{n-1}}$ and
 $\ProbGLM{w_n}{w_1^{n-1}}$ as weighted sums of terms depending on $w_n$ for a
 fixed history $h = w_1^{n-1}$ and an  arbitrary argument $w = w_n$.
@@ -53,98 +59,126 @@ Forfeiting this assumption will add considerable complexity in the case
 of Generalized Language Models.
 
 % ------------------------------------------------------------------------------
+\clearpage %TODO
 \section{Modified Kneser-Ney Smoothing}
 
-The first step in computing $\ProbMKN{w}{h}$ is backing off the history $h$
-until $h \Skp$ is seen for the first time (\cref{eq:mkn-backoff}).
-After this one pair of frequency counts $\Count(h \: w)$ and $\Count(h \Skp)$
-are taken (\cref{eq:mkn-high}) and we shorten the
-history by one word.
-We continue this process with continuation counts $\ContCountIp(\WSkp h \: w)$
-and $\ContCountIp(\WSkp h \WSkp)$ (\cref{eq:mkn-low}) until our history is
-empty.
-Lastly we take the frequency counts of the lowest order
-(\cref{eq:mkn-lowest}).
-All but the lowest order are interpolated with the next lower order via the
-interpolation weight $\gamma(h)$.
+Modified Kneser-Ney Smoothed probabilities $\ProbMKN{w}{h}$ are calculated as
+follows:
+\begin{enumerate}
+  \item Backing-off: Leave out words at the beginning of the history $h$, until
+    $h \Skp$ is seen for the first time (\cref{eq:mkn-backoff}).
+  \item Highest order: Take frequency counts $\DiscountedCount(h \: w)$ and
+    $\Count(h \Skp)$ (\cref{eq:mkn-high}) and shorten the history by one word.
+  \item Lower orders: Take continuation counts $\DiscountedCount*(\WSkp h \: w)$
+    and $\ContCountIp(\WSkp h \WSkp)$ (\cref{eq:mkn-low}) and shorten the
+    history further until it is empty.
+  \item Lowest order: Take continuation counts $\ContCountIp(\WSkp w)$ and
+    $\ContCountIp(\WSkp \WSkp)$ (\cref{eq:mkn-lowest}).
+\end{enumerate}
+All counts except those of the lowest order are discounted using
+$\DiscountedCount$ and $\DiscountedCount*$ to interpolate that order with the
+following by the weight $\gamma(h)$.
+This process of interpolation different orders is visualized in
+\cref{fig:history-mkn}.
 
+\begin{figure}
+  \centering
+  \begin{tikzpicture}
+    \begin{scope}[node distance = 7em]
+      \node [state] (highest)                    {$w_1 \: w_2 \: w_3$};
+      \node [state] (lower1)  [below of=highest] {$w_2 \: w_3$};
+      \node [state] (lower2)  [below of=lower1]  {$w_3$};
+      \node [state] (lowest)  [below of=lower2]  {$\varnothing$};
+    \end{scope}
+
+    \begin{scope}[node distance = 5.5em]
+      \node [order] [right of=highest] {$\ProbMKN {w_4}{w_1 w_2 w_3}$};
+      \node [order] [right of=lower1]  {$\ProbMKN*{w_4}{w_2 w_3}$};
+      \node [order] [right of=lower2]  {$\ProbMKN*{w_4}{w_3}$};
+      \node [order] [right of=lowest]  {$\ProbMKN*{w_4}$};
+    \end{scope}
+
+    \begin{scope}[node distance = 6em]
+      \node [order] [left of=highest] {Highest order};
+      \node [order] [left of=lower1]  {1st Lower order};
+      \node [order] [left of=lower2]  {2nd Lower order};
+      \node [order] [left of=lowest]  {Lowest order};
+    \end{scope}
+
+    \path[->, >=latex, thick]
+      (highest) edge node [right, order] {$\textstyle{\gamma(w_1 w_2 w_3)}$} (lower1)
+      (lower1)  edge node [right, order] {$\textstyle{\gamma(w_2 w_3)}$}     (lower2)
+      (lower2)  edge node [right, order] {$\textstyle{\gamma(w_3)}$}         (lowest);
+  \end{tikzpicture}
+  \caption{
+    Visualization of interpolation of different orders during computation of
+    $\ProbMKN{w_4}{w_1 w_2 w_3}$.
+    Centered are the stages of the history.
+    It is assumed that the history $w_1 w_2 w_3$ was seen during training, so
+    that no backing-off is necessary.
+    Orders are combined with with interpolation weight $\gamma$.
+  }
+  %\caption{States of the history $h = w_1 w_2 w_3$ during calculation of
+  %  $\ProbMKN{w}{h}$. It is assumed that the history is seen, so that no
+  %  back-off is necessary.}
+  \label{fig:history-mkn}
+\end{figure}
+
+The first step in expressing $\ProbMKN{w}{h}$ as a weighted sum is finding the
+number $N$ of sum weights.
+In the case of Modified Kneser-Ney Smoothing this is exactly the number of
+interpolation orders.
 Let $\SeenHistory$ be the first seen history that may be the result of backing
 off given history $h$ a number of times.
-The count $N$ of interpolation weights is then the number of words in
-the first seen history $\SeenHistory$ plus one.
+The number $N$ of sum weights is then the number of words in the first seen
+history $\SeenHistory$ plus one.
 \begin{equation}
   N = \StringLength{\SeenHistory} + 1
 \end{equation}
 
-We define a helper function $\History_i(w_1^n)$ that gives the history for the
-$i$th order model:
+The next step is to find the actual terms $\SumArg_i^h(w)$ that shall be
+weighted added.
+When looking at the equations that define Modified Kneser-Ney we note the fact
+that only the count terms in the numerators depend on the probability event $w$.
+Exactly these terms compose our sum arguments:
 \begin{equation}
-  \History_i(w_1^n) = w_i^n
-\end{equation}
-
-Building on this we can define:
-\begin{align}
-  \SumArg_i^h(w) &=
+  \SumArg_i^h(w) =
     \begin{dcases*}
       \Count(w)                                              & if $N = 1$ \\
       \DiscountedCount(\SeenHistory \: w)                    & if $N \neq 1 \land i = 1$ \\
       \DiscountedCount*(\WSkp \History_i(\SeenHistory) \: w) & if $N \neq 1 \land 1 < i < N$ \\
       \ContCountIp(\WSkp w)                                  & if $N \neq 1 \land i = N$
-    \end{dcases*} \\
-  \SumWeight_i^h &= \frac{\prod_{j = 1}^{i - 1} \gamma(\History_j(\SeenHistory))}
+    \end{dcases*}
+\end{equation}
+Where $\History_i(w_1^n) = w_i^n$ is a helper mapping that gives the history
+of the $i$th interpolation order.
+
+Lastly we need to define the actual sum weights $\SumWeight_i^h$.
+We note that --- because each order is interpolated with the weight $\gamma$ of
+the previous order --- each order is in total weighted by the product of the
+$\gamma$s of all previous orders.
+Additionally lower order models occur occur in numerators, because of that we
+the are also weighted by all previous denominator counts.
+Building on this we can define:
+\begin{equation}
+  \SumWeight_i^h = \frac{\prod_{j = 1}^{i - 1} \gamma(\History_j(\SeenHistory))}
                         {\Count(\SeenHistory \Skp) \prod_{k = 2}^{i} \ContCountIp(\WSkp \History_k(\SeenHistory) \WSkp)}
-\end{align}
+\end{equation}
 \todo[inline]{Or better recursively? Or alternatively?}
 \begin{equation}
   \SumWeight_i^h = \frac{1}{\Count(\SeenHistory \Skp)} \prod_{j = 2}^i \frac{\gamma(\History_{j-1}(\SeenHistory))}{\ContCountIp(\WSkp \History_j(\SeenHistory) \WSkp)}
 \end{equation}
-
-In other words, $\SumArg_i^h(w)$ is the respective frequency count that we take
-on the $i$th order of interpolation.
-The coefficient $\SumWeight_i^h$ weights each $\SumArg$ with the interpolation
-weight $\gamma$ of all higher orders divided by the denominator frequencies of
-all yet encountered orders.
-\todo{Rene: wording ok?}
 
 \todo[inline]{Do we prove that this is actually MKN?}
 
 Specifying an algorithm to compute interpolation weights $\SumWeight_i^h$ that
 minimizes frequency count lookup (using the iterative definition of
 $\SumWeight_i^h$) is straightforward and given in \cref{alg:weightedsum-mkn}.
+\todo{Do we actually show this algorithm, as it is rather simple?}
 
-\begin{algorithm}
-  \caption{\todo[inline]{Weighted Sum MKN Caption}}
-  \label{alg:weightedsum-mkn}
-  \begin{algorithmic}[1]
-    \Require $h$
-      \Comment{History for which to determinate interpolation weights}
-    \Ensure $\SumWeight_i^h$
-      \Comment{Array of interpolation weights}
-
-    \LineComment{Find first seen history $\SeenHistory$}
-    \State $\SeenHistory \gets h$
-    \While{$\Count(\SeenHistory \Skp) = 0$}
-      \State $\SeenHistory \gets \SeenHistory\text{.backoff()}$
-             \todo[inline]{Better notation for backoff}
-    \EndWhile
-    \State $N = \StringLength{\SeenHistory} + 1$
-    \State $\SumWeight^h \gets$ new array of size $N$
-    %\State
-    \State $nominator \gets 1$
-    \State $denominator \gets \Count(\SeenHistory \Skp)$
-    \State $\SumWeight_1^h \gets \frac{1}{denominator}$
-    %\State
-    \State $\History \gets \SeenHistory$
-    \For{$i \gets 2, N$}
-      \State $nominator \gets \gamma(\History) \frac{nominator}{denominator}$
-      \State $\History \gets \History\text{.backoff()}$
-      \State $denominator \gets \ContCountIp(\WSkp \History \WSkp)$
-      \State $\SumWeight_i^h \gets \frac{nominator}{denominator}$
-    \EndFor
-  \end{algorithmic}
-\end{algorithm}
 \begin{algorithm}
   \caption{Computing Modified Kneser-Ney sum weights}
+  \label{alg:weightedsum-mkn}
   \begin{algorithmic}[1]
     \Require $h$
       \Comment{History for which to determinate interpolation weights}
@@ -155,7 +189,7 @@ $\SumWeight_i^h$) is straightforward and given in \cref{alg:weightedsum-mkn}.
       \Comment{Find first seen history $\SeenHistory$}
     \While{$\Count(\SeenHistory \Skp) = 0$}
       \State $\SeenHistory \gets \SeenHistory\text{.backoff()}$
-             \todo[inline]{Better notation for backoff}
+        \todo[inline]{Better notation for backoff}
     \EndWhile
     \State $N = \StringLength{\SeenHistory} + 1$
     \State $\SumWeight^h \gets$ new List of size $N$
@@ -164,12 +198,10 @@ $\SumWeight_i^h$) is straightforward and given in \cref{alg:weightedsum-mkn}.
     \For{$i \gets 2 \mathinner{\ldotp \ldotp} N$}
       \State $\SumWeight_i^h \gets \SumWeight_{i-1}^h \frac{\gamma(\History_{i-1}(\SeenHistory))}{\ContCountIp(\WSkp \History_i(\SeenHistory) \WSkp)}$
         \Comment{Compute lower orders using last order}
+        \todo[inline]{Replace fraction with $x^{-1}$ for better visual?}
     \EndFor
-    \State \todo[inline]{Replace fraction with $x^{-1}$ for better visual?}
   \end{algorithmic}
 \end{algorithm}
-
-\todo[inline]{Do we specify algorithm for MKN weighted sum (as it is rather simple)?}
 
 % ------------------------------------------------------------------------------
 \section{Generalized Language Model}
@@ -193,21 +225,33 @@ Binomial Diamond.
 
 \begin{figure}
   \centering
-  \begin{tikzpicture}[
-    node distance = 6.5em,
-    seq/.style = {draw, circle, align=center, text centered, text width=4.2em},
-  ]
-    \node [seq] (000)                {$w_1 \: w_2 \: w_3$};
+  \begin{tikzpicture}
+    \begin{scope}[node distance = 6.5em]
+      \node [state] (000)                  {$w_1 \: w_2 \: w_3$};
+      \node [invis] (000l) [left  of=000]  {};
+      \node [invis] (000r) [right of=000]  {};
 
-    \node [seq] (010) [below of=000] {$w_1 \: \Skp \: w_3$};
-    \node [seq] (001) [left  of=010] {$w_1 \: w_2 \: \Skp$};
-    \node [seq] (100) [right of=010] {$\Skp \: w_2 \: w_3$};
+      \node [state] (001)  [below of=000l] {$w_1 \: w_2 \: \Skp$};
+      \node [state] (010)  [below of=000]  {$w_1 \: \Skp \: w_3$};
+      \node [state] (100)  [below of=000r] {$\Skp \: w_2 \: w_3$};
 
-    \node [seq] (101) [below of=010] {$\Skp \: w_2 \: \Skp$};
-    \node [seq] (011) [left  of=101] {$w_1 \: \Skp \: \Skp$};
-    \node [seq] (110) [right of=101] {$\Skp \: \Skp \: w_3$};
+      \node [state] (011)  [below of=001] {$w_1 \: \Skp \: \Skp$};
+      \node [state] (101)  [below of=010] {$\Skp \: w_2 \: \Skp$};
+      \node [state] (110)  [below of=100] {$\Skp \: \Skp \: w_3$};
 
-    \node [seq] (111) [below of=101] {$\Skp \: \Skp \: \Skp$};
+      \node [state] (111)  [below of=101] {$\Skp \: \Skp \: \Skp$};
+      \node [invis] (111l) [below of=011] {};
+    \end{scope}
+
+    \begin{scope}[node distance = 6em]
+      \node [order] [left of=000l]  {Highest order};
+      \node [order] [left of=001]   {1st Lower order};
+      \node [order] [left of=011]   {2nd Lower order};
+      \node [order] [left of=111l]  {Lowest order};
+
+      % to get align to center right
+      \node [order] [right of=000r] {};
+    \end{scope}
 
     \path[->, >=latex, thick]
       (000) edge (001)
@@ -226,42 +270,6 @@ Binomial Diamond.
       (110) edge (111);
   \end{tikzpicture}
   \caption{\todo[inline]{Binomial Diamond Caption}}
-\end{figure}
-\begin{figure}
-  \centering
-  \begin{tikzpicture}[
-    node distance = 6.5em,
-    seq/.style = {draw, circle, align=center, text centered, text width=4.2em},
-  ]
-    \node [seq] (000)                {$w_1 \: w_2 \: w_3$};
-
-    \node [seq] (010) [right of=000] {$w_1 \: \Skp \: w_3$};
-    \node [seq] (001) [above of=010] {$w_1 \: w_2 \: \Skp$};
-    \node [seq] (100) [below of=010] {$\Skp \: w_2 \: w_3$};
-
-    \node [seq] (101) [right of=010] {$\Skp \: w_2 \: \Skp$};
-    \node [seq] (011) [above of=101] {$w_1 \: \Skp \: \Skp$};
-    \node [seq] (110) [below of=101] {$\Skp \: \Skp \: w_3$};
-
-    \node [seq] (111) [right of=101] {$\Skp \: \Skp \: \Skp$};
-
-    \path[->, >=latex, thick]
-      (000) edge (001)
-      (000) edge (010)
-      (000) edge (100)
-
-      (001) edge (011)
-      (001) edge (101)
-      (010) edge (011)
-      (010) edge (110)
-      (100) edge (101)
-      (100) edge (110)
-
-      (011) edge (111)
-      (101) edge (111)
-      (110) edge (111);
-  \end{tikzpicture}
-  \caption{\todo[inline]{Decide on graph layout}}
 \end{figure}
 
 \subsection{Bitmagic}

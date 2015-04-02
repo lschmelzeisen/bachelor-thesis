@@ -151,7 +151,7 @@
   nameinlink, % link complete name, not just number
   noabbrev, % do not use abbreviations
 ]{cleveref}
-% Add reference names for listings
+% Add reference names for source code listings
 \crefname{lstlisting}{listing}{listings}
 \Crefname{lstlisting}{Listing}{Listings}
 % Capitalize all reference, regardless of command used.
@@ -178,9 +178,11 @@
 
   \hypersetup{
     % colors for classicthesis
-    urlcolor = webbrown,
-    linkcolor = RoyalBlue,
+    %urlcolor = webbrown,
+    %linkcolor = RoyalBlue,
     %citecolor = webgreen,
+    urlcolor = Maroon,
+    linkcolor = Maroon,
     citecolor = Maroon,
   }
 }\relax

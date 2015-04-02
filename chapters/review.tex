@@ -88,13 +88,26 @@ as follows:
     \frac{\DiscountedCount(w_1^n) + \gamma(w_1^{n-1}) \ProbMKN*{w_n}{w_1^{n-2}}}
          {\Count(w_1^{n-1} \Skp)} \\
 \end{equation}
-
 With the \emph{discounted} count
-$\DiscountedCount(w_1^n) = \max\Set{\Count(w_1^n) - \Discount(\Count(w_1^n)), 0}$.
+${\DiscountedCount(w_1^n) = \max\Set{\Count(w_1^n) - \Discount(\Count(w_1^n)), 0}}$.
 
 The exact definitions of $D(\DummyArg)$ and $\gamma(w_1^{n-1})$ are not
 important in our context, however for the sake of completeness they are given
 in \cref{sec:discounts-interpolation-weights}.
+
+Naturally \cref{eq:mkn-high} is only defined if the denominator
+${\Count(w_1^{n-1} \Skp) > 0}$, that is if the history $w_1^{n-1} \Skp$ was seen
+in training.
+If $w_1^{n-1} \Skp$ was not seen, we perform a so called \emph{``back-off''}
+and set:
+\begin{align}
+  \label{eq:mkn-backoff}
+  \ProbMKN{w_n}{w_1^{n-1}} = \ProbMKN{w_n}{w_1^{n-2}}
+      & & \Condition{\Count(w_1^{n-1} \Skp) = 0}
+\end{align}
+It is common to perform multiple back-offs until the history was actually seen.
+\todo{This should actually not be true, because we increase n-gram length for
+first lower order. How do we handle this in current implementation?}
 
 \begin{draft}
 Essentially, interpolation with a lower order model corresponds to leaving out
@@ -109,25 +122,10 @@ further lower orders:
     \frac{\DiscountedCount*(\WSkp w_1^n) + \gamma(w_1^{n-1}) \ProbMKN*{w_n}{w_1^{n-2}}}
          {\ContCountIp(\WSkp w_1^{n-1} \WSkp)} \\
 \end{equation}
-
 With the \emph{discounted} continuation count
-$\DiscountedCount*(\WSkp w_1^n) = \max\Set{ \ContCountIp(\WSkp w_1^n) - \Discount(\Count(w_1^n)), 0 }$.
-
-Naturally \cref{eq:mkn-high} is only defined if the denominator
-$\Count(w_1^{n-1} \Skp) > 0$, that is if the history $w_1^{n-1} \Skp$ was seen
-in training.
-If $w_1^{n-1} \Skp$ was not seen, we perform a so called \emph{``backoff''}
-and set:
-\begin{align}
-  \label{eq:mkn-backoff}
-  \ProbMKN{w_n}{w_1^{n-1}} = \ProbMKN{w_n}{w_1^{n-2}}
-      & & \Condition{\Count(w_1^{n-1} \Skp) = 0}
-\end{align}
-It is common to perform multiple backoffs until the history was actually seen.
-Backing off for computing lower orders is never necessary, because
-if history $w_1^n$ was seen, $w_1^{n-1}$ was seen as well.
-\todo{This should actually not be true, because we increase n-gram length for
-first lower order. How do we handle this in current implementation?}
+${\DiscountedCount*(\WSkp w_1^n) = \max\Set{ \ContCountIp(\WSkp w_1^n) - \Discount(\Count(w_1^n)), 0 }}$.
+Backing-off to compute lower orders is never necessary, because
+if history $w_1^{n-1}$ was seen, $w_1^{n-2}$ was seen as well.
 
 The lowest order (the probability of a single word) can not be further
 interpolated and we use the relative continuation frequency of that word.
@@ -175,7 +173,7 @@ For instance: $\partial_2(w_1^3) = w_1 \Skp w_3$.
 
 Again as with Modified Kneser-Ney Smoothing, \cref{eq:glm-high} is not
 defined if $w_1^{n-1}$ is unseen and thus our denominator would be zero.
-The backoff step is then performed as:
+The back-off step is then performed as:
 \begin{equation}
   \label{eq:glm-backoff}
   \begin{split}
