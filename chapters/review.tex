@@ -27,7 +27,7 @@ $w_1^n = w_1 \ldots w_n$ occurence in training data.
 Let $\Skp$ be a wildcard (called \emph{``skip''}), that can take the place
 of any word at its location.
 Thus, for example $\Count(\Skp w_1^n)$ is the frequency count of sequences
-in training data who start with any word $x \in \Sigma$ and were the remaining
+in training data that start with any word $x \in \Sigma$ and where the remaining
 words are $w_1^n$:
 \begin{equation}
   \Count(\Skp w_1^n) = \sum_{x \in \Sigma} \Count(x \: w_1^n)

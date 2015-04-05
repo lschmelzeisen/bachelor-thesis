@@ -111,16 +111,13 @@ This process of interpolation different orders is visualized in
       (lower2)  edge node [right, order] {$\textstyle{\gamma(w_3)}$}         (lowest);
   \end{tikzpicture}
   \caption{
-    Visualization of interpolation of different orders during computation of
+    Interpolation of different orders during computation of
     $\ProbMKN{w_4}{w_1 w_2 w_3}$.
-    Centered are the stages of the history.
+    Centered are the histories for each probability.
     It is assumed that the history $w_1 w_2 w_3$ was seen during training, so
     that no backing-off is necessary.
-    Orders are combined with with interpolation weight $\gamma$.
+    Orders are combined with with interpolation weights $\gamma(\DummyArg)$.
   }
-  %\caption{States of the history $h = w_1 w_2 w_3$ during calculation of
-  %  $\ProbMKN{w}{h}$. It is assumed that the history is seen, so that no
-  %  back-off is necessary.}
   \label{fig:history-mkn}
 \end{figure}
 
@@ -157,8 +154,8 @@ Lastly we need to define the actual sum weights $\SumWeight_i^h$.
 We note that --- because each order is interpolated with the weight $\gamma$ of
 the previous order --- each order is in total weighted by the product of the
 $\gamma$s of all previous orders.
-Additionally lower order models occur occur in numerators, because of that we
-the are also weighted by all previous denominator counts.
+Additionally lower order models occur in the numerators of fractions, because of
+that they are weighted by all previous denominator counts as well.
 Building on this we can define:
 \begin{equation}
   \SumWeight_i^h = \frac{\prod_{j = 1}^{i - 1} \gamma(\History_j(\SeenHistory))}
@@ -197,7 +194,7 @@ $\SumWeight_i^h$) is straightforward and given in \cref{alg:weightedsum-mkn}.
       \Comment{Set highest order weight}
     \For{$i \gets 2 \mathinner{\ldotp \ldotp} N$}
       \State $\SumWeight_i^h \gets \SumWeight_{i-1}^h \frac{\gamma(\History_{i-1}(\SeenHistory))}{\ContCountIp(\WSkp \History_i(\SeenHistory) \WSkp)}$
-        \Comment{Compute lower orders using last order}
+        \Comment{Compute lower orders using previous order}
         \todo[inline]{Replace fraction with $x^{-1}$ for better visual?}
     \EndFor
   \end{algorithmic}
@@ -206,22 +203,33 @@ $\SumWeight_i^h$) is straightforward and given in \cref{alg:weightedsum-mkn}.
 % ------------------------------------------------------------------------------
 \section{Generalized Language Model}
 
-The Generalized Language Models interpolates with lower orders differently
-than Modified Kneser-Ney, as described in \cref{sec:review-lm-glm}.
-This section will only consider the definition of the skip operator
-$\partial$ that we use in practice.
-That is, $\partial_j(w_1^{n-1})$ replaces the $j$th non-skip word with a skip.
-\begin{draft}
-The  case of an arbitrary $\partial$ would be to complex.
-\end{draft}
+The difference between a Modified Kneser-Ney language model and a
+Generalized Language Model is the way in which orders are interpolated.
+Instead of just one probability --- that of shortening the history by one ---
+being factored in, in the Generalized Language Model the average of multiple
+probabilities of the next lower order is factored into the higher order
+probability.
 
-The case of Generalized Language Models is related to the Modified-Kneser Ney
-case, although much more complex.
-In a fully expanded Modified-Kneser-Ney term
+This section will not consider the general case were one probability
+$\ProbGLM{w}{h}$ incorporates exactly $\#_\partial(h)$ probabilities
+$\ProbGLM*{w}{\partial_j h}$ of the next lower order.
+Instead only the special case described by \textcite{Pickhardt2014}, that is
+actually used in practice, is examined.
+That is the number of lower order probabilities $\#_\partial(h)$ incorporated
+is set to the number of non-skip words in $h$, and $\partial_j(h)$ is defined as
+replacing the $j$th non-skip word in $h$ with a skip $\Skp$.
 
-\begin{draft}
-Binomial Diamond.
-\end{draft}
+%   -    -    -    -    -    -    -    -    -    -    -    -    -    -    -    -
+\subsection{Binomial Diamond}
+
+The directed graph of \cref{fig:history-glm} visualizes the lower order
+probabilities that factor into those of higher orders, using that definition of
+$\partial_j(h)$.
+The nodes represent the histories $h$ of a probability $\ProbGLM{w_4}{h}$.
+The directed edges represent an immediate dependency, for example the
+probabilities that occur in the definition of
+$\ProbGLM*{w_4}{w_1 w_2 \Skp}$ are $\ProbGLM*{w_4}{w_1 \Skp \Skp}$ and
+$\ProbGLM*{w_4}{\Skp w_2 \Skp}$.
 
 \begin{figure}
   \centering
@@ -269,9 +277,54 @@ Binomial Diamond.
       (101) edge (111)
       (110) edge (111);
   \end{tikzpicture}
-  \caption{\todo[inline]{Binomial Diamond Caption}}
+  \caption{
+    Binomial diamond of order 3 for history $h = w_1 \: w_2 \: w_3$.
+  }
+  \label{fig:history-glm}
 \end{figure}
 
+We call a graphs that represents the inter-dependencies of probabilities during
+the calculation of $\ProbGLM{w}{h}$ the \emph{binomial diamond} of order
+$n = \StringLength{h}$, because of its diamond-like shape, and a number of
+properties:
+
+\begin{enumerate}
+  \item \label{itm:num-layers} If we partition the graph into layers, where
+    layer $k$ contains the histories that have exactly $k$ skip words, the graph
+    has $n + 1$ layers.
+  \item \label{itm:num-childs}  Layer $k$ contains exactly $\binom{n}{k}$ nodes.
+  \item \label{itm:num-edges}   Nodes in layer $k$ have exactly $n - k$ outgoing
+    and $k$ incoming edges.
+  \item \label{itm:num-nodes}  There are $2^n$ nodes in the graph.
+\end{enumerate}
+
+\Cref{itm:num-layers} is due to the fact that layer $k$ includes exactly those
+histories that are part of the $k$th highest of probability.
+
+To explain \cref{itm:num-childs}, it is helpful to imagine replacing words in
+a history as laying a mask of either a skip or a non-skip on top of each word.
+Then the number of nodes in each layer can be understood as permuting the
+skip and non-skip masks on top of the history.
+It is a well known fact that there are exactly $\binom{n}{k}$ permutations of
+$k$ tokens of type A (skips), $l$ tokens of type B (non-skips) and $n = k + l$.
+
+\Cref{itm:num-edges} directly follows from the fact, that each non-skip word
+in a history can be replaced by a skip, and that each skip is the result
+of those replacements.
+
+Lastly, \cref{itm:num-nodes} is a corollary of \cref{itm:num-childs} because
+$\sum_{k=0}^n \binom{n}{k} = 2^n$. This equation be inferred from the binomial
+theorem $(x+ y)^n = \sum_{k=0}^n \binom{n}{k} x^{n-k} y^k$ by setting
+${x = y = 1}$.
+
+Following the model of the binomial diamond will be a major aid in understanding
+the weighted sum representation of the Generalized Language Model.
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Weighted sum}
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Bitmagic}
 
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Computational Complexity}
