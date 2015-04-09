@@ -7,10 +7,10 @@ techniques.
 
 The \emph{noisy channel model} is a commonly applied concept in natural language
 processing.
-As first described by \textcite{Shannon1948}, it consists of a transmitter, who
+As first described by \textcite{Shannon1948}, it consists of a transmitter that
 tries to pass a message over a channel to a receiver.
 The channel is called noisy, because it may distort the message in any way.
-The task is then to reconstruct the original message, from the recieved
+The task is then to reconstruct the original message, from the recieved,
 distorted one.
 
 This metaphor has many applications, such as spelling correction
@@ -23,17 +23,17 @@ part-of-speech-tagging \parencite{Church1988}, machine translation
 %                     Chapter 9: Speech Recognition!
 
 Formalized, this task of the noisy channel model is to find the dispatched
-message~$m$, which is the sequence of words $s = w_1^n = w_1 \ldots w_n$ in a
-langauge~$\Language$ that is most likely to be the source of the received
-distorted observation~$o$:
+message~$m$, which in our context is the sequence of words
+$s = w_1^n = w_1 \ldots w_n$ in a langauge~$\Language$ that is most likely to be
+the source of the received, distorted observation~$o$:
 \begin{align}
   \label{eq:noisychannel}
   m &= \Argmax_{s \in \Language} \Prob{s}{o} \\
   \intertext{Using Bayes' theorem one can rewrite this to:}
   \label{eq:noisychannelbayes}
   \begin{split}
-    m &= \Argmax_{s \in \Language} \frac{\Prob{o}{s} \cdot \Prob{s}}{\Prob{o}} \\
-      &= \Argmax_{s \in \Language} \Prob{o}{s} \cdot \Prob{s}
+    m = \Argmax_{s \in \Language} \frac{\Prob{o}{s} \cdot \Prob{s}}{\Prob{o}}
+      = \Argmax_{s \in \Language} \Prob{o}{s} \cdot \Prob{s}
   \end{split}
 \end{align}
 With the observation likelihood~$\Prob{o}{s}$ and the prior
@@ -41,7 +41,7 @@ probability~$\Prob{s}$.
 Omitting the denominator~$\Prob{o}$ is valid because it is a constant that does
 not depend on the argument~$s$.
 Most commonly the observation likelihood is some domain specific probability
-distribution $\Prob[\text{Domain}]{o}{s}$, for the prior probability
+distribution $\Prob[\text{Domain}]{o}{s}$; for the prior probability
 \emph{statistical language models} are used.
 They assign a probability $\Prob[\text{LM}]{s}$ to a sequence of words
 $s = w_1^n = w_1 \ldots w_n$ by means of a probability distribution, created

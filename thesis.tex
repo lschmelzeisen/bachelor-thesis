@@ -22,6 +22,7 @@
 \usepackage{tikz}
 
 % TODO
+\usepackage{nicefrac}
 \usepackage{paralist}
 \newcommand{\inlinecode}[1]{\lstinline[columns=fixed]{#1}}
 
@@ -43,10 +44,10 @@
 }
 
 \newcommand*\Lukas[2][]{
-  \todo[linecolor = Cyan, bordercolor = Cyan, #1]{Lukas: #2}
+  \todo[linecolor = Cyan, bordercolor = Cyan, #1]{\textcolor{Cyan}{Lukas}: #2}
 }
 \newcommand*\Rene[2][]{
-  \todo[linecolor = Blue, bordercolor = Blue, #1]{Rene: #2}
+  \todo[linecolor = Blue, bordercolor = Blue, #1]{\textcolor{Blue}{Rene}: #2}
 }
 
 \newcommand{\noref}{\textcolor{RoyalBlue}{\footnotesize[Citation needed]}}
@@ -88,6 +89,7 @@
 \todo[inline]{Use etoolbox for ifthenelse in class.}
 \todo[inline]{Kill warnings.}
 \todo[inline]{Rewrite math package. Use left/right braces for set.}
+\todo[inline]{Use subequations more often?}
 
 \cleardoublepage
 \pdfbookmark[1]{\contentsname}{toc}
