@@ -16,6 +16,10 @@ are described.
       notation or new glm notation)
   \end{itemize}
 }
+\Rene[inline]{In a section like this you would have a sentence like: we follow
+[...] and review basics. for unpublished stuff that is work in progress I think
+marking it and having a statement in the foreword that states that some of the
+stuff in here is new and not your IP seems reasonable.}
 
 % ------------------------------------------------------------------------------
 \section{Notation: Counts and Skips}
@@ -61,15 +65,18 @@ times:
 
 In continuation counts regular skips and continuation skips can be mixed, for
 example:
-\todo{Check this equation!}
+\todo{Check if equation actually corresponds with implementation.}
 \begin{equation}
   \ContCountIp(\WSkp w \Skp \WSkp) =
     \Cardinality{\left\{ x, y \in \Sigma \,\middle|\, c(x \: w \Skp y) \geq 1 \right\}}
 \end{equation}
+\Rene{$k+$ and $1+$ intermixed.}
 
 To make a clear distinction between ``normal'' counts $\Count(\DummyArg)$ and
 continuation counts $\ContCount_{\DummyIndex}(\DummyArg)$, we
 sometimes call the former \emph{absolute} counts.
+
+\todo[inline]{Examples of counting with small text corpus.}
 
 % ------------------------------------------------------------------------------
 \section{Modified Kneser-Ney Smoothing}
@@ -85,7 +92,7 @@ as follows:
 \begin{equation}
   \label{eq:mkn-high}
   \ProbMKN{w_n}{w_1^{n-1}} =
-    \frac{\DiscountedCount(w_1^n) + \gamma(w_1^{n-1}) \ProbMKN*{w_n}{w_1^{n-2}}}
+    \frac{\DiscountedCount(w_1^n) + \gamma(w_1^{n-1}) \ProbMKN*{w_n}{w_2^{n-1}}}
          {\Count(w_1^{n-1} \Skp)} \\
 \end{equation}
 With the \emph{discounted} count
@@ -102,7 +109,7 @@ If $w_1^{n-1} \Skp$ was not seen, we perform a so called \emph{``back-off''}
 and set:
 \begin{align}
   \label{eq:mkn-backoff}
-  \ProbMKN{w_n}{w_1^{n-1}} = \ProbMKN{w_n}{w_1^{n-2}}
+  \ProbMKN{w_n}{w_1^{n-1}} = \ProbMKN{w_n}{w_2^{n-1}}
       & & \Condition{\Count(w_1^{n-1} \Skp) = 0}
 \end{align}
 It is common to perform multiple back-offs until the history was actually seen.
@@ -119,18 +126,19 @@ further lower orders:
 \begin{equation}
   \label{eq:mkn-low}
   \ProbMKN*{w_n}{w_1^{n-1}} =
-    \frac{\DiscountedCount*(\WSkp w_1^n) + \gamma(w_1^{n-1}) \ProbMKN*{w_n}{w_1^{n-2}}}
+    \frac{\DiscountedCount*(\WSkp w_1^n) + \gamma(w_1^{n-1}) \ProbMKN*{w_n}{w_2^{n-1}}}
          {\ContCountIp(\WSkp w_1^{n-1} \WSkp)} \\
 \end{equation}
 With the \emph{discounted} continuation count
 ${\DiscountedCount*(\WSkp w_1^n) = \max\Set{ \ContCountIp(\WSkp w_1^n) - \Discount(\Count(w_1^n)), 0 }}$.
 Backing-off to compute lower orders is never necessary, because
-if history $w_1^{n-1}$ was seen, $w_1^{n-2}$ was seen as well.
+if history $w_1^{n-1}$ was seen, $w_2^{n-1}$ was seen as well.
 
 The lowest order (the probability of a single word) can not be further
 interpolated and we use the relative continuation frequency of that word.
 Similarly if we only want to compute the probability of a single word on the
 highest order, we compute it as the relative frequency of that word:
+\Rene[noline]{Let us discuss this.}
 \begin{subequations}
   \label{eq:mkn-lowest}
   \begin{align}
@@ -148,6 +156,8 @@ Smoothing.
 It is again based on interpolation, though it differs in the way lower order
 models are interpolated.
 The highest order is computed as:
+\Rene[noline]{I'm unsure whether I understand the semantics of $\#_\partial$
+correctly.}
 \begin{equation}
   \label{eq:glm-high}
   \ProbGLM{w_n}{w_1^{n-1}} =

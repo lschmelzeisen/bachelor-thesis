@@ -22,6 +22,9 @@ part-of-speech-tagging \parencite{Church1988}, machine translation
 % JurafskyMartin2009: Chapter 5: Spelling Correction
 %                     Chapter 9: Speech Recognition!
 
+\Rene[noline]{Probability space unclear. Most of the time not exactly stated
+when talking about Noisy Channel Theorem. Maybe not bring it up in bachelor
+thesis.}
 Formalized, this task of the noisy channel model is to find the dispatched
 message~$m$, which in our context is the sequence of words
 $s = w_1^n = w_1 \ldots w_n$ in a langauge~$\Language$ that is most likely to be
@@ -68,6 +71,7 @@ will not be observed in training \noref.
 A common approximation are \emph{$n$-gram models}, in which it is assumed that
 the probability of a word only depdens on the $n\!-\!1$~previous words, thus
 only sequences of length $n$ have to be considered.
+\Rene{Markov assumption.}
 
 State-of-the-art language models use $n$-grams with $n$ as large as $5$
 \mbref{JurafskyMartin2009,Goodman2001}.
@@ -102,3 +106,5 @@ Introduction to next word predition.
 \begin{draft}
 Overview of following chapters.
 \end{draft}
+
+\Rene[inline]{Context info maybe needs to be moved to foundation chapter?}
