@@ -1,9 +1,19 @@
+% Math packages
+\RequirePackage{amssymb}
+\RequirePackage{mathtools}
+
+% Command helper library
+\RequirePackage{xparse}
+
 % Scale
 % see http://tex.stackexchange.com/questions/60453/reducing-font-size-in-equation
 \newcommand*{\Scale}[2][4]{\scalebox{#1}{$#2$}}%
 
 % For conditions after equations
 \newcommand{\Condition}[1]{\Scale[0.85]{(\text{if} \: #1)}}
+
+% Set of natural numbers
+\newcommand*\NaturalNumbers{\mathbb{N}}
 
 % Given
 % see http://tex.stackexchange.com/questions/141570/sizing-for-given-that-symbol-vertical-bar

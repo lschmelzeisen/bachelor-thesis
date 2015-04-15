@@ -1,13 +1,6 @@
 \chapter{Formulating Language Models as Weighted Sums}
 \label{ch:weightedsum}
 
-\tikzset{
-  state/.style  = {draw, circle, align = center, text centered, text width = 4.2em},
-  invis/.style  = {text width = 4.2em},
-  order/.style  = {align = center, text centered, text width = 4em, text = Maroon},
-  number/.style = {xshift = 1em, text = Maroon},
-}
-
 \Rene[noline]{I'm unsure whether you want to describe it in this way. Actually
 you also want to state that you can calculate alphas relatively easy in
 descending order. Does it make sense to discuss the general problem here
@@ -90,33 +83,7 @@ This process of interpolation different orders is visualized in
 
 \begin{figure}
   \centering
-  \begin{tikzpicture}
-    \begin{scope}[node distance = 7em]
-      \node [state] (highest)                    {$w_1 \: w_2 \: w_3$};
-      \node [state] (lower1)  [below of=highest] {$w_2 \: w_3$};
-      \node [state] (lower2)  [below of=lower1]  {$w_3$};
-      \node [state] (lowest)  [below of=lower2]  {$\varnothing$};
-    \end{scope}
-
-    \begin{scope}[node distance = 5.5em]
-      \node [order] [right of=highest] {$\ProbMKN {w_4}{w_1 w_2 w_3}$};
-      \node [order] [right of=lower1]  {$\ProbMKN*{w_4}{w_2 w_3}$};
-      \node [order] [right of=lower2]  {$\ProbMKN*{w_4}{w_3}$};
-      \node [order] [right of=lowest]  {$\ProbMKN*{w_4}$};
-    \end{scope}
-
-    \begin{scope}[node distance = 5em]
-      \node [order] [left of=highest] {Highest order};
-      \node [order] [left of=lower1]  {1st Lower order};
-      \node [order] [left of=lower2]  {2nd Lower order};
-      \node [order] [left of=lowest]  {Lowest order};
-    \end{scope}
-
-    \path[->, >=latex, thick]
-      (highest) edge node [right, order] {$\textstyle{\gamma(w_1 w_2 w_3)}$} (lower1)
-      (lower1)  edge node [right, order] {$\textstyle{\gamma(w_2 w_3)}$}     (lower2)
-      (lower2)  edge node [right, order] {$\textstyle{\gamma(w_3)}$}         (lowest);
-  \end{tikzpicture}
+  \input{figures/historiesmkn}
   \caption{
     Interpolation of different orders during computation of
     $\ProbMKN{w_4}{w_1 w_2 w_3}$.
@@ -217,6 +184,44 @@ $\SumWeight_i^h$) is straightforward and given in \cref{alg:weightedsum-mkn}.
   \end{algorithmic}
 \end{algorithm}
 
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Proof}
+
+\begin{draft}
+We want to prove that the following equations holds for all $n \in \NaturalNumbers$:
+\begin{align}
+  \ProbMKN {w_n}{w_1^{n-1}} &= \sum_{i=1}^N \SumWeight_i^{w_1^{n-1}} \cdot \SumArg_i^{w_1^{n-1}}(w_n) \\
+  \ProbMKN*{w_n}{w_1^{n-1}} &= \sum_{i=1}^N \SumWeight_i^{w_1^{n-1}} \cdot \SumArg_i^{w_1^{n-1}}(w_n)
+\end{align}
+
+\noindent
+Base case:
+\begin{subequations}
+  \begin{align}
+    \ProbMKN{w_1} &= \sum_{i = 1}^N \SumWeight_i^\varnothing \cdot \SumArg_i^\varnothing(w_1) \\
+                  &= \sum_{i = 1}^1 \SumWeight_i^\varnothing \cdot \SumArg_i^\varnothing(w_1) \\
+                  &= \SumWeight_1^\varnothing \cdot \SumArg_1^\varnothing(w_1) \\
+                  &= \left( \frac{1}{\Count(\SeenHistory \Skp)} \prod_{j = 2}^1 \frac{\gamma(\History_{j-1}(\SeenHistory))}{\ContCountIp(\WSkp \History_j(\SeenHistory) \WSkp)} \right) \cdot \SumArg_1^\varnothing(w_1) \\
+                  &= \left( \frac{1}{\Count(\varnothing \Skp)} \prod_{j = 2}^1 \frac{\gamma(\History_{j-1}(\varnothing))}{\ContCountIp(\WSkp \History_j(\varnothing) \WSkp)} \right) \cdot \SumArg_1^\varnothing(w_1) \\
+                  &= \frac{\SumArg_1^\varnothing(w_1)}{\Count(\Skp)} \\
+                  &= \frac{\Count(w_1)}{\Count(\Skp)} \\
+                  &= \text{\cref{eq:mkn-lowest-abs}}
+  \end{align}
+\end{subequations}
+
+Base case $\ProbMKN*{w_1}$ currently impossible, as $N = 1$ but we then do no
+get continuation counts in $\SumArg$ definition.
+
+Showing $n+1$ from $n$:
+\begin{align}
+  \ProbMKN{w_{n+1}}{w_1^n} &= \sum_{i = 1}^N \SumWeight_i^{w_1^n} \cdot \SumArg_i^{w_1^n}(w_{n+1})
+\end{align}
+
+Extracting one sum term doesn't help here as induction statement is not
+applicable as $\SumWeight$ and $\SumArg$ are defined on highest history, not
+decreasing history.
+\end{draft}
+
 % ------------------------------------------------------------------------------
 \section{Generalized Language Model}
 
@@ -236,11 +241,11 @@ That is the number of lower order probabilities incorporated $\#_\partial(h)$
 is set to the number of non-skip words in $h$, and $\partial_j(h)$ is defined as
 replacing the $j$th non-skip word in $h$ with a skip $\Skp$.
 
-%   -    -    -    -    -    -    -    -    -    -    -    -    -    -    -    -
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Binomial Diamond}
 
 \todo[inline]{Do we mention \emph{Hasse diagrams} in this subsection?}
-\Rene[inline]{Let us discuss ``Hasse'' vs ``diamond''. Only use on term or the
+\Rene[inline]{Let us discuss ``Hasse'' vs ``diamond''. Only use one term or the
 other.}
 
 The directed graph of \cref{fig:history-glm} visualizes the lower order
@@ -254,64 +259,7 @@ $\ProbGLM*{w_4}{\Skp w_2 \Skp}$.
 
 \begin{figure}
   \centering
-  \begin{tikzpicture}
-    \begin{scope}[node distance = 6.5em]
-      \node [state] (000)                  {$w_1 \: w_2 \: w_3$};
-      \node [invis] (000l) [left  of=000]  {};
-      \node [invis] (000r) [right of=000]  {};
-
-      \node [state] (001)  [below of=000l] {$w_1 \: w_2 \: \Skp$};
-      \node [state] (010)  [below of=000]  {$w_1 \: \Skp \: w_3$};
-      \node [state] (100)  [below of=000r] {$\Skp \: w_2 \: w_3$};
-
-      \node [state] (011)  [below of=001] {$w_1 \: \Skp \: \Skp$};
-      \node [state] (101)  [below of=010] {$\Skp \: w_2 \: \Skp$};
-      \node [state] (110)  [below of=100] {$\Skp \: \Skp \: w_3$};
-
-      \node [state] (111)  [below of=101] {$\Skp \: \Skp \: \Skp$};
-      \node [invis] (111l) [below of=011] {};
-      \node [invis] (111r) [below of=110] {};
-    \end{scope}
-
-    \begin{scope}[node distance = 5em]
-      \node [order] [left of=000l]  {Highest order};
-      \node [order] [left of=001]   {1st Lower order};
-      \node [order] [left of=011]   {2nd Lower order};
-      \node [order] [left of=111l]  {Lowest order};
-
-      \node [order] [right of=000r] {Layer 0};
-      \node [order] [right of=100]  {Layer 1};
-      \node [order] [right of=110]  {Layer 2};
-      \node [order] [right of=111r] {Layer 3};
-    \end{scope}
-
-    \begin{scope}[node distance = 3em]
-      \node [number] [above of=000] {1};
-      \node [number] [above of=001] {2};
-      \node [number] [above of=010] {3};
-      \node [number] [above of=100] {4};
-      \node [number] [below of=011] {5};
-      \node [number] [below of=101] {6};
-      \node [number] [below of=110] {7};
-      \node [number] [below of=111] {8};
-    \end{scope}
-
-    \path[->, >=latex, thick]
-      (000) edge (001)
-      (000) edge (010)
-      (000) edge (100)
-
-      (001) edge (011)
-      (001) edge (101)
-      (010) edge (011)
-      (010) edge (110)
-      (100) edge (101)
-      (100) edge (110)
-
-      (011) edge (111)
-      (101) edge (111)
-      (110) edge (111);
-  \end{tikzpicture}
+  \input{figures/historiesglm}
   \caption{
     Binomial diamond of order 3 for history $h = w_1 \: w_2 \: w_3$.
   }
@@ -345,8 +293,6 @@ skip and non-skip masks on top of the history.
 It is a well known fact that there are exactly $\binom{n}{k}$ permutations of
 $k$ tokens of type A (skips) and $l$ tokens of type B (non-skips) when
 $n = k + l$.
-\todo{With this argumentation $\binom{n}{l}$ would be true as well.}
-\Rene[noline]{Symmetry of binomial coefficients.}
 
 \Cref{itm:num-edges} directly follows from the fact, that each non-skip word
 in a history can be replaced by a skip, and that each skip is the result
@@ -465,10 +411,8 @@ unigram case or is it?}
 \end{equation}
 
 \begin{draft}
-$\mu$ is coefficient.
+Coefficient $\mu = \frac{(order - level)!}{order!}$.
 \end{draft}
-
-\todo[inline]{Formulate $\mu$ as direct formula with faculties.}
 
 \begin{draft}
 $\SumWeight_{2 i}^h$ is $\frac{\mu}{\Count(\History_i(h) \Skp)}$ times number
@@ -513,7 +457,8 @@ one node.
       \State $C_i^a \gets \Count(\History_i(h) \Skp)$
       \State $C_i^c \gets \ContCountIp(\WSkp \History_i(h) \WSkp)$
       \State $\Gamma_i \gets \gamma(\History_i(h))$
-      \State $\mu \gets$ \Call{calcCoefficient}{$level(i)$, $\StringLength{h}$}
+      \State $\mu \gets \frac{(\StringLength{h} - level(i))!}{\StringLength{h}!}$
+        \Comment{Could be stored in a Look-up table}
 
       \If{$C_i^a = 0$}
         \State $\SumWeight_{2 i}^h \gets 0$
@@ -531,18 +476,18 @@ one node.
   \end{algorithmic}
 \end{algorithm}
 
-\begin{algorithm}
-  \begin{algorithmic}[1]
-    \Function{calcCoefficient}{$level$, $order$}
-      \Rene[inline]{This is cached, right?}
-      \State $\mu = 1$
-      \For{$i \gets 1 \mathinner{\ldotp \ldotp} level$}
-        \State $\mu \gets \mu \cdot (order - i)$
-      \EndFor
-      \State \textbf{return} $\mu$
-    \EndFunction
-  \end{algorithmic}
-\end{algorithm}
+%\begin{algorithm}
+%  \begin{algorithmic}[1]
+%    \Function{calcCoefficient}{$level$, $order$}
+%      \Rene[inline]{This is cached, right?}
+%      \State $\mu = 1$
+%      \For{$i \gets 1 \mathinner{\ldotp \ldotp} level$}
+%        \State $\mu \gets \frac{\mu}{order - i + 1}$
+%      \EndFor
+%      \State \textbf{return} $\mu$
+%    \EndFunction
+%  \end{algorithmic}
+%\end{algorithm}
 
 \begin{algorithm}
   \begin{algorithmic}[1]
@@ -568,21 +513,17 @@ one node.
 \begin{algorithm}
   \begin{algorithmic}[1]
     \Function{calcContinuationWeight}{$ancestor$, $node$, $absolute$}
+      \State $mult \gets 1$
       \If{$absolute$}
         \If{$C_{ancestor}^a = 0$}
-          \If{$level(ancestor) = level(node) - 1 \land C_{node}^a <> 0$}
-            \State $mult \gets 0$
-            \State \todo[inline]{Quick exit with \textbf{return} $0$?}
-          \Else
-            \State $mult \gets 1$
+          \If{$level(ancestor) = level(node) - 1 \land C_{node}^a \neq 0$}
+            \State \textbf{return} $0$
           \EndIf
         \Else
           \State $mult \gets \frac{\Gamma_{ancestor}}{C_{ancestor}^a}$
           \State $absolute \gets$ \textbf{false}
         \EndIf
-      \ElsIf{$C_{ancestor}^c = 0$}
-        \State $mult \gets 1$
-      \Else
+      \ElsIf{$C_{ancestor}^c \neq 0$}
         \State $mult \gets \frac{\Gamma_{ancestor}}{C_{ancestor}^c}$
       \EndIf
 

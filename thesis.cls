@@ -187,7 +187,7 @@
   }
 }\relax
 
-% Maketitle ====================================================================
+% Title ========================================================================
 
 \newcommand*\monthword{%
   \ifcase\month%
@@ -215,9 +215,9 @@
     %\renewcommand*\arraystretch{0.8}%
     \footnotesize%
     \begin{tabular}{c p{2.25cm} c}%
-        \includegraphics[height=.9cm]{images/uni-logo-color}%
+        \includegraphics[height=.9cm]{figures/uni-logo-color}%
       &&%
-        \includegraphics[height=.9cm]{images/institute-logo-color}%
+        \includegraphics[height=.9cm]{figures/institute-logo-color}%
       \\%
         \hspace{.71cm}%
         Fachbereich 4: Informatik%

@@ -20,6 +20,7 @@
 
 \usepackage{pdflscape}
 \usepackage{tikz}
+\usepackage{standalone}
 
 % TODO
 \usepackage{nicefrac}
@@ -38,9 +39,9 @@
 ]{todonotes}
 
 \definecolor{draft}{rgb}{0.5, 0.5, 0.5}
-\newenvironment*{draft}{
-  \color{draft}
-}{
+\newenvironment*{draft}{%
+  \color{draft}%
+}{%
 }
 
 \newcommand*\Lukas[2][]{
@@ -84,7 +85,6 @@
     \item Terminology: Probability event? Interpolation weight/argument?
   \end{itemize}
 }
-\todo[inline]{Use standalone documents for figures.}
 \todo[inline]{Use etoolbox for ifthenelse in class.}
 \todo[inline]{Kill warnings.}
 \todo[inline]{Rewrite math package. Use left/right braces for set.}

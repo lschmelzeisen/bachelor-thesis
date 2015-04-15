@@ -62,6 +62,7 @@ times:
   \ContCountIp(\WSkp w_1^n) =
     \Cardinality{\left\{ x \in \Sigma \,\middle|\, \Count(x \: w_1^n) \geq 1 \right\}}
 \end{equation}
+\Rene{$k+$ and $1+$ intermixed.}
 
 In continuation counts regular skips and continuation skips can be mixed, for
 example:
@@ -70,7 +71,6 @@ example:
   \ContCountIp(\WSkp w \Skp \WSkp) =
     \Cardinality{\left\{ x, y \in \Sigma \,\middle|\, c(x \: w \Skp y) \geq 1 \right\}}
 \end{equation}
-\Rene{$k+$ and $1+$ intermixed.}
 
 To make a clear distinction between ``normal'' counts $\Count(\DummyArg)$ and
 continuation counts $\ContCount_{\DummyIndex}(\DummyArg)$, we
@@ -113,8 +113,6 @@ and set:
       & & \Condition{\Count(w_1^{n-1} \Skp) = 0}
 \end{align}
 It is common to perform multiple back-offs until the history was actually seen.
-\todo{This should actually not be true, because we increase n-gram length for
-first lower order. How do we handle this in current implementation?}
 
 \begin{draft}
 Essentially, interpolation with a lower order model corresponds to leaving out
@@ -133,6 +131,8 @@ With the \emph{discounted} continuation count
 ${\DiscountedCount*(\WSkp w_1^n) = \max\Set{ \ContCountIp(\WSkp w_1^n) - \Discount(\Count(w_1^n)), 0 }}$.
 Backing-off to compute lower orders is never necessary, because
 if history $w_1^{n-1}$ was seen, $w_2^{n-1}$ was seen as well.
+\todo{This should actually not be true, because we increase n-gram length for
+first lower order. How do we handle this in current implementation?}
 
 The lowest order (the probability of a single word) can not be further
 interpolated and we use the relative continuation frequency of that word.
@@ -142,7 +142,9 @@ highest order, we compute it as the relative frequency of that word:
 \begin{subequations}
   \label{eq:mkn-lowest}
   \begin{align}
+    \label{eq:mkn-lowest-abs}
     \ProbMKN {w} &= \frac{\Count(w)}{\Count(\Skp)} \\
+    \label{eq:mkn-lowest-cont}
     \ProbMKN*{w} &= \frac{\ContCountIp(\WSkp w)}{\ContCountIp(\WSkp \WSkp)}
   \end{align}
 \end{subequations}
