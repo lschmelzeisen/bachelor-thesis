@@ -1,6 +1,44 @@
 \chapter{Formulating Language Models as Weighted Sums}
 \label{ch:weightedsum}
 
+\begin{equation}
+  \Prob{w}{h} = \sum_{\CurHistory \in \SkpOpMult(h)} \SumWeight_{\CurHistory} \cdot \SumArg_{\CurHistory}(w)
+\end{equation}
+\begin{equation}
+  \SumArg_{\CurHistory}(w) =
+    \begin{dcases*}
+      \Count(w)                        & if $\SeenHistory = \varnothing$ \\
+      \DiscountedCount (\CurHistory w) & if $\SeenHistory \neq \varnothing \land \CurHistory = \SeenHistory$ \\
+      \DiscountedCount*(\CurHistory w) & if $\SeenHistory \neq \varnothing \land \CurHistory \neq \SeenHistory \land \CurHistory \neq \varnothing$ \\
+      \ContCountIp(w)                  & if $\SeenHistory \neq \varnothing \land \CurHistory = \varnothing$
+    \end{dcases*}
+\end{equation}
+\Lukas[inline, caption={``Else If'' in equation with cases?}]{
+It is possible to simplify the conditions by using ``else if'', is
+this acceptable in a mathematical publication?
+\begin{equation}
+  \SumArg_{\CurHistory}(w) =
+    \begin{dcases*}
+      \Count(w)                        & if $\SeenHistory = \varnothing$ \\
+      \ContCountIp(w)                  & else if $\CurHistory = \varnothing$ \\
+      \DiscountedCount (\CurHistory w) & else if $\CurHistory = \SeenHistory$ \\
+      \DiscountedCount*(\CurHistory w) & else
+    \end{dcases*}
+\end{equation}
+}
+\begin{equation}
+  \SumWeight_{\CurHistory} =
+    \begin{dcases*}
+      \frac{1}{\Count(\SeenHistory \Skp)} & if $\CurHistory = \SeenHistory$ \\
+      \SumWeight_{\SkpOpInv \, \CurHistory} \frac{\gamma(\SkpOpInv \, \CurHistory)}{\ContCountIp(\WSkp \CurHistory \WSkp)} & if $\CurHistory \neq \SeenHistory$
+    \end{dcases*}
+\end{equation}
+
+
+\todo[inline]{Rewrite section using $\sum_{w^\prime \in W(w)}$ and
+$\SkpOpInv$.}
+\todo[inline]{Call $\SumArg$: (count-) function.}
+
 \Rene[noline]{I'm unsure whether you want to describe it in this way. Actually
 you also want to state that you can calculate alphas relatively easy in
 descending order. Does it make sense to discuss the general problem here
@@ -8,7 +46,7 @@ with respect to used memory, indices and runtime?}
 
 This chapter will show how to represent  $\ProbMKN{w_n}{w_1^{n-1}}$ and
 $\ProbGLM{w_n}{w_1^{n-1}}$ as weighted sums of terms depending on $w_n$ for a
-fixed history $h = w_1^{n-1}$ and an  arbitrary argument $w = w_n$.
+fixed history $h = w_1^{n-1}$ and an  arbitrary probability event $w = w_n$.
 In other words we will express the formulas given in \cref{ch:review-lm} as
 equations of the following form:
 \begin{equation}
@@ -151,8 +189,6 @@ may be called for here, not just in the appendix.}
 Specifying an algorithm to compute interpolation weights $\SumWeight_i^h$ that
 minimizes frequency count lookup (using the iterative definition of
 $\SumWeight_i^h$) is straightforward and given in \cref{alg:weightedsum-mkn}.
-\todo[inline]{Do we actually show this algorithm, as it is rather simple?}
-\Rene[inline]{What means ``simple'' in our case?}
 
 \begin{algorithm}
   \caption{Computing Modified Kneser-Ney sum weights}
@@ -233,12 +269,12 @@ probabilities of the next lower order is factored into the higher order
 probability.
 
 This section will not consider the general case were one probability
-$\ProbGLM{w}{h}$ incorporates exactly $\#_\partial(h)$ probabilities
-$\ProbGLM*{w}{\partial_j h}$ of the next lower order.
+$\ProbGLM{w}{h}$ incorporates exactly $\NumSkpOp(h)$ probabilities
+$\ProbGLM*{w}{\SkpOp_j h}$ of the next lower order.
 Instead only the special case described by \textcite{Pickhardt2014}, that is
 actually used in practice, is examined.
-That is the number of lower order probabilities incorporated $\#_\partial(h)$
-is set to the number of non-skip words in $h$, and $\partial_j(h)$ is defined as
+That is the number of lower order probabilities incorporated $\NumSkpOp(h)$
+is set to the number of non-skip words in $h$, and $\SkpOp_j(h)$ is defined as
 replacing the $j$th non-skip word in $h$ with a skip $\Skp$.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -250,7 +286,7 @@ other.}
 
 The directed graph of \cref{fig:history-glm} visualizes the lower order
 probabilities that factor into those of higher orders, using that definition of
-$\partial_j(h)$.
+$\SkpOp_j(h)$.
 The nodes represent the histories $h$ of a probability $\ProbGLM{w_4}{h}$.
 The directed edges represent an immediate dependency, for example the
 probabilities that occur in the definition of
@@ -377,26 +413,26 @@ times two, as histories can occur both in highest and lower order probabilities:
   \begin{align}
     \SumArg_{2 i}^h(w) &=
       \begin{dcases*}
-        \DiscountedCount(\History_i(h) w)        & if $\#_\partial(\History_i(h)) > 0$ \\
-        \Count(\History_i(h) w)                  & if $\#_\partial(\History_i(h)) = 0$
+        \DiscountedCount(\History_i(h) w)        & if $\NumSkpOp(\History_i(h)) > 0$ \\
+        \Count(\History_i(h) w)                  & if $\NumSkpOp(\History_i(h)) = 0$
       \end{dcases*} \\
     \SumArg_{2 i + 1}^h(w) &=
       \begin{dcases*}
-        \DiscountedCount*(\WSkp \History_i(h) w) & if $\#_\partial(\History_i(h)) > 0$ \\
-        \ContCountIp(\WSkp \History_i(h) w)      & if $\#_\partial(\History_i(h)) = 0$
+        \DiscountedCount*(\WSkp \History_i(h) w) & if $\NumSkpOp(\History_i(h)) > 0$ \\
+        \ContCountIp(\WSkp \History_i(h) w)      & if $\NumSkpOp(\History_i(h)) = 0$
       \end{dcases*}
   \end{align}
 \end{subequations}
-\Rene{Why no discount in case $\#_\partial(\History_i(h)) = 0$? This isn't
+\Rene{Why no discount in case $\NumSkpOp(\History_i(h)) = 0$? This isn't
 unigram case or is it?}
 \todo[inline]{Or alternatively?}
 \begin{equation}
   \SumArg_{2 i + j}^h(w) =
     \begin{dcases*}
-      \Count(\History_i(h) w)                  & if $j = 0 \land \#_\partial(\History_i(h)) = 0$ \\
-      \ContCountIp(\WSkp \History_i(h) w)      & if $j = 1 \land \#_\partial(\History_i(h)) = 0$ \\
-      \DiscountedCount(\History_i(h) w)        & if $j = 0 \land \#_\partial(\History_i(h)) > 0$ \\
-      \DiscountedCount*(\WSkp \History_i(h) w) & if $j = 1 \land \#_\partial(\History_i(h)) > 0$
+      \Count(\History_i(h) w)                  & if $j = 0 \land \NumSkpOp(\History_i(h)) = 0$ \\
+      \ContCountIp(\WSkp \History_i(h) w)      & if $j = 1 \land \NumSkpOp(\History_i(h)) = 0$ \\
+      \DiscountedCount(\History_i(h) w)        & if $j = 0 \land \NumSkpOp(\History_i(h)) > 0$ \\
+      \DiscountedCount*(\WSkp \History_i(h) w) & if $j = 1 \land \NumSkpOp(\History_i(h)) > 0$
     \end{dcases*}
 \end{equation}
 \todo[inline]{Or alternatively?}

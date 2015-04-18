@@ -87,6 +87,12 @@
   \operatorname{NKSS}\IfNoValueTF{#1}{}{(#1)}
 }
 
+% Skip Operator
+\newcommand*\SkpOp{\partial}
+\newcommand*\SkpOpInv{\SkpOp^{-1}}
+\newcommand*\SkpOpMult{\SkpOp^\star}
+\newcommand*\NumSkpOp{\#_\SkpOp}
+
 % Weighted Sum
 %\DeclareMathOperator\SumWeight{\lambda}
 \newcommand*\SumWeight{\lambda}
@@ -97,3 +103,5 @@
 
 %\DeclareMathOperator\History{\eta}
 \newcommand*\History{\eta}
+
+\newcommand*\CurHistory{h^\star}

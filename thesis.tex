@@ -19,8 +19,10 @@
 \secondreviewerinfo{Institute for Web Science and Technologies}
 
 \usepackage{pdflscape}
-\usepackage{tikz}
 \usepackage{standalone}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat = 1.12}
 
 % TODO
 \usepackage{nicefrac}
@@ -74,15 +76,11 @@
 
 \clearpage
 \todo[inline]{License!}
+\todo[inline]{Dedication}
 \todo[inline,caption={Discussion with Ren{\'e}}]{
   Discussion with Ren{\'e}:
   \begin{itemize}
-    \item Are chapters ok?
-    \item Capitalize in document reference?
-    \item Citation style?
-    \item Conditions after Equations ok as in \cref{ch:review-lm}?
-    \item Scope ok? Not too long or short?
-    \item Terminology: Probability event? Interpolation weight/argument?
+    \item Terminology: Probability event?
   \end{itemize}
 }
 \todo[inline]{Use etoolbox for ifthenelse in class.}

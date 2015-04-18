@@ -1,6 +1,9 @@
 \chapter{Review of Considered Language Models}
 \label{ch:review-lm}
 
+\todo[inline]{Try to find improvements to $\NumSkpOp$ notation, maybe by
+establishing it as current order?}
+
 This chapter will recall language modeling techniques considered in this work,
 and introduce the used notation (\cref{sec:review-notation}).
 Namely, \emph{Modified Kneser-Ney Smoothing} (\cref{sec:review-lm-mkn})
@@ -158,30 +161,30 @@ Smoothing.
 It is again based on interpolation, though it differs in the way lower order
 models are interpolated.
 The highest order is computed as:
-\Rene[noline]{I'm unsure whether I understand the semantics of $\#_\partial$
+\Rene[noline]{I'm unsure whether I understand the semantics of $\NumSkpOp$
 correctly.}
 \begin{equation}
   \label{eq:glm-high}
   \ProbGLM{w_n}{w_1^{n-1}} =
-    \frac{\DiscountedCount(w_1^n) + \frac{\gamma(w_1^{n-1})}{\#_\partial(w_1^{n-1})}
-                                    \sum_{j=1}^{\#_\partial(w_1^{n-1})} \ProbGLM*{w_n}{\partial_j w_1^{n-1}}}
+    \frac{\DiscountedCount(w_1^n) + \frac{\gamma(w_1^{n-1})}{\NumSkpOp(w_1^{n-1})}
+                                    \sum_{j=1}^{\NumSkpOp(w_1^{n-1})} \ProbGLM*{w_n}{\SkpOp_j w_1^{n-1}}}
          {\Count(w_1^{n-1} \Skp)}
 \end{equation}
 Auxiliary definitions $\DiscountedCount, \DiscountedCount*, \gamma$ are the same
 as for Modified Kneser-Ney Smoothing and given in \cref{sec:review-lm-mkn}.
 
-The skip operator $\partial_j w_1^{n-1}$ can be any mapping that relates
-$w_1^{n-1}$ to exactly $\#_\partial(w_1^{n-1})$ many derived sequences.
-It is easy to see that for $\#_\partial(w_1^{n-1}) = 1$ and
-$\partial_1 w_1^{n-1} = w_2^{n-1}$ \cref{eq:glm-high} is an
+The skip operator $\SkpOp_j w_1^{n-1}$ can be any mapping that relates
+$w_1^{n-1}$ to exactly $\NumSkpOp(w_1^{n-1})$ many derived sequences.
+It is easy to see that for $\NumSkpOp(w_1^{n-1}) = 1$ and
+$\SkpOp_1 w_1^{n-1} = w_2^{n-1}$ \cref{eq:glm-high} is an
 instantiation of \cref{eq:mkn-high} (Modified Kneser-Ney Smoothing), and thus
 a true generalization.
 
-In practice only one definition for $\partial$ is used though.
-That is $\#_\partial(w_1^{n-1})$ is set to the number of non-skip words in
-$w_1^{n-1}$ and $\partial_j(w_1^{n-1})$ replaces the $j$th non-skip word with
+In practice only one definition for $\SkpOp$ is used though.
+That is $\NumSkpOp(w_1^{n-1})$ is set to the number of non-skip words in
+$w_1^{n-1}$ and $\SkpOp_j(w_1^{n-1})$ replaces the $j$th non-skip word with
 a skip.
-For instance: $\partial_2(w_1^3) = w_1 \Skp w_3$.
+For instance: $\SkpOp_2(w_1^3) = w_1 \Skp w_3$.
 
 Again as with Modified Kneser-Ney Smoothing, \cref{eq:glm-high} is not
 defined if $w_1^{n-1}$ is unseen and thus our denominator would be zero.
@@ -189,8 +192,8 @@ The back-off step is then performed as:
 \begin{equation}
   \label{eq:glm-backoff}
   \begin{split}
-    \ProbGLM{w_n}{w_1^{n-1}} = \frac{1}{\#_\partial(w_1^{n-1})}
-                               \sum_{j=1}^{\#_\partial(w_1^{n-1})} \ProbGLM{w_n}{\partial_j w_1^{n-1}} \\
+    \ProbGLM{w_n}{w_1^{n-1}} = \frac{1}{\NumSkpOp(w_1^{n-1})}
+                               \sum_{j=1}^{\NumSkpOp(w_1^{n-1})} \ProbGLM{w_n}{\SkpOp_j w_1^{n-1}} \\
       \hfill \Condition{\Count(w_1^{n-1} \Skp) = 0}
   \end{split}
 \end{equation}
@@ -199,23 +202,28 @@ Subsequently lower order models are computed as:
 \begin{equation}
   \label{eq:glm-low}
   \ProbGLM*{w_n}{w_1^{n-1}} =
-    \frac{\DiscountedCount*(\WSkp w_1^n) + \frac{\gamma(w_1^{n-1})}{\#_\partial(w_1^{n-1})}
-                                     \sum_{j=1}^{\#_\partial(w_1^{n-1})} \ProbGLM*{w_n}{\partial_j w_1^{n-1}}}
+    \frac{\DiscountedCount*(\WSkp w_1^n) + \frac{\gamma(w_1^{n-1})}{\NumSkpOp(w_1^{n-1})}
+                                     \sum_{j=1}^{\NumSkpOp(w_1^{n-1})} \ProbGLM*{w_n}{\SkpOp_j w_1^{n-1}}}
          {\ContCountIp(\WSkp w_1^{n-1} \WSkp)}
 \end{equation}
-\todo[inline]{Replace \Skp with \WSkp in $\ContCountIp$ in GLM?}
-\todo[inline]{\WSkp at end of $\ContCountIp$ correct?}
 
-The case of the lowest order occurs when $\#_\partial(w_1^{n-1}) = 0$ and is
+\todo[inline, caption={Switch of \Skp and \WSkp in GLM $\ContCountIp$}]{
+\begin{itemize}
+  \item Replace \Skp with \WSkp in $\ContCountIp$ in GLM?
+  \item \WSkp at end of $\ContCountIp$ correct?
+\end{itemize}
+}
+
+The case of the lowest order occurs when $\NumSkpOp(w_1^{n-1}) = 0$ and is
 handled similarly to Modified Kneser-Ney Smoothing.
 In practice this is the case when $w_1^{n-1}$ only consists of skips.
 \begin{subequations}
   \label{eq:glm-lowest}
   \begin{align}
     \ProbGLM {w_n}{w_1^{n-1}} &= \frac{\Count(w_1^n)}{\Count(w_1^{n-1} \Skp)}
-      & \Condition{\#_\partial(w_1^{n-1}) = 0} \\
+      & \Condition{\NumSkpOp(w_1^{n-1}) = 0} \\
     \ProbMKN*{w_n}{w_1^{n-1}} &= \frac{\ContCountIp(\WSkp w_1^n)}{\ContCountIp(\WSkp w_1^{n-1} \WSkp)}
-      & \Condition{\#_\partial(w_1^{n-1}) = 0}
+      & \Condition{\NumSkpOp(w_1^{n-1}) = 0}
   \end{align}
 \end{subequations}
 
