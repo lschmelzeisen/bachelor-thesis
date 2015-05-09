@@ -49,8 +49,7 @@
   BCOR = 5mm,
   a4paper, paper = a4,
   11pt, fontsize = 11pt,
-  ngerman,
-  american,
+  ngerman, american,
 ]{scrreprt}
 
 % Packages =====================================================================
@@ -94,7 +93,7 @@
 \RequirePackage{thesismath}
 
 % Color
-\RequireOptionsPackage[dvipsnames,svgnames,x11names]{xcolor}
+\RequireOptionsPackage[dvipsnames, svgnames, x11names]{xcolor}
 
 % Quotations
 \RequirePackage{csquotes}
@@ -120,7 +119,7 @@
   %style = alphabetic,
   maxbibnames = 10, % max number of names in bibliography
   maxcitenames = 2, % max number of names in text cite
-  uniquelist = minyear, % only add more author if year is not unique
+  uniquelist = minyear, % only add more authors if year is not unique
   backref = true, % bibliography contains links to cite occurence
   backrefstyle = three+,
   doi = false, % do not show doi
@@ -154,7 +153,7 @@
 % Add reference names for source code listings
 \crefname{lstlisting}{listing}{listings}
 \Crefname{lstlisting}{Listing}{Listings}
-% Capitalize all reference, regardless of command used.
+% Capitalize all references, regardless of command used.
 % We use different commands, to allow easy switching.
 \renewcommand*\cref{\Cref}
 

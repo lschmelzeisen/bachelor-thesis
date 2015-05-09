@@ -1,5 +1,5 @@
 \chapter{Review of Considered Language Models}
-\label{ch:review-lm}
+\label{ch:review}
 
 \todo[inline]{Try to find improvements to $\NumSkpOp$ notation, maybe by
 establishing it as current order?}
@@ -62,10 +62,9 @@ precede $w_1^n$ in training data, and occur exactly $2$ times:
 Further let $\ContCount_{k+}(\DummyArg)$ count sequences that occur $k$ or more
 times:
 \begin{equation}
-  \ContCountIp(\WSkp w_1^n) =
-    \Cardinality{\left\{ x \in \Sigma \,\middle|\, \Count(x \: w_1^n) \geq 1 \right\}}
+  \ContCount_{k+}(\WSkp w_1^n) =
+    \Cardinality{\left\{ x \in \Sigma \,\middle|\, \Count(x \: w_1^n) \geq k \right\}}
 \end{equation}
-\Rene{$k+$ and $1+$ intermixed.}
 
 In continuation counts regular skips and continuation skips can be mixed, for
 example:

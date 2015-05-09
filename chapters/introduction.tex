@@ -1,9 +1,5 @@
 \chapter{Introduction}
-
-\begin{draft}
-Introduction pargraph: We solve noisy channel argmax with Top-$k$ joining
-techniques.
-\end{draft}
+\label{ch:introduction}
 
 The \emph{noisy channel model} is a commonly applied concept in natural language
 processing.
@@ -16,27 +12,38 @@ distorted one.
 This metaphor has many applications, such as spelling correction
 \parencite{JurafskyMartin2009,Manning2008,Kernighan1990,Mays1991},
 %          \------------- non-word-errors ------------/    \- real-word-erros
-part-of-speech-tagging \parencite{Church1988}, machine translation
-\parencite{Brown1990}, speech recognition or text compression.
-\todo{Find newer citations. Maybe from \textcite{Bickel2005}}
+word prediction \parencite{Bickel2005}, part-of-speech tagging
+\parencite{Church1988}, machine translation \parencite{Brown1990}, speech
+recognition or text compression.
+\todo{Newer citations!}
 % JurafskyMartin2009: Chapter 5: Spelling Correction
 %                     Chapter 9: Speech Recognition!
+
+This thesis will present a novel approach to solve noisy channel type queries.
+The basic idea is to formulate the query as the argmax of a monotone scoring
+function, and then to find the solution using \emph{top-$k$ joining techniques}.
+This approach will exemplary be showcased by applying it to the problem of
+\emph{next word prediction}.
+
+% ------------------------------------------------------------------------------
+\section{Noisy Channel Model}
 
 \Rene[noline]{Probability space unclear. Most of the time not exactly stated
 when talking about Noisy Channel Theorem. Maybe not bring it up in bachelor
 thesis.}
-Formalized, this task of the noisy channel model is to find the dispatched
-message~$m$, which in our context is the sequence of words
-$s = w_1^n = w_1 \ldots w_n$ in a langauge~$\Language$ that is most likely to be
-the source of the received, distorted observation~$o$:
+Formalized, the task of the noisy channel model is to find the dispatched
+message~$m$, which in our context is the sequence of words $s$ in a
+langauge~$\Language$ that is most likely to be the source of the received,
+distorted observation~$o$:
 \begin{align}
   \label{eq:noisychannel}
   m &= \Argmax_{s \in \Language} \Prob{s}{o} \\
-  \intertext{Using Bayes' theorem one can rewrite this to:}
+  \intertext{Commonly this noisy channel equation is rewritten using Bayes'
+    theorem to:}
   \label{eq:noisychannelbayes}
   \begin{split}
-    m = \Argmax_{s \in \Language} \frac{\Prob{o}{s} \cdot \Prob{s}}{\Prob{o}}
-      = \Argmax_{s \in \Language} \Prob{o}{s} \cdot \Prob{s}
+    m &= \Argmax_{s \in \Language} \frac{\Prob{o}{s} \cdot \Prob{s}}{\Prob{o}}
+       = \Argmax_{s \in \Language} \Prob{o}{s} \cdot \Prob{s}
   \end{split}
 \end{align}
 With the observation likelihood~$\Prob{o}{s}$ and the prior
@@ -44,16 +51,15 @@ probability~$\Prob{s}$.
 Omitting the denominator~$\Prob{o}$ is valid because it is a constant that does
 not depend on the argument~$s$.
 Most commonly the observation likelihood is some domain specific probability
-distribution $\Prob[\text{Domain}]{o}{s}$; for the prior probability
-\emph{statistical language models} are used.
-They assign a probability $\Prob[\text{LM}]{s}$ to a sequence of words
-$s = w_1^n = w_1 \ldots w_n$ by means of a probability distribution, created
-through statistical analysis of text corpora.
+distribution $\Prob[\text{Domain}]{o}{s}$.
+For the prior probability, \emph{statistical language model} distributions
+$\Prob[\text{LM}]{s}$ are used.
+%They assign a probability $\Prob[\text{LM}]{s}$ to a sequence of words
+%$s$ by means of a probability distribution, created through statistical analysis
+%of text corpora.
 Thus the noisy channel model is a natural combintion of domain knowledge with
 language information.
 
-\Lukas{It is possible to omit this paragraph, but I think it provides
-clarification.}
 For example, to translate French into English, \textcite{Brown1990} defined a
 probability distribution $\Prob[\text{Translate}]{e}{f}$, that would give the
 probability for each English sentence $e$ to be the result of translating
@@ -65,46 +71,135 @@ models and arrive at
 $\Argmax_{e} \Prob[\text{Translate}]{f}{e} \cdot \Prob[\text{LM}]{e}$, which is
 just \cref{eq:noisychannelbayes}.
 
+% ------------------------------------------------------------------------------
+\section{Next Word Prediction}
+
+In this thesis the problem of \emph{next word prediction} will be researched.
+For a sequence of words $w_1 \ldots w_n = w_1^{n}$, the task is to find the last word
+$w_n$, given only the first $n-1$ words $w_1^{n-1}$.
+This is done by finding the $w$ that maximizes the probability to
+occur after $w_1^{n-1}$ \parencite{Bickel2005}:
+\begin{equation}
+  \label{eq:nwp}
+  w_n = \Argmax_{w \in \Vocab} \Prob{w}{w_1^{n-1}}
+\end{equation}
+With vocabulary $\Vocab$, the set of all words.
+
+We can see that next word prediction is an instance of the noisy channel model,
+as specified in \cref{eq:noisychannel}.
+
+As there is no domain knowledge to apply, one way to solve next word prediction
+is to directly calculate probabilities $\Prob{w}{w_1^{n-1}}$ by using
+\emph{statistical language models} \parencite{Bickel2005}.
+
+Next word prediction techniques are often evaluated by measuring \emph{next
+keystroke savings} \parencite{Bickel2005}\todo{More citations!}.
+\begin{draft}Next Keystroke savings are: What actually?\end{draft}
+As such, we would like our implementation to also support the computation of
+next keystroke savings.
+%A metric closely related to next word prediction is \emph{next keystroke
+%savings}.
+%\Lukas[inline]{How do we define NKSS? How do I justify it's use in this thesis?
+%I need NKSS to justify my choice of completion-tries as data structure :).}
+
+% ------------------------------------------------------------------------------
+\section{Top-\emph{k} Join Queries}
+
+Top-$k$ queries are queries whose results are limited to only the $k$ most
+important ones.
+These top-$k$ results are identified by scoring all answers with a
+\emph{scoring function}, and selecting the $k$ highest scoring.
+\emph{Top-$k$ join queries} are these top-$k$ queries that produce
+their results trough combination of multiple data sources \parencite{Ilyas2008}.
+
+One example might be the query to a web search engine.
+Search results are ranked by relevance, as computed by several criteria
+(matching keywords, links from other sites, popularity, ...).
+Users generally require more than just the one highest ranking search result, as
+it may not be exactly what they are they were looking for.
+On the other hand it would be infeasible to relevance-rank all sites in the
+search engine's database.
+Many search engines solve this by only displaying the top 10 sites, deemed most
+relevant to the user's query, and querying more if required.
+
+\begin{draft}
+Top-$k$ joining techniques have widespread use and are of importance in
+many applications \noref.
+\end{draft}
+
+As can be seen by the example, the na\"{\i}ve way to solve top-$k$ join
+queries, i.e.\ to aggregate all possible join results, sort all of them by
+score, and then to discard non top-$k$ results, is in most cases far to
+slow to be of any use.
+There are of plethora of different top-$k$ processing techniques, but most
+of them achieve efficiency by requiring \emph{monotone scoring functions} and
+then sorting data sources on each predicate of that function
+\parencite{Ilyas2008}.
+
+% ------------------------------------------------------------------------------
+\section{Statistical Language Models}
+
+\emph{Statistical language models} assign a probability $\Prob[\text{LM}]{s}$ to
+a sequence of words $s = w_1^n = w_1 \ldots w_n$ by means of a probability
+distribution, created through statistical analysis of text corpora.
+
 A major problem in creating statistical language models from text corpora, is
 that even for very large corpora, most possible word sequences in a language
 will not be observed in training \noref.
-A common approximation are \emph{$n$-gram models}, in which it is assumed that
-the probability of a word only depdens on the $n\!-\!1$~previous words, thus
-only sequences of length $n$ have to be considered.
-\Rene{Markov assumption.}
+A common approximation is to make a $n$th-order \emph{markov assumption},
+i.e.\ to assume that the probability of the $n$th word $w_n$ only depends on
+the $n\!-\!1$~previous words $w_1^{n-1}$.
+\todo{Problem with indices: They suggest that there are no words before $w_1$.}
+Thus only sequences of length $n$ have to be considered.
+The resulting language models are called \emph{$n$-gram models}.
+State-of-the-art language modeling uses $n$-grams with $n$ as large as $5$
+\parencite{JurafskyMartin2009,Goodman2001}.
 
-State-of-the-art language models use $n$-grams with $n$ as large as $5$
-\mbref{JurafskyMartin2009,Goodman2001}.
 \begin{draft}
+Calculating noisy channel type queries (\cref{eq:noisychannel}) is a very time
+expensive operation, as for each.
 \Cref{eq:noisychannel} is hard to calculate for such large $n$.
 So we want to optimize that.
 \end{draft}
 
-\begin{draft}
-We try to use top-$k$ joining.
+Most statistical language models' probabilities are based on the occurrence
+count of sequences \noref.
+If these probabilities can be expressed as monotone scoring functions of
+occurrence counts, we can apply top-$k$ joining techniques in order to solve
+noisy channel type queries.
 
-We are interested in \emph{next word prediction} $\NWP$ and
-\emph{next keystroke savings} $\NKSS$.
+% ------------------------------------------------------------------------------
+\section{Thesis' contribution}
 
-So we have to map our problem on the realm of top-$k$ joining.
+\todo[noline]{Wouldn't this be better as an abstract? How do I introduce here
+instead?}
+The concern of this thesis is solving noisy channel type queries that are based
+on statistical language model probabilities.
+Our novel approach is to formulate language models as weighted sum functions on
+occurrence counts.
+As these weighted sum functions are monotone, we can then employ various
+top-$k$ joining techniques, to efficiently find those arguments that maximize
+the noisy channel's probability.
+This approach can be used for all noisy channel type queries, that can be
+expressed as monotone scoring functions.
+We will present our method by implementing next word prediction with it.
+%This approach will exemplary be showcased by applying it to the problem of
+%next word prediction.
+%The concern of this thesis is solving noisy channel type queries based on
+%statistical language model probabilities, by employing top-$k$ joining
+%techniques, in order to avoid having to calculate probabilities for all
+%arguments.
+%To avoid having to calculate probabilities for all arguments top-$k$ joining
+%techniques can be used.
 
-We apply that technique.
-
-May be good because we do not have to prune, and pruning might be bad
-\parencite{Stolcke2000,Chelba2013,Chelba2010,Siivola2007}.
-
-Most non-trivial top-\emph{k} joining algorithms require a monotone scoring
-function, some further improvements can be made if using a linear scoring
-function~\parencite{Ilyas2008}.
-\end{draft}
-
-\begin{draft}
-Introduction to next word predition.
-\todo{Read \textcite{Bickel2005} for info.}
-\end{draft}
-
-\begin{draft}
-Overview of following chapters.
-\end{draft}
-
-\Rene[inline]{Context info maybe needs to be moved to foundation chapter?}
+In \cref{ch:relatedwork} an overview of related work will be given.
+\Cref{ch:review} will review the two types of language models, that are used in
+this thesis: \emph{Modified Kneser-Ney Smoothing} and the \emph{Generalized
+Language Model}.
+We will then express these language models as weighted sums in
+\cref{ch:weightedsum}.
+Using this representation as monotone scoring functions, top-$k$ joining
+techniques and their implementations will be discussed in \cref{ch:topkjoin}.
+In \cref{ch:evaluation} the given approach will be evaluated using empirical
+results.
+\Cref{ch:conclusion} concludes.

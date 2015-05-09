@@ -47,7 +47,7 @@ with respect to used memory, indices and runtime?}
 This chapter will show how to represent  $\ProbMKN{w_n}{w_1^{n-1}}$ and
 $\ProbGLM{w_n}{w_1^{n-1}}$ as weighted sums of terms depending on $w_n$ for a
 fixed history $h = w_1^{n-1}$ and an  arbitrary probability event $w = w_n$.
-In other words we will express the formulas given in \cref{ch:review-lm} as
+In other words we will express the formulas given in \cref{ch:review} as
 equations of the following form:
 \begin{equation}
   \Prob{w}{h} = \sum_{i = 1}^{N} \SumWeight_i^h \cdot \SumArg_i^h(w_n)
@@ -67,7 +67,7 @@ select our join arguments to exactly match $\SumArg_i^h$.
 In addition further optimized top-$k$ joining algorithms exists, that require
 weighted sum scoring functions.
 However we will not use these algorithms in this work.
-For a detailed discussion see \cref{ch:top-k-joining}.
+For a detailed discussion see \cref{ch:topkjoin}.
 
 In the case of Generalized Language Models our solution will also have a
 considerably better computational complexity to calculate probabilities than the

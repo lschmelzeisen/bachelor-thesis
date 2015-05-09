@@ -1,4 +1,5 @@
 \chapter{Related Work}
+\label{ch:relatedwork}
 
 \begin{draft}
 Commonly to solve the described problem Viterbi or beam search algorithms are
@@ -11,6 +12,17 @@ Is there some work on expressing language models as weighted sums?
   \item Jelinek Mercer 1980 or 1981 learn interpolation weights on counts.
 \end{itemize}
 }
+
+\begin{draft}
+May be good because we do not have to prune, and pruning might be bad
+\parencite{Stolcke2000,Chelba2013,Chelba2010,Siivola2007}.
+
+\textcite{Bickel2005} state that viterbi algorithm does not always find best
+result.
+\end{draft}
+
+% ------------------------------------------------------------------------------
+\section{Noisy Channel Queries}
 
 % ------------------------------------------------------------------------------
 \section{State-of-the-art Language Models}
@@ -29,6 +41,10 @@ Very recently \textcite{Pickhardt2014} provided a generalization of this techniq
 the \emph{Generalized Language Model}.
 
 \begin{draft}
+\textcite{BilmesKirchhoff2003}
+\end{draft}
+
+\begin{draft}
 Justify selection of MKN and GLM over recently popular LMs from
 \parencite{Chelba2013}.
 
@@ -37,17 +53,17 @@ Mention \emph{Nerual Network Language Models} \parencite{Bengio2003,Mikolov2012}
 \end{draft}
 
 An in-depth summary of Modified Kneser-Ney Smoothing and the Generalized
-Language Model is given in \cref{ch:review-lm}.
+Language Model is given in \cref{ch:review}.
 
 % ------------------------------------------------------------------------------
 \section{Top-\emph{k} Joining Techniques}
 
 \Lukas[inline]{I would much rather summarize top-$k$ joining techniques in
-\cref{ch:top-k-joining} as the task is clearly defined there, and we can have
+\cref{ch:topkjoin} as the task is clearly defined there, and we can have
 more in-depth discussion about it.}
 
 \begin{draft}
-Reference to \cref{ch:top-k-joining}.
+Reference to \cref{ch:topkjoin}.
 \end{draft}
 
 \Rene[inline]{Related Work may be omitted and split up into content chapters.}
