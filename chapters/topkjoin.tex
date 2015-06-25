@@ -184,3 +184,24 @@ Clever: How to find T as max of $(p_1^{max}, p_2^{last})$ and
 $(p_1^{last}, p_2^{max})$.
 
 Clever: Priority-Queue with constant contains and update.
+
+\section{Beam search}
+
+Beam search is a path finding algorithm that always expands the most promising
+states, and terminates when a solution was found.
+
+This however is not directly applicable to our problem, as finding a solution
+is typically very easy (get top node from sorted pattern counts and take it as
+solution).
+
+How to interpret: expanding the most promising state?
+\begin{enumerate}
+  \item Peek sorted counts, list with highest count is most promising.
+  \item Now how to determine if we want to do random access to missing pattern
+    counts or rather fetch next sorted count.
+  \item Could do beam width many sorted accesses, and complete missing patterns
+    with random acccess and call it a day.
+\end{enumerate}
+
+For random access the cost of an edge is only known, once the edge is walked.
+For sorted access we can peek.

@@ -1,6 +1,11 @@
 \chapter{Introduction}
 \label{ch:introduction}
 
+\begin{draft}
+\textcite{Bickel2005} actually does trivial argmax and calculates probabilities
+for all words in vocabulary repeatedly.
+\end{draft}
+
 The \emph{noisy channel model} is a commonly applied concept in natural language
 processing.
 As first described by \textcite{Shannon1948}, it consists of a transmitter that
@@ -114,7 +119,7 @@ their results trough combination of multiple data sources \parencite{Ilyas2008}.
 
 One example might be the query to a web search engine.
 Search results are ranked by relevance, as computed by several criteria
-(matching keywords, links from other sites, popularity, ...).
+(matching keywords, links from other sites, popularity, \ldots).
 Users generally require more than just the one highest ranking search result, as
 it may not be exactly what they are they were looking for.
 On the other hand it would be infeasible to relevance-rank all sites in the
@@ -153,7 +158,7 @@ the $n\!-\!1$~previous words $w_1^{n-1}$.
 Thus only sequences of length $n$ have to be considered.
 The resulting language models are called \emph{$n$-gram models}.
 State-of-the-art language modeling uses $n$-grams with $n$ as large as $5$
-\parencite{JurafskyMartin2009,Goodman2001}.
+\parencite{JurafskyMartin2009,Goodman2001,Stolcke2000}.
 
 \begin{draft}
 Calculating noisy channel type queries (\cref{eq:noisychannel}) is a very time
@@ -162,8 +167,8 @@ expensive operation, as for each.
 So we want to optimize that.
 \end{draft}
 
-Most statistical language models' probabilities are based on the occurrence
-count of sequences \noref.
+Most language model probability formulas are given in recursive form, that only
+implicitly depend on the occurrence count of sequences in the corpus \noref.
 If these probabilities can be expressed as monotone scoring functions of
 occurrence counts, we can apply top-$k$ joining techniques in order to solve
 noisy channel type queries.
@@ -183,14 +188,6 @@ the noisy channel's probability.
 This approach can be used for all noisy channel type queries, that can be
 expressed as monotone scoring functions.
 We will present our method by implementing next word prediction with it.
-%This approach will exemplary be showcased by applying it to the problem of
-%next word prediction.
-%The concern of this thesis is solving noisy channel type queries based on
-%statistical language model probabilities, by employing top-$k$ joining
-%techniques, in order to avoid having to calculate probabilities for all
-%arguments.
-%To avoid having to calculate probabilities for all arguments top-$k$ joining
-%techniques can be used.
 
 In \cref{ch:relatedwork} an overview of related work will be given.
 \Cref{ch:review} will review the two types of language models, that are used in

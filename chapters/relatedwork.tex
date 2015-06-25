@@ -2,68 +2,89 @@
 \label{ch:relatedwork}
 
 \begin{draft}
-Commonly to solve the described problem Viterbi or beam search algorithms are
-used \mbref{JurafskyMartin2009}.
-\end{draft}
-
-\todo[inline, caption={Find related work on language models as weighted sums}]{
-Is there some work on expressing language models as weighted sums?
-\begin{itemize}
-  \item Jelinek Mercer 1980 or 1981 learn interpolation weights on counts.
-\end{itemize}
-}
-
-\begin{draft}
-May be good because we do not have to prune, and pruning might be bad
-\parencite{Stolcke2000,Chelba2013,Chelba2010,Siivola2007}.
-
-\textcite{Bickel2005} state that viterbi algorithm does not always find best
-result.
+\begin{displayquote}[\textcite{JurafskyMartin2009}]
+Because in practice most implementations of Viterbi use beam
+search, some of the literature uses the term beam search or time-synchronous beam
+search instead of Viterbi.
+\end{displayquote}
 \end{draft}
 
 % ------------------------------------------------------------------------------
 \section{Noisy Channel Queries}
 
+The established way to solve noisy channel type queries is to use
+\emph{Viterbi-} or \emph{beam-search-algorithms}
+\parencite{JurafskyMartin2009,Bickel2005}.
+These algorithms are based on following most promising looking paths and
+pruning the search space with some heuristic.
+Trough this pruning, remarkable runtime performance can be achieved, however it
+has other undesirable effects, for instance these algorithms are not guaranteed
+to always find (optimal) solutions \parencite{Bickel2005}.
+
+This thesis' approach using top-$k$ joining does not have these drawbacks, it
+will always find the best solution(s).
+
 % ------------------------------------------------------------------------------
 \section{State-of-the-art Language Models}
-
-\begin{draft}
-This section summarizes the state-of-the-art language models considered in this
-work.
-And their origins?
-\end{draft}
 
 The currently most commonly used \parencite{JurafskyMartin2009,Chelba2013}
 technique for estimating language models is \emph{Modified Kneser-Ney Smoothing}
 by \textcite{ChenGoodman1996,ChenGoodman1998,ChenGoodman1999}, based on
 \emph{Kneser-Ney Smoothing} by \textcite{KneserNey1995}.
-Very recently \textcite{Pickhardt2014} provided a generalization of this technique,
-the \emph{Generalized Language Model}.
-
-\begin{draft}
-\textcite{BilmesKirchhoff2003}
-\end{draft}
+\textcite{BilmesKirchhoff2003} introduced the concept of a \emph{generalized
+parallel backoff}, which very recently \textcite{Pickhardt2014} used to provide
+a generalization of Modified Kneser-Ney Smoothing, the \emph{Generalized
+Language Model}.
 
 \begin{draft}
 Justify selection of MKN and GLM over recently popular LMs from
-\parencite{Chelba2013}.
-
-Mention \emph{Nerual Network Language Models} \parencite{Bengio2003,Mikolov2012}
-(do we not use them because they can not be represented as weighted sums).
+\textcite{Chelba2013}.
 \end{draft}
 
 An in-depth summary of Modified Kneser-Ney Smoothing and the Generalized
 Language Model is given in \cref{ch:review}.
 
+We will then express these language models as weighted sums of their occurrence
+counts in \cref{ch:weightedsum}.
+To the authors knowledge, there is no other work on expressing language models
+as weighted sums.
+However, \textcite{JelinekMercer1980} already experimented with trying to learn
+weighted sum parameters automatically for language modeling.
+
+\begin{draft}
+Mention \emph{Nerual Network Language Models} \parencite{Bengio2003,Mikolov2012}
+(do we not use them because they can not be represented as weighted sums?), as
+they seem to be in favor of academic research recently.
+\end{draft}
+
 % ------------------------------------------------------------------------------
 \section{Top-\emph{k} Joining Techniques}
 
-\Lukas[inline]{I would much rather summarize top-$k$ joining techniques in
-\cref{ch:topkjoin} as the task is clearly defined there, and we can have
-more in-depth discussion about it.}
+\textcite{Ilyas2008} survey a wide range of different top-$k$ processing
+techniques.
+One way to distinguish top-$k$ techniques is data access.
+Nearly all algorithms necessitate some form of \emph{sorted access} to data
+sources.
+Some techniques additionally require \emph{random access}.
+
+Among others, two fundamental algorithms were established by
+\textcite{Fagin2001}: the \emph{threshold algorithm} (sorted and random access)
+and the \emph{no-random-access algorithm} (only sorted access).
+The implementation for these two algorithms will be described in
+\cref{ch:topkjoin}, and we will evaluate them in \cref{ch:evaluation}.
 
 \begin{draft}
-Reference to \cref{ch:topkjoin}.
+Mention instance optimiallity, and else Fagin proved.
 \end{draft}
 
-\Rene[inline]{Related Work may be omitted and split up into content chapters.}
+
+\begin{draft}
+Mention \textcite{Guentzer2000} and \textcite{Guentzer2001} improvements to TA
+and NRA.
+\end{draft}
+
+\begin{draft}
+Mention other more optimized techniques such as onion indices or J* or
+Rank-Join.
+How do I explain these can not be used in this chapter?
+\end{draft}

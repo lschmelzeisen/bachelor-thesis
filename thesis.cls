@@ -291,7 +291,7 @@
 
         \vfill
 
-        \begin{addmargin}{2cm}
+        \begin{addmargin}{1cm}
           \begin{center}
             \fontsize{17}{19}\selectfont\textcolor{Maroon}{\spacedallcaps{\@title}}
           \end{center}
@@ -390,12 +390,12 @@
 \let\oldtocEntry\tocEntry
 % Align chapters with and without number
 \ifthenelse{\boolean{@styleclassicthesis}}{
-  \renewcommand*\tocEntry[1]{
-    \hspace{1.2em}%
+  \renewcommand*\tocEntry[1]{%
+    \hspace{1.45em}%
     \oldtocEntry{#1}%
   }
 }{
-  \renewcommand*\tocEntry[1]{
+  \renewcommand*\tocEntry[1]{%
     \hspace{1.0em}%
     \oldtocEntry{#1}%
   }
@@ -442,6 +442,11 @@
 }
 
 % References ===================================================================
+
+% last names before first names
+% http://tex.stackexchange.com/questions/113573/biblatex-order-last-first-for-the-names-of-multiple-editors
+\DeclareNameAlias{sortname}{last-first}
+\DeclareNameAlias{default}{last-first}
 
 \setlength\bibitemsep{0.8em} % vertical space between bibliography entries
 \setlength\bibhang{1em} % indent after first line on bibliography entries
