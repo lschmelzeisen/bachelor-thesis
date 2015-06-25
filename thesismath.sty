@@ -80,8 +80,8 @@
 \newcommand*\Vocab{\Sigma}
 
 % Next Word Prediction
-\NewDocumentCommand{\NWP}{g}{
-  \operatorname{NWP}\IfNoValueTF{#1}{}{(#1)}
+\NewDocumentCommand{\NWP}{o g}{
+  \operatorname{NWP}_{\IfNoValueTF{#1}{}{#1}}\IfNoValueTF{#2}{}{(#2)}
 }
 
 % Next Keystroke Savings

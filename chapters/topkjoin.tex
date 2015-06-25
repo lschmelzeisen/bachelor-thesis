@@ -1,6 +1,70 @@
 \chapter{Top-\emph{k} Joining Language Models}
 \label{ch:topkjoin}
 
+As motivated in the introduction, we want to solve prefix queries based
+on statistical language models.
+
+Prefix queries have the form...
+\begin{equation}
+  \NWP[p]{w_1^{n-1}} =
+    \Argmax_{\mathclap{\substack{w \in \Vocab,\\p\ \text{prefix of}\ w}}}
+      \Prob[\text{LM}]{w}{w_1^{n-1}}
+\end{equation}
+\todo{Notation for $w\ \text{prefix of}\ p$?}
+\todo{How do we define NWP, in case there is not one clear argmax?}
+
+$\Prob[\text{LM}]{w}{w_1^{n-1}}$ is calculated from occurrence counts of
+sequences in a corpus, that we denote with $\Count(\DummyArg)$.
+In \cref{ch:weightedsum} we have shown that it is possible to formulate
+that probability as a weighted sum of form \cref{eq:weightedsum}, that
+are monotone.
+Those weighted sums are of terms independent of $w$, and terms dependent on it.
+
+We thus only have to calculate the term independent of $w$ once, and can reuse
+them for each probability calculated for one NWP query.
+
+Additionally calculating the probability for all valid $w$ is very time
+expensive.
+By sorting counts we can achieve better performance with top k joining
+techniques.
+
+In order to store sorted counts space efficient and have acceptable lookup
+times, that is further able to utilize the fact the we have prefix, we use
+completion tries.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
 \todo[inline]{Add algorithm that only uses sorted access.}
 
 \lstset{
