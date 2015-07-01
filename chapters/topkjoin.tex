@@ -1,40 +1,445 @@
-\chapter{Top-\emph{k} Joining Language Models}
+\chapter{Fast Prefix Queries using Top-\emph{k} Joins}
 \label{ch:topkjoin}
 
+\todo[inline]{Update math notation once it has been fixed in
+\cref{ch:weightedsum}.}
+
+\begin{draft}
 As motivated in the introduction, we want to solve prefix queries based
-on statistical language models.
+on statistical language models (NWP with NKSS).
+\end{draft}
 
-Prefix queries have the form...
+Our objective is to reduce the execution time of a high number of next word
+prediction queries for arbitrary histories and prefixes.
+\Cref{eq:prefixquery} shows that next word prediction queries $\NWP[p][k](h)$
+are an argmax of probabilities.
+To optimize query time we follow a two-pronged approach:
+First we identify calculations shared by multiple probabilities, and perform
+them only once up front.
+Secondly we try to avoid enumerating the whole argument space of the argmax.
+Instead our goal is to always compute the probability for the next most
+promising argument, and to terminate as soon as we are sure to have found the
+$k$ words that maximize the probability.
+
+As specified in \cref{ch:review} each language model probability  is calculated
+from occurrence counts of sequences in a corpus.
+In order to avoid having to analyze the corpus on each query for its relevant
+sequences, the number of occurrence for all contained sequences in a corpus is
+counted up front in a learning phase.
+We store those counts in a data structure that is optimized for necessary
+retrieval.
+We will explain that data structure and define what necessary retrieval means
+in \cref{sec:completiontrie}.
+Subsequently we may persist that data, so that for each requested corpus the
+necessary analyzation only has to be performed once.
+
+To find the answer for a query $\NWP[p][k]{h}$ probabilities $\Prob{w}{h}$ have
+to be calculated for a fixed history $h$ but many different $w$.
+We have shown in \cref{ch:weightedsum} that we can represent each probability
+as a weighted sum that resembles \cref{eq:weightedsum}.
+The weights $\SumWeight^h_i$ of that sum are composed of exactly these counts
+that are independent of the argument $w$.
+This enables us to calculate the $\SumWeight_i^h$ once beforehand and reuse them
+for every probability calculation of a query.
+The remaining factors $\SumArg^h_i(w)$ depend on $w$.
+This means we can find a function $s$ that expresses our
+probabilities\footnote{The definition for $s$ is just \cref{eq:weightedsum}.
+This new representation is only introduced to make it clear, that given the
+$\SumWeight^h_i$ the probability can be calculated from the $\SumArg^h_i(w)$.}:
+\todo{It is not visible from the notation that $s$ depends on the
+  $\SumWeight^h_i$.}
 \begin{equation}
-  \NWP[p]{w_1^{n-1}} =
-    \Argmax_{\mathclap{\substack{w \in \Vocab,\\p\ \text{prefix of}\ w}}}
-      \Prob[\text{LM}]{w}{w_1^{n-1}}
+  \label{eq:scoringfunc}
+  \Prob{w}{h} = s\left(\SumArg^h_1(w), \, \ldots, \, \SumArg^h_N(w)\right)
 \end{equation}
-\todo{Notation for $w\ \text{prefix of}\ p$?}
-\todo{How do we define NWP, in case there is not one clear argmax?}
 
-$\Prob[\text{LM}]{w}{w_1^{n-1}}$ is calculated from occurrence counts of
-sequences in a corpus, that we denote with $\Count(\DummyArg)$.
-In \cref{ch:weightedsum} we have shown that it is possible to formulate
-that probability as a weighted sum of form \cref{eq:weightedsum}, that
-are monotone.
-Those weighted sums are of terms independent of $w$, and terms dependent on it.
+\iffalse
+Our approach to avoid enumerating all possible values for $w$ to find the $k$
+words that maximize $\Prob{w}{h}$ relies on the fact that the probabilities are
+\emph{monotone}, as was shown in \textbf{??}.
+\todo{Actually show monotony somewhere in \cref{ch:weightedsum}.}
+Monotone in our context means that higher $\SumArg^h_i(w)$ values correspond
+to higher probabilities.
+Our idea is now to always calculate the probability for the next remaining $w$
+with the highest $\SumArg^h_i(w)$.
+This is repeated until we are sure to have found the $k$ words $w$ with the
+highest probability.
+%This process is known as \emph{top-\emph{k} joining}.
+%We will first explain the employed data structure to store counts in
+%\cref{sec:completiontrie} and then explain our algorithm in
+%\cref{sec:topkjoin}.
+\fi
 
-We thus only have to calculate the term independent of $w$ once, and can reuse
-them for each probability calculated for one NWP query.
+% ------------------------------------------------------------------------------
+\section{Top-\emph{k} Joining Techniques}
+\label{sec:topkjoin}
 
-Additionally calculating the probability for all valid $w$ is very time
-expensive.
-By sorting counts we can achieve better performance with top k joining
-techniques.
+\iffalse
+\begin{lstlisting}[
+  label = {lst:topksql},
+  float,
+  caption = {\todo[inline]{Example SQL-Request Caption}},
+  language = SQL,
+  %basicstyle = \ttfamily,
+  emph = {history1, historyN},
+  emphstyle = \textit,
+  deletekeywords = {count} % Used as column name, don't want to escape it though
+]
+  SELECT
+    word,
+    s(Trie1.alpha, ..., TrieN.alpha) AS probability
+  FROM Vocabulary
+  LEFT OUTER JOIN Trie1
+    ON history1 + word = Trie1.sequence
+  ...
+  LEFT OUTER JOIN TrieN
+    ON historyN + word = TrieN.sequence
+  ORDER BY probability DESC
+  LIMIT k;
+\end{lstlisting}
+\fi
 
-In order to store sorted counts space efficient and have acceptable lookup
-times, that is further able to utilize the fact the we have prefix, we use
-completion tries.
+The problem we are trying to solve, namely finding the $k$ words $w$ that
+maximize our probability $\Prob{w}{h}$, is actually well researched under the
+topic of \emph{top-$k$ joining techniques}.
+The result of a join operation is the set of all combinations of tuples from
+multiple data sources, where each tuple combination satisfies the \emph{join
+condition}.
+Top-$k$ joins are then these that only return the $k$ highest scoring
+according to some \emph{scoring function}.
 
+We can easily see that our prefix queries fit the scheme of top-$k$ join
+queries.
+To calculate the probability of any word $w$, we have to look up all
+$\SumArg^h_i(w)$ that belong to that word.
+Finding all combinations
+$\left(\SumArg^h_1(w), \, ..., \, \SumArg^h_N(w)\right)$
+for each word $w$ is actually a join operation with the join condition that
+the $w$ is constant over the $\SumArg^h_i(w)$ of a single combination.
+As defined, for a query $\NWP[p][k]{w}$ we only want to return the $k$ best
+predictions.
+The $k$ best predictions are those that yield the $k$ highest values according
+to a scoring function, which in our case is the probability.
+Each join combination gives the arguments for the scoring function, as shown
+in \cref{eq:scoringfunc}.
 
+Almost all top-$k$ joining techniques that try to be more efficient than
+enumerating all join combinations, require \emph{monotone} scoring functions.
+Monotone in our context means that higher $\SumArg^h_i(w)$ values correspond
+to higher probabilities, which we have shown in \textbf{??}.
+\todo{Actually show monotony somewhere in \cref{ch:weightedsum}.}
+This fact can be utilized to find the top-$k$ predictions by always calculating
+the probability for the next promising $w$ with the highest $\SumArg^h_i(w)$.
 
+Finding the $w$ with the highest $\SumArg^h_i(w)$ requires sorting.
+Since join combinations
+$\left(\SumArg^h_1(w), \, ..., \, \SumArg^h_N(w)\right)$ are multi-dimensional
+there is no meaningful order defined on them, besides sorting by the scoring
+function.
+However that requires calculating the probability for each join
+combination, which is precisely what we are trying to avoid.
+For this reason we instead maintain $N$ data relations, one for each
+$\SumArg^h_i(w)$, and sort them independently in the learning phase.
+During query time, we can then perform \emph{sorted access} on these relations,
+that is for a given history $h$ we want to retrieve words $w$ paired with and
+sorted by their $\SumArg^h_i(w)$.
+Some top-$k$ joining techniques additionally require \emph{random access},
+that is for a given history $h$ and a given word $w$ we want to find
+$\SumArg^h_i(w)$.
+The data structure we use for this will be explained in
+\cref{sec:completiontrie}.
 
+\textcite{Ilyas2008} survey a wide number of top-$k$ joining techniques.
+Among other things, top-$k$ joining techniques can be classified by the type
+of join operation they support.
+The join operation for our problem is whether for two values $\SumArg^h_i(w_i)$
+and $\SumArg^h_j(w_j)$ the $w_i$ and $w_j$ are equal.
+This is actually the simplest and most common type of join operation and is
+called an \emph{equi-join}.
+Those have the nice property that for each $\SumArg^h_i(w)$ there is exactly one
+corresponding $\SumArg^h_j(w)$ for all $j$ that are different from $i$, which
+allows easy indexing in a hash table by key $w$.
+Top-$k$ joining techniques that operate on equi-joins are also called
+\emph{top-$k$ selections}.
+
+In this thesis we will implement and compare two top-$k$ joining techniques
+described by \textcite{Fagin2001}: the \emph{threshold algorithm}, which
+requires sorted and random access, and the \emph{no random access algorithm},
+which only requires sorted access.
+
+There exists a plethora of more sophisticated techniques.
+For example Onion indices \parencite{Chang2000} and rank join indices
+\parencite{Tsaparas2003} feature an extended learning phase, in which
+optimized data representation are created over all arguments to the scoring
+function.
+These allow faster top-$k$ joins for arbitrary scoring functions over the same
+arguments.
+However optimizations like these are not applicable to our prefix query problem,
+as the history $h$ changes with each query $\NWP[p][k](h)$.
+Because of this the whole argument space $\SumArg^h_i(w)$ changes, which in turn
+means we would have to built indices with each query, obviously defeating the
+purpose.
+The Rank Join operator \parencite{Ilyas2004} is another more recent algorithm.
+However in the precense of an equi-join it practically reduces to the threshold
+algorithm.
+
+% ------------------------------------------------------------------------------
+\section{Completion Trie}
+\label{sec:completiontrie}
+
+For our needs we require a data structure that can return sorted pairs
+$\left(w, \SumArg^h_i(w)\right)$ for each $i$ for a given history $h$.
+Additionally as we are solving prefix queries, it has to be possible to specify
+a prefix $p$ with which all $w$ have to start.
+
+\begin{draft}
+Random access is important for better top-k-joins and for computing
+$\SumWeight^h_i$ directly from the same data structure.
+\end{draft}
+
+\begin{draft}
+Since bigger corpora usually allow for better language model quality \noref,
+data compression is desirable.
+Obviously on top of this low time complexity is key.
+\end{draft}
+
+\Lukas[noline]{How in depth do I explain the completion trie?}
+The data structure which satisfies all these requirements is the
+\emph{completion trie} described by \textcite{HsuOttaviano2013}.
+A completion trie is a compact prefix tree that allows storage of arbitrary
+pairs of strings and integer-scores.
+A prefix trie is an ordered tree data structure where each node stores a
+character sequence.
+Retrieving a full string from the trie is done by concatenating all character
+sequences along a path from the root to a leaf node.
+In a completion trie each node also stores the highest score of all its leaf
+nodes.
+This enables very fast retrieval of all string-score-pairs sorted by score,
+where the string start with a requested prefix, hence the name
+\emph{completion} trie.
+
+\textcite{HsuOttaviano2013} devise a method for storing only a minimal number of
+tree edges, while maintaining data locality.
+Further employing a variable-byte encoding they report an average compression
+ratio of their data structure of 51\% compared to raw uncompressed text files.
+In the same publication \textcite{HsuOttaviano2013} present two alternative
+data structures for the same task that achieve compression ratios of 29\%
+respectively 30\%.
+However they report access times which are at least twice as high as those
+of the completion trie.
+Since speed is the primary concern of this thesis these alternatives
+were not further considered.
+
+For $1 \leq i \leq N$ we maintain $N$ many completion trie instances and store
+pairs $\left(h \Concat w, \SumArg^h_i(w)\right)$ in each trie for all possible
+histories $h$ and words $w$, where $h \Concat w$ is the concatenation of
+$h$ and $w$.
+This enables all our desired accessing schemes:
+\begin{itemize}
+  \item Sorted access for some history $h$ is done by querying for completions
+    of $h$.
+    \todo{Actually $\hat h$.}
+    Results are then pairs where the string starts with the requested
+    history.
+    The remaining part of the string is the word $w$.
+    Results are sorted on the score $\SumArg^h_i(w)$.
+    \todo{Querying $i$-th trie is only said implicitly.}
+  \item A prefix $p$ with which $w$ has to start is easily included.
+    Querying for completions of $h \Concat p$ returns the same pairs as above, but only
+    those where $p$ is a prefix in $w$.
+  \item Random access for a fixed history $h$ and fixed word $w$ is achieved by
+    walking the path along the trie that is described by $h \Concat w$.
+    If that path ends in a leaf node, this node's score is $\SumArg^h_i(w)$.
+    If that path does not exists, or the found node is not a leaf node,
+    $\SumArg^h_i(w)$ is zero.
+\end{itemize}
+
+% ------------------------------------------------------------------------------
+\section{Threshold Algorithm}
+
+\begin{algorithm}
+  \caption{\emph{Threshold Algorithm} to solve $\NWP[p][k]{h}$}
+  \label{alg:tresholdalgorithm}
+  \begin{algorithmic}[1]
+    \Require $C_1, \: \ldots, \: C_N$
+      \Comment{corpus data stored in Completion Tries}
+    \Require $history$, $prefix$, $limit$
+    \Statex \Comment{history $h$, prefix $p$ and limit $k$ for prefix query $\NWP[p][k]{h}$}
+    \Ensure $predictions$
+      \Comment{list of word-probability-pairs}
+
+    \State $\SumWeight_1, \: \ldots, \: \SumWeight_N \gets$ \Call{calcSumWeights}{$h$}
+      \Comment{see \cref{ch:weightedsum}}
+    \For{$i \gets 1$ \textbf{to} $N$}
+      \State $\overline{\SumArg}_i \gets C_i$.\Call{peekCount}{history $+$ prefix}
+    \EndFor
+    \State queue $\gets$ \textbf{new} \Call{PriorityQueue}{$ $}
+      \Comment{prediction candidates}
+    \State seen $\gets$ \textbf{new} \Call{Set}{$ $}
+      \Comment{set of seen words}
+
+    \vspace{0.7em}
+    \While{$i \gets$ \Call{nextTrie}{$ $}}
+      \LineComment{perform sorted access, track seen words}
+      \State word$,$ count $\gets C_i$.\Call{next}{history $+$ prefix}
+      \If{seen.\Call{contains}{word}}
+        \State \textbf{continue}
+          \Comment{skip words already seen in previous iterations}
+      \EndIf
+      \State seen.\Call{add}{word}
+
+      \vspace{0.7em}
+      \LineComment{compute word probability}
+      \For{$j \gets 1$ \textbf{to} $N$}
+        \If{j == i}
+          \State $\SumArg_j \gets$ count
+        \Else
+          \State $\SumArg_j \gets C_j$.\Call{get}{history $+$ word}
+            \Comment{random access}
+        \EndIf
+      \EndFor
+      \State probability $\gets \sum_{j = 0}^N \SumWeight_j \SumArg_j$
+
+      \vspace{0.7em}
+      \LineComment{keep limit-many best predictions}
+      \State queue.\Call{add}{(word, probability)}
+      \If{queue.\Call{size}{$ $} $>$ limit}
+        \State queue.\Call{removeLowestProbabilityEntry}{$ $}
+      \EndIf
+
+      \vspace{0.7em}
+      \LineComment{compute threshold}
+      \State $\overline{\SumArg}_i \gets \SumArg_i$
+      \State threshold $\gets \sum_{j = 0}^N \SumWeight_j \overline{\SumArg}_j$
+
+      \vspace{0.7em}
+      \LineComment{stop if better predictions are impossible}
+      \If{queue.\Call{size}{$ $} $=$ limit \textbf{and}
+        \\\hspace{2.5em}threshold $<$ queue.\Call{getLowestProbability}{$ $}}
+        \State \textbf{break}
+      \EndIf
+    \EndWhile
+
+    \vspace{0.7em}
+    \State predictions $\gets$ queue.\Call{toList}{$ $}
+  \end{algorithmic}
+\end{algorithm}
+
+\Cref{alg:tresholdalgorithm}
+
+\begin{draft}
+Needs to keep set of all seen words.
+
+Need to keep $k$ many word-probability pairs in priority-queue.
+\end{draft}
+
+% ------------------------------------------------------------------------------
+\section{No Random Access Algorithm}
+
+\begin{algorithm}
+  \caption{\emph{No Random Access Algorithm} to solve $\NWP[p][k]{h}$}
+  \label{alg:norandomaccessalgorithm}
+  \begin{algorithmic}[1]
+    \Require $C_1, \: \ldots, \: C_N$
+      \Comment{corpus data stored in Completion Tries}
+    \Require $history$, $prefix$, $limit$
+    \Statex \Comment{history $h$, prefix $p$ and limit $k$ for prefix query $\NWP[p][k]{h}$}
+    \Ensure $predictions$
+      \Comment{list of words}
+
+    \State $\SumWeight_1, \: \ldots, \: \SumWeight_N \gets$ \Call{calcSumWeights}{$h$}
+      \Comment{see \cref{ch:weightedsum}}
+    \For{$i \gets 1$ \textbf{to} $N$}
+      \State $\overline{\SumArg}_i \gets C_i$.\Call{peekCount}{history + prefix}
+    \EndFor
+    \State queue $\gets$ \textbf{new} \Call{PriorityQueue}{$ $}
+      \Comment{all predictions}
+    \State wordCounts $\gets$ \textbf{new} \Call{Map}{$ $}
+      \Comment{map from words to their counts}
+    \State predictions $\gets$ \textbf{new} \Call{List}{$ $}
+
+    \vspace{0.7em}
+    \While{$i \gets$ \Call{nextTrie}{$ $}}
+      \LineComment{perform sorted access, track known counts per word}
+      \State word$,$ count $\gets C_i$.\Call{next}{history $+$ prefix}
+      \If{\textbf{not} wordCounts.\Call{contains}{word}}
+        \State $\SumArg_1, \: \ldots, \: \SumArg_N \gets $ \textbf{unkown}$, \: \ldots, \:$\textbf{unkown}
+      \Else
+        \State $\SumArg_1, \: \ldots, \: \SumArg_N \gets $ wordCounts.\Call{get}{word}
+        \State queue.\Call{remove}{word}
+      \EndIf
+      \State $\SumArg_i \gets$ count
+      \State wordCounts.\Call{set}{word, $(\SumArg_1, \: \ldots, \: \SumArg_N)$}
+
+      \vspace{0.7em}
+      \LineComment{compute word probability upper- and lower-bound}
+      \State $\overline{\SumArg}_i \gets \SumArg_i$
+      \State upperBound $\gets 0$
+      \State lowerBound $\gets 0$
+      \For{$j \gets 1$ \textbf{to} $N$}
+        \If{$\SumArg_j =$ \textbf{unknown}}
+          \State upperBround $\gets$ upperBound $+ \SumWeight_j \overline{\SumArg}_j$
+        \Else
+          \State upperBound $\gets$ upperBound $+ \SumWeight_j \SumArg_j$
+          \State lowerBound $\gets$ lowerBound $+ \SumWeight_j \SumArg_j$
+        \EndIf
+      \EndFor
+
+      \vspace{0.7em}
+      \LineComment{predict words with lower bound $\geq$ all other upper bounds}
+      \State queue.\Call{push}{(word, upperBound, lowerBound)}
+      \While{\textbf{true}}
+        \State word, upperBound, lowerBound $\gets$ queue.\Call{pop}{$ $}
+        \If{lowerBound $\geq$ queue.\Call{getLargestUpperBound}{$ $}}
+          \State predictions.\Call{add}{word}
+        \Else
+          \State queue.\Call{push}{(word, upperBound, lowerBound)}
+          \State \textbf{break}
+        \EndIf
+        \If{predictions.\Call{size}{$ $} $=$ limit}
+          \State \textbf{exit}
+        \EndIf
+      \EndWhile
+    \EndWhile
+
+    \vspace{0.7em}
+    \For{$i \gets$ predictions.\Call{size}{$ $} \textbf{to} limit}
+      \State word, upperBound, lowerBound $\gets$ queue.\Call{pop}{$ $}
+      \If{upperBound $= 0$}
+        \State \textbf{break}
+      \EndIf
+      \State predictions.\Call{add}{word}
+    \EndFor
+  \end{algorithmic}
+\end{algorithm}
+
+\Cref{alg:norandomaccessalgorithm}
+
+\begin{draft}
+Need to keep all encountered words along with counts lower and upperBounds.
+\end{draft}
+
+% ------------------------------------------------------------------------------
+\section{Implementation}
+
+\begin{draft}
+Not actually $h * p$ but $\hat{h} * p$.
+
+Can't actually store $\SumArg(\DummyArg)$ but only counts $\Count(\DummyArg)$.
+Discounts fuck everything up and sometimes require random access even when only
+doing sorted.
+
+Faster threshold calucation.
+
+Can't just do $C_i$.\Call{next}{$\DummyArg$}, iterators needed instead.
+\end{draft}
+
+% ------------------------------------------------------------------------------
+\section{Alternatives}
+
+\begin{draft}
+Why beam search is impossible.
+\end{draft}
 
 
 
@@ -65,6 +470,7 @@ completion tries.
 
 
 \clearpage
+\textbf{Old stuff. Don't read this.}
 \todo[inline]{Add algorithm that only uses sorted access.}
 
 \lstset{
@@ -80,7 +486,7 @@ model $\Prob[\text{LM}]$ using top-$k$ joining techniques.
 
 The task is to efficiently compute the following expression:
 \begin{equation}
-  \Argmax_{t \in T} \Prob[\text{LM}]{t}{h}
+  \Argmax{t \in T} \Prob[\text{LM}]{t}{h}
 \end{equation}
 Where $t$ is a token in the set of all tokens $T$, $\Prob[\text{LM}]$ is a
 language model, that can be expressed as a weighted sum (as described in
@@ -93,7 +499,7 @@ arg-max-query as a SQL-\texttt{SELECT}-Request, as given in \cref{lst:topksql}.
 
 \begin{lstlisting}[
   label = {lst:topksql},
-  float,
+  %float,
   caption = {\todo[inline]{Example SQL-Request Caption}},
 ]
   SELECT
@@ -115,7 +521,7 @@ arg-max-query as a SQL-\texttt{SELECT}-Request, as given in \cref{lst:topksql}.
 Our data model is thus: One input relation \inlinecode{Token} that stores
 all possible tokens \inlinecode{arg}, over which we want to compute:
 \begin{equation}
-  \Argmax_{\text{\inlinecode{arg}} \, \in \, \text{\inlinecode{Token}}}
+  \Argmax{\text{\inlinecode{arg}} \, \in \, \text{\inlinecode{Token}}}
     \Prob[\text{LM}]{\text{\inlinecode{arg}}}{\text{\inlinecode{history}}}
 \end{equation}
 Additionally we have $n$ input relations

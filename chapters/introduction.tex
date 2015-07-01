@@ -51,13 +51,13 @@ langauge~$\Language$ that is most likely to be the source of the received,
 distorted observation~$o$:
 \begin{align}
   \label{eq:noisychannel}
-  m &= \Argmax_{s \in \Language} \Prob{s}{o} \\
+  m &= \Argmax{s \in \Language} \Prob{s}{o} \\
   \intertext{Commonly this noisy channel equation is rewritten using Bayes'
     theorem to:}
   \label{eq:noisychannelbayes}
   \begin{split}
-    m &= \Argmax_{s \in \Language} \frac{\Prob{o}{s} \cdot \Prob{s}}{\Prob{o}}
-       = \Argmax_{s \in \Language} \Prob{o}{s} \cdot \Prob{s}
+    m &= \Argmax{s \in \Language} \frac{\Prob{o}{s} \cdot \Prob{s}}{\Prob{o}}
+       = \Argmax{s \in \Language} \Prob{o}{s} \cdot \Prob{s}
   \end{split}
 \end{align}
 With the observation likelihood~$\Prob{o}{s}$ and the prior
@@ -82,7 +82,7 @@ To obtain the most likely translation, the $e$ that maximizes that probability
 has to be found.
 With applying Bayes' theorem they combine their distribution with language
 models and arrive at
-$\Argmax_{e} \Prob[\text{Translate}]{f}{e} \cdot \Prob[\text{LM}]{e}$, which is
+$\Argmax{e} \Prob[\text{Translate}]{f}{e} \cdot \Prob[\text{LM}]{e}$, which is
 just \cref{eq:noisychannelbayes}.
 
 % ------------------------------------------------------------------------------
@@ -95,8 +95,26 @@ This is done by finding the $w$ that maximizes the probability to
 occur after $w_1^{n-1}$ \parencite{Bickel2005}:
 \begin{equation}
   \label{eq:nwp}
-  w_n = \Argmax_{w \in \Vocab} \Prob{w}{w_1^{n-1}}
+  w_n = \Argmax{w \in \Vocab} \Prob{w}{w_1^{n-1}}
 \end{equation}
+\begin{draft}
+\begin{equation}
+  \label{eq:prefixquery}
+  \NWP[p][k]{h} =
+    \Argmax*[k]{\mathclap{\substack{w \in \Vocab,\\p \: \text{prefix of} \: w}}}
+      \Prob{w}{h}
+\end{equation}
+\begin{subequations}
+  \begin{align}
+    \Argmax [1]{x} f(x) &= \big\{ x \,\Given\, \forall y : f(y) \leq f(x) \big\} \\
+    \Argmax [k]{x} f(x) &= \big\{ x \,\Given\, \forall y \notin \Argmax*[k-1]{z} f(z) : f(y) \leq f(x) \big\} \\
+    \Argmax*[k]{x} f(x) &= \bigcup_{{1 \leq i \leq k}} \Argmax[i]{x} f(x)
+  \end{align}
+\end{subequations}
+\todo{Notation for $w\ \text{prefix of}\ p$?}
+\todo{How do we define NWP, in case there is not one clear argmax?}
+We call $h$ the history and $p$ the prefix.
+\end{draft}
 With vocabulary $\Vocab$, the set of all words.
 
 We can see that next word prediction is an instance of the noisy channel model,

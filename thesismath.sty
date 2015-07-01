@@ -34,7 +34,10 @@
 \newcommand{\DummyIndex}{\bullet}
 
 % Argmax
-\DeclareMathOperator*{\Argmax}{arg\,max}
+\DeclareMathOperator*{\ArgmaxOp}{arg\,max}
+\NewDocumentCommand{\Argmax}{s o g}{
+  \ArgmaxOp_{#3}\IfNoValueTF{#2}{}{\!{}_{#2}^{\IfBooleanTF{#1}{\star}{}}\,}
+}
 
 % Cardinality
 \newcommand{\Cardinality}[1]{\left|#1\right|}
@@ -80,8 +83,8 @@
 \newcommand*\Vocab{\Sigma}
 
 % Next Word Prediction
-\NewDocumentCommand{\NWP}{o g}{
-  \operatorname{NWP}_{\IfNoValueTF{#1}{}{#1}}\IfNoValueTF{#2}{}{(#2)}
+\NewDocumentCommand{\NWP}{o o g}{
+  \operatorname{NWP}_{\IfNoValueTF{#1}{}{#1}}^{\IfNoValueTF{#2}{}{#2}}\IfNoValueTF{#3}{}{(#3)}
 }
 
 % Next Keystroke Savings
@@ -107,3 +110,5 @@
 \newcommand*\History{\eta}
 
 \newcommand*\CurHistory{h^\star}
+
+\newcommand*\Concat{*}
