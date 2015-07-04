@@ -53,51 +53,9 @@ $\SumWeight^h_i$ the probability can be calculated from the $\SumArg^h_i(w)$.}:
   \Prob{w}{h} = s\left(\SumArg^h_1(w), \, \ldots, \, \SumArg^h_N(w)\right)
 \end{equation}
 
-\iffalse
-Our approach to avoid enumerating all possible values for $w$ to find the $k$
-words that maximize $\Prob{w}{h}$ relies on the fact that the probabilities are
-\emph{monotone}, as was shown in \textbf{??}.
-\todo{Actually show monotony somewhere in \cref{ch:weightedsum}.}
-Monotone in our context means that higher $\SumArg^h_i(w)$ values correspond
-to higher probabilities.
-Our idea is now to always calculate the probability for the next remaining $w$
-with the highest $\SumArg^h_i(w)$.
-This is repeated until we are sure to have found the $k$ words $w$ with the
-highest probability.
-%This process is known as \emph{top-\emph{k} joining}.
-%We will first explain the employed data structure to store counts in
-%\cref{sec:completiontrie} and then explain our algorithm in
-%\cref{sec:topkjoin}.
-\fi
-
 % ------------------------------------------------------------------------------
 \section{Top-\emph{k} Joining Techniques}
 \label{sec:topkjoin}
-
-\iffalse
-\begin{lstlisting}[
-  label = {lst:topksql},
-  float,
-  caption = {\todo[inline]{Example SQL-Request Caption}},
-  language = SQL,
-  %basicstyle = \ttfamily,
-  emph = {history1, historyN},
-  emphstyle = \textit,
-  deletekeywords = {count} % Used as column name, don't want to escape it though
-]
-  SELECT
-    word,
-    s(Trie1.alpha, ..., TrieN.alpha) AS probability
-  FROM Vocabulary
-  LEFT OUTER JOIN Trie1
-    ON history1 + word = Trie1.sequence
-  ...
-  LEFT OUTER JOIN TrieN
-    ON historyN + word = TrieN.sequence
-  ORDER BY probability DESC
-  LIMIT k;
-\end{lstlisting}
-\fi
 
 The problem we are trying to solve, namely finding the $k$ words $w$ that
 maximize our probability $\Prob{w}{h}$, is actually well researched under the
@@ -149,9 +107,8 @@ $\SumArg^h_i(w)$.
 The data structure we use for this will be explained in
 \cref{sec:completiontrie}.
 
-\textcite{Ilyas2008} survey a wide number of top-$k$ joining techniques.
 Among other things, top-$k$ joining techniques can be classified by the type
-of join operation they support.
+of join operation they support \parencite{Ilyas2008}.
 The join operation for our problem is whether for two values $\SumArg^h_i(w_i)$
 and $\SumArg^h_j(w_j)$ the $w_i$ and $w_j$ are equal.
 This is actually the simplest and most common type of join operation and is
@@ -160,18 +117,19 @@ Those have the nice property that for each $\SumArg^h_i(w)$ there is exactly one
 corresponding $\SumArg^h_j(w)$ for all $j$ that are different from $i$, which
 allows easy indexing in a hash table by key $w$.
 Top-$k$ joining techniques that operate on equi-joins are also called
-\emph{top-$k$ selections}.
+\emph{top-$k$ selections} \parencite{Ilyas2008}.
 
-In this thesis we will implement and compare two top-$k$ joining techniques
+In this thesis we will implement and compare two top-$k$ selection techniques
 described by \textcite{Fagin2001}: the \emph{threshold algorithm}, which
 requires sorted and random access, and the \emph{no random access algorithm},
 which only requires sorted access.
 
-There exists a plethora of more sophisticated techniques.
-For example Onion indices \parencite{Chang2000} and rank join indices
-\parencite{Tsaparas2003} feature an extended learning phase, in which
-optimized data representation are created over all arguments to the scoring
-function.
+There exists a plethora of more sophisticated top-$k$ joining techniques, of
+which \textcite{Ilyas2008} surveys a wide number.
+For example \emph{onion indices} \parencite{Chang2000} and
+\emph{rank join indices} \parencite{Tsaparas2003} feature an extended learning
+phase, in which optimized data representation are created over all arguments to
+the scoring function.
 These allow faster top-$k$ joins for arbitrary scoring functions over the same
 arguments.
 However optimizations like these are not applicable to our prefix query problem,
@@ -179,7 +137,9 @@ as the history $h$ changes with each query $\NWP[p][k](h)$.
 Because of this the whole argument space $\SumArg^h_i(w)$ changes, which in turn
 means we would have to built indices with each query, obviously defeating the
 purpose.
-The Rank Join operator \parencite{Ilyas2004} is another more recent algorithm.
+The \emph{Rank Join operator} \parencite{Ilyas2004} is another more recent
+algorithm, designed for fast solution in the presence of arbitrary join
+conditions.
 However in the precense of an equi-join it practically reduces to the threshold
 algorithm.
 
@@ -256,10 +216,36 @@ This enables all our desired accessing schemes:
 
 % ------------------------------------------------------------------------------
 \section{Threshold Algorithm}
+\label{sec:thresholdalgorithm}
+
+The \emph{Threshold Algorithm}, applied to our problem $\NWP[p][k](w)$, roughly
+works as follows \parencite{Fagin2001}:
+\begin{enumerate}
+  \item We perform sorted access to data sources (in our case completion tries
+    are queried with prefix $h \Concat p$) in any order.
+    One strategy might be a round robin approach, that is each source is
+    accessed once in turn.
+  \item Every time a pair $(w, \SumArg^h_i(w))$ is a encountered with a new word
+    $w$, we look up all other $\SumArg^h_j(w)$ for $j \neq i$ with random
+    access.
+    With these the word probability
+    $\Prob{w}{h} = s(\SumArg^h_1, \ldots, \SumArg^h_N)$ can be calculated.
+    We keep track of the $k$ pairs $(w, \: \Prob{w}{h})$ with the highest
+    probabilities.
+  \item Let $\overline{\SumArg}_i$ denote the last count $\SumArg^h_i(w)$ that
+    was encountered during sorted access to the $i$th data source.
+    Then the \emph{threshold}
+    $t = s(\overline{\SumArg}_1, \ldots, \overline{\SumArg}_N)$
+    is an upper bound for the probability of all words that have not yet been
+    seen.
+  \item Once we have encountered $k$ probabilities greater than the current
+    threshold $t$ the algorithm terminates and the $k$ best pairs
+    $(w, \: \Prob{w}{h})$ are returned.
+\end{enumerate}
 
 \begin{algorithm}
   \caption{\emph{Threshold Algorithm} to solve $\NWP[p][k]{h}$}
-  \label{alg:tresholdalgorithm}
+  \label{alg:thresholdalgorithm}
   \begin{algorithmic}[1]
     \Require $C_1, \: \ldots, \: C_N$
       \Comment{corpus data stored in Completion Tries}
@@ -268,73 +254,195 @@ This enables all our desired accessing schemes:
     \Ensure $predictions$
       \Comment{list of word-probability-pairs}
 
-    \State $\SumWeight_1, \: \ldots, \: \SumWeight_N \gets$ \Call{calcSumWeights}{$h$}
+    \State $\SumWeight_1, \: \ldots, \: \SumWeight_N \gets$ \Call{calcSumWeights}{history}
       \Comment{see \cref{ch:weightedsum}}
+      \label{ln:ta-sumweights}
     \For{$i \gets 1$ \textbf{to} $N$}
-      \State $\overline{\SumArg}_i \gets C_i$.\Call{peekCount}{history $+$ prefix}
+      \label{ln:ta-bara-for}
+      \State $\overline{\SumArg}_i \gets C_i$.\Call{peekCount}{history $\Concat$ prefix}
+        \Comment{threshold factors}
+        \label{ln:ta-bara-peek}
     \EndFor
-    \State queue $\gets$ \textbf{new} \Call{PriorityQueue}{$ $}
-      \Comment{prediction candidates}
     \State seen $\gets$ \textbf{new} \Call{Set}{$ $}
       \Comment{set of seen words}
+      \label{ln:ta-seen}
+    \State queue $\gets$ \textbf{new} \Call{PriorityQueue}{$ $}
+      \Comment{prediction candidates}
+      \label{ln:ta-queue}
 
     \vspace{0.7em}
     \While{$i \gets$ \Call{nextTrie}{$ $}}
       \LineComment{perform sorted access, track seen words}
-      \State word$,$ count $\gets C_i$.\Call{next}{history $+$ prefix}
+      \label{ln:ta-while}
+      \State word$,$ count $\gets C_i$.\Call{next}{history $\Concat$ prefix}
+        \label{ln:ta-next}
       \If{seen.\Call{contains}{word}}
+        \label{ln:ta-isseen-if}
         \State \textbf{continue}
           \Comment{skip words already seen in previous iterations}
+          \label{ln:ta-isseen-continue}
       \EndIf
+      \vspace{-1.2em} % TODO: how is the gap created we are hotfixing here?
       \State seen.\Call{add}{word}
+        \label{ln:ta-seen-add}
 
       \vspace{0.7em}
       \LineComment{compute word probability}
       \For{$j \gets 1$ \textbf{to} $N$}
         \If{j == i}
           \State $\SumArg_j \gets$ count
+            \label{ln:ta-a-sorted}
         \Else
           \State $\SumArg_j \gets C_j$.\Call{get}{history $+$ word}
             \Comment{random access}
+            \label{ln:ta-a-random}
         \EndIf
       \EndFor
       \State probability $\gets \sum_{j = 0}^N \SumWeight_j \SumArg_j$
+        \label{ln:ta-prob}
 
       \vspace{0.7em}
       \LineComment{keep limit-many best predictions}
-      \State queue.\Call{add}{(word, probability)}
+      \State queue.\Call{push}{(word, probability)}
+        \label{ln:ta-queue-add}
       \If{queue.\Call{size}{$ $} $>$ limit}
+        \label{ln:ta-queue-full}
         \State queue.\Call{removeLowestProbabilityEntry}{$ $}
+          \label{ln:ta-queue-remove}
       \EndIf
 
       \vspace{0.7em}
       \LineComment{compute threshold}
       \State $\overline{\SumArg}_i \gets \SumArg_i$
+        \label{ln:ta-bara-update}
       \State threshold $\gets \sum_{j = 0}^N \SumWeight_j \overline{\SumArg}_j$
+        \label{ln:ta-threshold}
 
       \vspace{0.7em}
       \LineComment{stop if better predictions are impossible}
       \If{queue.\Call{size}{$ $} $=$ limit \textbf{and}
+        \label{ln:ta-done-if-1}
         \\\hspace{2.5em}threshold $<$ queue.\Call{getLowestProbability}{$ $}}
+        \label{ln:ta-done-if-2}
         \State \textbf{break}
+          \label{ln:ta-done-break}
       \EndIf
     \EndWhile
 
     \vspace{0.7em}
     \State predictions $\gets$ queue.\Call{toList}{$ $}
+      \label{ln:ta-tolist}
   \end{algorithmic}
 \end{algorithm}
 
-\Cref{alg:tresholdalgorithm}
+Our implementation of the \emph{Threshold Algorithm} is given in
+\cref{alg:thresholdalgorithm}.
 
-\begin{draft}
-Needs to keep set of all seen words.
+As input we require $N$ completion tries from which we can extract
+$(w, \: \SumArg^h_i(w))$ pairs in sorted or random order as described in
+\cref{sec:completiontrie}.
+Further, as we are finding answers to an $\NWP[p][k]{h}$ query, those parameters
+are necessary.
+Both \emph{history} and \emph{prefix} are strings that may be empty;
+\emph{limit} has to be an integer greater zero.
+The output \emph{predictions} will be a list composed of at most
+\emph{limit} $(w, \: \Prob{w}{h})$ pairs, sorted descendingly by probability.
 
-Need to keep $k$ many word-probability pairs in priority-queue.
-\end{draft}
+The calculation of probabilities depends on sum weights
+$\SumWeight_1, \: \ldots, \: \SumWeight_N$.
+They only depend on the fixed \emph{history} and can thus be computed once at
+the start (\cref{ln:ta-sumweights}).
+To calculate the \emph{threshold}, the upper bound for all of remaining
+probabilities, the factors
+$\overline{\SumArg}_1, \: \ldots, \: \overline{\SumArg}_N$ are required.
+Those are the last accessed counts $\SumArg_i(w)$ of each trie.
+Before performing any trie-access we initialize them to the highest count in the
+trie (\cref{ln:ta-bara-for,ln:ta-bara-peek}).
+\emph{Peeking} a data source is the operation that returns the next entry in it,
+without advancing its iterator.
+
+\emph{seen} is a set that keeps track of all processed words thus far
+(\cref{ln:ta-seen}).
+It's purpose is to avoid random access for the calculation of probabilities
+that have been performed before.
+It is an optimization that enables a faster execution time at the cost of
+a higher space complexity.\todo{HashSet}
+
+\emph{queue} keeps track of the word-probability-pairs with the highest
+probabilities that are candidates for prediction (\cref{ln:ta-queue}).
+At any point in time it contains at most $\text{\emph{limit}} + 1$ entries.
+It is implemented as a priority queue, which we expect to be ordered on
+the probabilities of each entry.
+Thus efficient querying (\cref{ln:ta-done-if-2}) or removal
+(\cref{ln:ta-queue-remove}) of the entry with the lowest probability is
+possible.
+
+After initialization is done we query words until we have found the $limit$
+best predictions.
+The \Call{nextTrie}{$ $} function in \cref{ln:ta-while} returns the number $i$
+of the trie to be queried next.
+It is thus stateful and needs to keep track of previous return values.
+In our implementation we perform a round-robin approach, e.g.\ tries are
+returned in the order $1, 2, \ldots, N, 1, 2, \ldots$
+Once a trie is depleted it is omitted.
+
+For each iteration we perform sorted access and retrieve the next
+word-count-pair from the current trie, that starts with the requested
+\emph{history} and \emph{prefix} (\cref{ln:ta-next}).
+The \Call{next}{$\DummyArg$} method of a trie returns the current pair under
+the iterator and advances it in sorted order.
+If the word has been encountered in a previous iteration from a different trie
+we continue with the next iteration step
+(\cref{ln:ta-isseen-if,ln:ta-isseen-continue}).
+If the word is new, we add it to the list of seen words (\cref{ln:ta-seen-add}).
+
+In the following the probability $\Prob{w}{h}$ for the word is calculated
+(\cref{ln:ta-prob}).
+The factor $\SumArg_i$ is known from sorted access (\cref{ln:ta-a-sorted}), all
+other $\SumArg_j$ with $j \neq i$ are retrieved by random access
+(\cref{ln:ta-a-random}).
+With the word's probability we update our record of the \emph{limit} best
+predictions thus far
+(\cref{ln:ta-queue-add,ln:ta-queue-full,ln:ta-queue-remove}).
+The sorting of the priority queue happens implicit with the
+\Call{push}{$\DummyArg$} operation.
+
+Afterwards the last access sorted count of the current trie is update
+(\cref{ln:ta-bara-update}) and with it the \emph{threshold} calculated
+(\cref{ln:ta-threshold}).
+If we already found $limi$ predictions and the probability of all those
+predictions is higher than our upper bound of all remaining ones, the algorithm
+terminates (\cref{ln:ta-done-if-1,ln:ta-done-if-2,ln:ta-done-break}).
+The resulting \emph{predictions} are formed by the conversion of the
+\emph{queue} to a list (\cref{ln:ta-tolist}), where the sorting of the
+\emph{queue} is respected.
 
 % ------------------------------------------------------------------------------
 \section{No Random Access Algorithm}
+\label{sec:norandomaccessalgorithm}
+
+The \emph{No Random Access Algorithm}, applied to our problem $\NWP[p][k](w)$,
+roughly works as follows \parencite{Fagin2001}:
+\begin{enumerate}
+  \item We perform sorted access to data sources (in our case completion tries
+    are queried with prefix $h \Concat p$) in any order.
+    One strategy might be a round robin approach, that is each source is
+    accessed once in turn.
+  \item We maintain a mapping that initially maps all words to \emph{unkown}
+    counts $\SumArg^h_i(w)$.
+    For every word-count pair queried, we set that count in the mapping to its
+    now know value.
+  \item Using this mapping we calculate upper and lower bounds for all seen
+    words.
+    Let $\overline{\SumArg}_i$ denote the last count $\SumArg^h_i(w)$ that
+    was encountered during sorted access to the $i$th data source.
+    The upper bound for a word probability is calculated by replacing unkown
+    counts with their highest possible value $\overline{\SumArg}_i$.
+    Lower bounds are calculated by replaced unkown counts with zeros.
+  \item Once $k$ words have been found, whose lower bound of probability is
+    higher than all other upper bounds, the algorithm terminates and returns
+    these $k$ best predictions.
+\end{enumerate}
 
 \begin{algorithm}
   \caption{\emph{No Random Access Algorithm} to solve $\NWP[p][k]{h}$}
@@ -347,77 +455,189 @@ Need to keep $k$ many word-probability pairs in priority-queue.
     \Ensure $predictions$
       \Comment{list of words}
 
-    \State $\SumWeight_1, \: \ldots, \: \SumWeight_N \gets$ \Call{calcSumWeights}{$h$}
+    \State $\SumWeight_1, \: \ldots, \: \SumWeight_N \gets$ \Call{calcSumWeights}{history}
       \Comment{see \cref{ch:weightedsum}}
+      \label{ln:nra-sumweights}
     \For{$i \gets 1$ \textbf{to} $N$}
-      \State $\overline{\SumArg}_i \gets C_i$.\Call{peekCount}{history + prefix}
+      \label{ln:nra-bara-for}
+      \State $\overline{\SumArg}_i \gets C_i$.\Call{peekCount}{history $\Concat$ prefix}
+        \label{ln:nra-bara-peek}
     \EndFor
-    \State queue $\gets$ \textbf{new} \Call{PriorityQueue}{$ $}
-      \Comment{all predictions}
     \State wordCounts $\gets$ \textbf{new} \Call{Map}{$ $}
       \Comment{map from words to their counts}
+      \label{ln:nra-wordcounts}
+    \State queue $\gets$ \textbf{new} \Call{PriorityQueue}{$ $}
+      \Comment{all predictions}
+      \label{ln:nra-queue}
     \State predictions $\gets$ \textbf{new} \Call{List}{$ $}
+      \label{ln:nra-predictions}
 
     \vspace{0.7em}
     \While{$i \gets$ \Call{nextTrie}{$ $}}
+      \label{ln:nra-while}
       \LineComment{perform sorted access, track known counts per word}
-      \State word$,$ count $\gets C_i$.\Call{next}{history $+$ prefix}
+      \State word$,$ count $\gets C_i$.\Call{next}{history $\Concat$ prefix}
+        \label{ln:nra-next}
       \If{\textbf{not} wordCounts.\Call{contains}{word}}
+        \label{ln:nra-contains}
         \State $\SumArg_1, \: \ldots, \: \SumArg_N \gets $ \textbf{unkown}$, \: \ldots, \:$\textbf{unkown}
+          \label{ln:nra-set-unkown}
       \Else
         \State $\SumArg_1, \: \ldots, \: \SumArg_N \gets $ wordCounts.\Call{get}{word}
+          \label{ln:nra-get-wordcounts}
         \State queue.\Call{remove}{word}
+          \label{ln:nra-queue-remove}
       \EndIf
       \State $\SumArg_i \gets$ count
+        \label{ln:nra-a-set}
       \State wordCounts.\Call{set}{word, $(\SumArg_1, \: \ldots, \: \SumArg_N)$}
+        \label{ln:nra-update-mapping}
 
       \vspace{0.7em}
       \LineComment{compute word probability upper- and lower-bound}
       \State $\overline{\SumArg}_i \gets \SumArg_i$
+        \label{ln:nra-bara-update}
       \State upperBound $\gets 0$
+        \label{ln:nra-upperbound-init}
       \State lowerBound $\gets 0$
+        \label{ln:nra-lowerbound-init}
       \For{$j \gets 1$ \textbf{to} $N$}
         \If{$\SumArg_j =$ \textbf{unknown}}
           \State upperBround $\gets$ upperBound $+ \SumWeight_j \overline{\SumArg}_j$
+            \label{ln:nra-upperbound-unknown}
         \Else
           \State upperBound $\gets$ upperBound $+ \SumWeight_j \SumArg_j$
+            \label{ln:nra-upperbound-known}
           \State lowerBound $\gets$ lowerBound $+ \SumWeight_j \SumArg_j$
+            \label{ln:nra-lowerbound-known}
         \EndIf
       \EndFor
 
       \vspace{0.7em}
       \LineComment{predict words with lower bound $\geq$ all other upper bounds}
       \State queue.\Call{push}{(word, upperBound, lowerBound)}
+        \label{ln:nra-queue-push}
       \While{\textbf{true}}
+        \label{ln:nra-while-true}
         \State word, upperBound, lowerBound $\gets$ queue.\Call{pop}{$ $}
+          \label{ln:nra-queue-pop}
         \If{lowerBound $\geq$ queue.\Call{getLargestUpperBound}{$ $}}
+          \label{ln:nra-lowerbound-greater}
           \State predictions.\Call{add}{word}
+            \label{ln:nra-certain-predict}
         \Else
           \State queue.\Call{push}{(word, upperBound, lowerBound)}
+            \label{ln:nra-queue-readd}
           \State \textbf{break}
+            \label{ln:nra-predict-break}
         \EndIf
         \If{predictions.\Call{size}{$ $} $=$ limit}
+          \label{ln:nra-isdone}
           \State \textbf{exit}
+            \label{ln:nra-exit}
         \EndIf
       \EndWhile
     \EndWhile
 
     \vspace{0.7em}
     \For{$i \gets$ predictions.\Call{size}{$ $} \textbf{to} limit}
+      \label{ln:nra-for-limit}
       \State word, upperBound, lowerBound $\gets$ queue.\Call{pop}{$ $}
+        \label{ln:nra-pop-2}
       \If{upperBound $= 0$}
+        \label{ln:nra-upperbound-zero-if}
         \State \textbf{break}
+          \label{ln:nra-upperbound-zero-break}
       \EndIf
       \State predictions.\Call{add}{word}
+        \label{ln:nra-limit-predict}
     \EndFor
   \end{algorithmic}
 \end{algorithm}
 
-\Cref{alg:norandomaccessalgorithm}
+\Cref{alg:norandomaccessalgorithm} shows our implementation of the
+\emph{No Random Access Algorithm}.
 
-\begin{draft}
-Need to keep all encountered words along with counts lower and upperBounds.
-\end{draft}
+The input requirements are the same as for the \emph{Threshold Algorithm}
+described in \cref{sec:thresholdalgorithm}.
+The output is similar, however we only return a list of predicted words without
+their probabilities, as the algorithm doesn't compute the exact probabilities.
+Also the initialization of sum weights
+$\SumWeight_1, \: \ldots, \: \SumWeight_N$ and last seen counts
+$\overline{\SumArg}_1, \: \ldots, \: \overline{\SumArg}_N$ is the same as
+before (\cref{ln:nra-sumweights,ln:nra-bara-for,ln:nra-bara-peek}).
+
+\emph{wordCounts} is the mapping from words $w$ to $N$-tuples that contain the
+counts $\SumArg^h_i(w)$ (\cref{ln:nra-wordcounts}).
+Unset values are interpreted as having \emph{unkown} counts.
+
+\emph{queue} is a priority queue that stores $($word$,$ upper
+bound$,$ lower bound$)$ tuples (\cref{ln:nra-queue}).
+As opposed to the \emph{Threshold Algorithm} the queue needs to keep track of
+bounds for all encountered words, not just \emph{limit} many.
+Entries in the queue are sorted by lower bounds and for objects with equal
+lower bounds sorted by their upper bounds.
+
+\emph{predictions} is the list of all possible word predictions
+(\cref{ln:nra-predictions}).
+Words in the list are sorted by probability descending without actually
+calculating the probability.
+It contains at most \emph{limit} items.
+
+The selection of the next trie with \Call{nextTrie}{$ $} (\cref{ln:nra-while})
+and the following sorted access to that trie (\cref{ln:nra-next}) are equal
+to those of the \emph{Threshold Algorithm}.
+Each new word-count-pair is stored in \emph{wordCounts}.
+If the word has not been seen before (\cref{ln:nra-contains}) we initialize all
+counts $\SumArg_1, \: \ldots, \: \SumArg_N$ as \emph{unkown} values.
+Otherwise we load previously stored counts from the mapping
+(\cref{ln:nra-get-wordcounts}).
+Additionally as we know the word to receive updated bounds its entry from the
+\emph{queue} (\cref{ln:nra-queue-remove}).
+Afterwards we update the one $\SumArg_i$ we have retrieved the value for
+(\cref{ln:nra-a-set}) and write the resulting count-tuple back into the map
+(\cref{ln:nra-update-mapping}).
+
+With the update counts we can compute a better upper and lower bound for the
+word probability.
+First we update the last accessed count of the current trie
+(\cref{ln:nra-bara-update}).
+Bounds are then calculated as the weighted sums of $\SumArg_j$
+(\cref{ln:nra-upperbound-known,ln:nra-lowerbound-known}).
+In case the the value of any $\SumArg_j$ is \emph{unkown}, it is  substituted
+with the highest possible value $\overline{\SumArg}_j$ for the calculation of
+the upper bound (\cref{ln:nra-upperbound-unknown}) or in the case of the lower
+bound it is not factored in at all.
+
+The newly calculated bounds of the word are then added to the \emph{queue}
+(\cref{ln:nra-queue-push}).
+Afterwards all words that have a higher lower bound than the largest
+upper bound of all other words in the queue are added as final
+\emph{predictions}.
+First the next word with the highest lower bound is retrieved from the queue
+with the \Call{pop}{$ $} operation (\cref{ln:nra-queue-pop}).
+If that word's lower bound is greater or equal to the largest remaining upper
+bound in the queue (\cref{ln:nra-lowerbound-greater}) we can add it to the list
+of \emph{predictions} (\cref{ln:nra-certain-predict}) and repeat the process.
+Otherwise we add the word back into the queue and continue with new sorted
+retrieval.
+The algorithm terminates once \emph{limit} predictions have been found
+(\cref{ln:nra-isdone,ln:nra-exit}).
+This procedure ensures that predictions are added in order of decreasing
+probabilities.
+
+A case than can occur for small corpora, is that all tries may be depleted
+before \emph{limit} predictions have been established.
+Because of this we fill the \emph{predictions} with words from the \emph{queue}
+in order until \emph{limit} many have been reached
+(\cref{ln:nra-for-limit,ln:nra-pop-2,ln:nra-upperbound-zero-if,ln:nra-upperbound-zero-break,ln:nra-limit-predict}).
+However if remaining words have an probability upper bound of zero
+(\cref{ln:nra-upperbound-zero-if}) we prefer to have less than \emph{limit}
+predictions, as the remaining ones are guaranteed not to match.
+
+\todo[inline]{NRA implementation buggy because upper bounds for words are not
+updated until they are found encountered during sorted access? Maybe read
+\textcite{Fagin2001}.}
 
 % ------------------------------------------------------------------------------
 \section{Implementation}
@@ -432,6 +652,23 @@ doing sorted.
 Faster threshold calucation.
 
 Can't just do $C_i$.\Call{next}{$\DummyArg$}, iterators needed instead.
+
+Optimized \Call{nextTrie} implementation possible with blah...
+\end{draft}
+
+% ------------------------------------------------------------------------------
+\section{Discussion}
+
+\begin{draft}
+Space requirements of algorithms.
+
+NRA can give predictions.
+
+NRA sorting may be bad for small corpora.
+
+Random access may be far more expensive on distributed systems.
+
+Corpus needs to be preanalyzed.
 \end{draft}
 
 % ------------------------------------------------------------------------------
@@ -439,223 +676,6 @@ Can't just do $C_i$.\Call{next}{$\DummyArg$}, iterators needed instead.
 
 \begin{draft}
 Why beam search is impossible.
-\end{draft}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-\clearpage
-\textbf{Old stuff. Don't read this.}
-\todo[inline]{Add algorithm that only uses sorted access.}
-
-\lstset{
-  language=SQL,
-  %basicstyle=\ttfamily,
-  emph={arg,Pattern,Pattern1,PatternN,P_LM},
-  emphstyle=\textit,
-  deletekeywords={count} % Used as column name, don't want to escape it though.
-}
-
-This chapter explains how to efficiently compute arg-max-queries of language
-model $\Prob[\text{LM}]$ using top-$k$ joining techniques.
-
-The task is to efficiently compute the following expression:
-\begin{equation}
-  \Argmax{t \in T} \Prob[\text{LM}]{t}{h}
-\end{equation}
-Where $t$ is a token in the set of all tokens $T$, $\Prob[\text{LM}]$ is a
-language model, that can be expressed as a weighted sum (as described in
-\cref{ch:weightedsum}), and $h$ is the conditional history, a sequence
-of tokens.
-
-Given a language model $\Prob[\text{LM}]$ as a scoring function, if we
-imagine our input data forming database relations, we can express our
-arg-max-query as a SQL-\texttt{SELECT}-Request, as given in \cref{lst:topksql}.
-
-\begin{lstlisting}[
-  label = {lst:topksql},
-  %float,
-  caption = {\todo[inline]{Example SQL-Request Caption}},
-]
-  SELECT
-    Token.token AS arg,
-    $\Prob[\text{LM}]$(Pattern1.count, ..., PatternN.count) AS score
-  FROM Token
-  LEFT OUTER JOIN Pattern1
-    ON history(Pattern1) + arg = Pattern1.sequence
-  ...
-  LEFT OUTER JOIN PatternN
-    ON history(PatternN) + arg = PatternN.sequence
-  ORDER BY score DESC
-  LIMIT k;
-\end{lstlisting}
-
-\todo[inline]{Where \inlinecode{history} and plus is concat.}
-\todo[inline]{Explain \inlinecode{LEFT OUTER JOIN}.}
-
-Our data model is thus: One input relation \inlinecode{Token} that stores
-all possible tokens \inlinecode{arg}, over which we want to compute:
-\begin{equation}
-  \Argmax{\text{\inlinecode{arg}} \, \in \, \text{\inlinecode{Token}}}
-    \Prob[\text{LM}]{\text{\inlinecode{arg}}}{\text{\inlinecode{history}}}
-\end{equation}
-Additionally we have $n$ input relations
-\inlinecode{Pattern1} to \inlinecode{PatternN} that contain pairs
-of \inlinecode{sequence}s and the sequence's occurrence \inlinecode{count} as
-columns.
-Each \inlinecode{Pattern} relation contains exactly these sequences that fit the
-relations pattern.
-
-For an example database state and fully expanded SQL-Request see
-\cref{app:sqlenv}.
-
-A na\"{\i}ve method to solve this query would
-\begin{inparaenum}[(1)]
-  \item produce all possible object combinations that satisfy the join
-    condition,
-  \item order results by scoring function $\Prob[\text{LM}]$, and
-  \item discard non top-$k$ objects (those that do not have the $k$ largest
-    scores).
-\end{inparaenum}
-
-Considering that in reality only small values of $k$ are queried, this approach
-can be deemed as rather wasteful, as large numbers of objects would have to be
-discarded.
-Optimally we would like to cherry-pick the top-$k$ join results and only
-score and order those.
-Relying on the fact that we are dealing with a \emph{monotone} scoring function
-we approximate this by sorting our input relations by their counts.
-\textcite{Ilyas2008} survey a wide number of techniques to produces top-$k$ results
-with a monotone scoring function from sorted relations.
-
-Among other things, top-$k$ joining techniques differ on the type of join
-conditions they can be applied to.
-One particularly optimizable join operation is the \emph{equi-join}:
-the join that checks for equality over a unique key attribute present in all
-relations.
-Equi-joins have the advantage that it is possible to form equivalence classes
-over an object's key attribute to determine which join results an object is
-part of.
-Using this, the \emph{hash join} algorithm can efficiently generate join
-results.
-
-It is possible to view our join operations as an instance of equi-join:
-By filtering each input relation \inlinecode{Pattern} to only contain
-objects whose sequences begin with the requested history, objects'
-sequences only differ on the last token (our argument token \inlinecode{arg}).
-Our join condition thus reduces to
-\inlinecode{arg = lastToken(Pattern.sequence)}.
-
-\todo[inline]{Read \textit{``2013 BlanasPatel Memory Footprint Matters Efficient
-Equi-Join Algorithms fro Main Memory Data Processing.pdf''} for possibly better
-join algorithm.}
-
-The technique for obtaining these both sorted and filtered relations is
-explained in \cref{sec:sorted-and-filtered-access}.
-
-\todo[inline]{Do we want discussion here rather than explanation?}
-
-The algorithm used to produce top-$k$ results is presented in
-\cref{sec:algorithm}.
-
-% ------------------------------------------------------------------------------
-\section{Remarks}
-
-% ------------------------------------------------------------------------------
-\section{Sorted and Filtered Access}
-\label{sec:sorted-and-filtered-access}
-
-As explained we require a data structure for efficiently retrieving all
-sequences whose first to second to last words match a requested string $h$.
-Additionally we want to specify that the last word has to contain $p$ as a
-prefix, in order to support efficient Next-Keystroke-Savings $\NKSS$
-computation.
-\mbox{$\Set{\, w_1^n \: \Given \: w_1^{n-1} = h \; \land \; b \:\text{is prefix of}\: w_n \,}$}
-which is equivalent to
-\mbox{$\Set{\, w_1^n \: \Given \: \,}$}
-\begin{equation*}
-  \underbracket{\enskip w_1 \qquad w_2 \qquad \ldots \qquad w_{n-1} \enskip}
-    _\text{matches $h$}
-  \quad
-  \underbracket{\enskip w_n \enskip}_\text{starts with $b$}
-\end{equation*}
-
-NKSS requires Top-\emph{k} Completion.
-
-Use Completion-Trie \parencite{HsuOttaviano2013}.
-
-\todo[inline]{Explain Completion-Trie here?}
-\todo[inline]{Can we save all patterns in one trie?}
-
-% ------------------------------------------------------------------------------
-\section{Algorithm}
-\label{sec:algorithm}
-
-\subsection{Requirements}
-
-\begin{enumerate}
-  \item Dataset remains the same.
-  \item Scoring function changes on each query.
-  \item Join condition changes on each query!
-\end{enumerate}
-
-\subsection{Algorithm}
-
-There are several techniques for indexing {Rank Join Indices \mbref{Tsaparas et
-al 2003}, Onion Indices \mbref{Chang et al 2000}) which we don't use as history
-changes to often.
-
-Ranked Join Indicies\mbref{Tsaparas et al 2003})
-
-Algorithms that precompute stuff may be general speed up, but not in our case
-since we never expect the same thing to be queried again.
-
-TA \parencite{Fagin2001}.
-
-Rank-Join \parencite{Ilyas2004}.
-
-Evaluate following algorithms:
-
-\begin{enumerate}
-  \item Traditional Rank-Join that generates all possible join combinations
-    after each input.
-  \item Improved version that uses random access for early tuple completion.
-\end{enumerate}
-
-Use observation that if a pattern is seen, it's child patterns' will be seen as
-well.
-
-Clever: How to find T as max of $(p_1^{max}, p_2^{last})$ and
-$(p_1^{last}, p_2^{max})$.
-
-Clever: Priority-Queue with constant contains and update.
-
-\section{Beam search}
 
 Beam search is a path finding algorithm that always expands the most promising
 states, and terminates when a solution was found.
@@ -675,3 +695,27 @@ How to interpret: expanding the most promising state?
 
 For random access the cost of an edge is only known, once the edge is walked.
 For sorted access we can peek.
+\end{draft}
+
+\begin{lstlisting}[
+  label = {lst:topksql},
+  float,
+  caption = {\todo[inline]{Example SQL-Request Caption}},
+  language = SQL,
+  %basicstyle = \ttfamily,
+  emph = {history1, historyN},
+  emphstyle = \textit,
+  deletekeywords = {count} % Used as column name, don't want to escape it though
+]
+  SELECT
+    word,
+    s(Trie1.alpha, ..., TrieN.alpha) AS probability
+  FROM Vocabulary
+  LEFT OUTER JOIN Trie1
+    ON history1 + word = Trie1.sequence
+  ...
+  LEFT OUTER JOIN TrieN
+    ON historyN + word = TrieN.sequence
+  ORDER BY probability DESC
+  LIMIT k;
+\end{lstlisting}
