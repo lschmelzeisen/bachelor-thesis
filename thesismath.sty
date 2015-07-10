@@ -24,7 +24,7 @@
 
 % Set
 % see http://tex.stackexchange.com/questions/13634/define-pretty-sets-in-latex-esp-how-to-do-the-condition-separator
-\newcommand\SetSymbol[1][]{
+\newcommand*\SetSymbol[1][]{
   \nonscript\,#1\vert\nonscript\,\mathopen{}\allowbreak
 }
 \DeclarePairedDelimiterX\Set[1]{\{}{\}}%
@@ -39,11 +39,8 @@
   \ArgmaxOp_{#3}\IfNoValueTF{#2}{}{\!{}_{#2}^{\IfBooleanTF{#1}{\star}{}}\,}
 }
 
-% Cardinality
+% Cardinality of a set
 \newcommand{\Cardinality}[1]{\left|#1\right|}
-
-% String Length
-\newcommand{\StringLength}[1]{{\left|#1\right|}}
 
 % Probability
 \NewDocumentCommand{\Prob}{s o g g}{
@@ -93,10 +90,15 @@
 }
 
 % Skip Operator
-\newcommand*\SkpOp{\partial}
-\newcommand*\SkpOpInv{\SkpOp^{-1}}
-\newcommand*\SkpOpMult{\SkpOp^\star}
-\newcommand*\NumSkpOp{\#_\SkpOp}
+\NewDocumentCommand{\SkpOp}{o g}{
+  \partial_{\IfNoValueTF{#1}{}{#1}} \IfNoValueTF{#2}{}{#2}
+}
+%\newcommand*\SkpOp{\partial}
+%\newcommand*\SkpOpInv{\SkpOp^{-1}}
+%\newcommand*\SkpOpMult{\SkpOp^\star}
+\NewDocumentCommand{\NumSkpOp}{g}{
+  \#_{\SkpOp} \IfNoValueTF{#1}{}{#1}
+}
 
 % Weighted Sum
 %\DeclareMathOperator\SumWeight{\lambda}
@@ -104,11 +106,21 @@
 %\DeclareMathOperator\SumArg{\alpha}
 \newcommand*\SumArg{\alpha}
 
+% Can we avoid this?
 \newcommand{\SeenHistory}{h^\prime}
 
 %\DeclareMathOperator\History{\eta}
-\newcommand*\History{\eta}
+%\newcommand*\History{\eta}
+% Derived History
+\NewDocumentCommand{\DerivedHistory}{o}{
+   \hat{h}_{\IfNoValueTF{#1}{}{#1}}
+}
 
-\newcommand*\CurHistory{h^\star}
+% Concatenation of N-Grams
+\newcommand*\NGramConcat{*}
 
-\newcommand*\Concat{*}
+% Length N of an N-Gram
+\newcommand*\NGramLength[1]{{\left|#1\right|}}
+
+% Empty n-Gram
+\newcommand*\EmptyNGram{\epsilon}

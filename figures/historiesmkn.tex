@@ -8,7 +8,7 @@
     state/.style  = {draw, circle, align = center, text centered, text width = 4.2em},
     invis/.style  = {text width = 4.2em},
     order/.style  = {align = center, text centered, text width = 4em, text = Maroon},
-    number/.style = {xshift = 1em, text = Maroon},
+    number/.style = {xshift = -1.7em, yshift = -0.3em, text = Maroon},
   }
 
   \begin{scope}[node distance = 7em]
@@ -30,6 +30,13 @@
     \node [order] [left of=lower1]  {1st Lower order};
     \node [order] [left of=lower2]  {2nd Lower order};
     \node [order] [left of=lowest]  {Lowest order};
+  \end{scope}
+
+  \begin{scope}[node distance = 3em]
+    \node [number] [above of=highest] {1};
+    \node [number] [above of=lower1]  {2};
+    \node [number] [above of=lower2]  {3};
+    \node [number] [above of=lowest]  {4};
   \end{scope}
 
   \path[->, >=latex, thick]

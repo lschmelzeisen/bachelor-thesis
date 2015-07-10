@@ -1,42 +1,14 @@
 \chapter{Formulating Language Models as Weighted Sums}
 \label{ch:weightedsum}
 
-\begin{equation}
-  \Prob{w}{h} = \sum_{\CurHistory \in \SkpOpMult(h)} \SumWeight_{\CurHistory} \cdot \SumArg_{\CurHistory}(w)
-\end{equation}
-\begin{equation}
-  \SumArg_{\CurHistory}(w) =
-    \begin{dcases*}
-      \Count(w)                        & if $\SeenHistory = \varnothing$ \\
-      \DiscountedCount (\CurHistory w) & if $\SeenHistory \neq \varnothing \land \CurHistory = \SeenHistory$ \\
-      \DiscountedCount*(\CurHistory w) & if $\SeenHistory \neq \varnothing \land \CurHistory \neq \SeenHistory \land \CurHistory \neq \varnothing$ \\
-      \ContCountIp(w)                  & if $\SeenHistory \neq \varnothing \land \CurHistory = \varnothing$
-    \end{dcases*}
-\end{equation}
-\Lukas[inline, caption={``Else If'' in equation with cases?}]{
-It is possible to simplify the conditions by using ``else if'', is
-this acceptable in a mathematical publication?
-\begin{equation}
-  \SumArg_{\CurHistory}(w) =
-    \begin{dcases*}
-      \Count(w)                        & if $\SeenHistory = \varnothing$ \\
-      \ContCountIp(w)                  & else if $\CurHistory = \varnothing$ \\
-      \DiscountedCount (\CurHistory w) & else if $\CurHistory = \SeenHistory$ \\
-      \DiscountedCount*(\CurHistory w) & else
-    \end{dcases*}
-\end{equation}
-}
-\begin{equation}
-  \SumWeight_{\CurHistory} =
-    \begin{dcases*}
-      \frac{1}{\Count(\SeenHistory \Skp)} & if $\CurHistory = \SeenHistory$ \\
-      \SumWeight_{\SkpOpInv \, \CurHistory} \frac{\gamma(\SkpOpInv \, \CurHistory)}{\ContCountIp(\WSkp \CurHistory \WSkp)} & if $\CurHistory \neq \SeenHistory$
-    \end{dcases*}
-\end{equation}
+\section{Notation}
 
+\begin{itemize}
+  \item N-Gram length (absolute bars)
+  \item N-Gram concatenation (side by side or with star)
+  \item Empty N-Gram (epsilon)
+\end{itemize}
 
-\todo[inline]{Rewrite section using $\sum_{w^\prime \in W(w)}$ and
-$\SkpOpInv$.}
 \todo[inline]{Call $\SumArg$: (count-) function.}
 
 \Rene[noline]{I'm unsure whether you want to describe it in this way. Actually
@@ -143,7 +115,7 @@ off given history $h$ a number of times.
 The number $N$ of sum weights is then the number of words in the first seen
 history $\SeenHistory$ plus one.
 \begin{equation}
-  N = \StringLength{\SeenHistory} + 1
+  N = \NGramLength{\SeenHistory} + 1
 \end{equation}
 
 The next step is to find the actual terms $\SumArg_i^h(w)$ that shall be
@@ -154,14 +126,15 @@ Exactly these terms compose our sum arguments:
 \begin{equation}
   \SumArg_i^h(w) =
     \begin{dcases*}
-      \Count(w)                                              & if $N = 1$ \\
-      \DiscountedCount(\SeenHistory \: w)                    & if $N \neq 1 \land i = 1$ \\
-      \DiscountedCount*(\WSkp \History_i(\SeenHistory) \: w) & if $N \neq 1 \land 1 < i < N$ \\
-      \ContCountIp(\WSkp w)                                  & if $N \neq 1 \land i = N$
+      \Count(w)                                        & if $N = 1$ \\
+      \DiscountedCount(\SeenHistory \: w)              & if $N \neq 1 \land i = 1$ \\
+      \DiscountedCount*(\WSkp \DerivedHistory[i] \: w) & if $N \neq 1 \land 1 < i < N$ \\
+      \ContCountIp(\WSkp w)                            & if $N \neq 1 \land i = N$
     \end{dcases*}
 \end{equation}
-Where $\History_i(w_1^n) = w_i^n$ is a helper mapping that gives the history
+Where $\DerivedHistory[i](w_1^n) = w_i^n$ is a helper mapping that gives the history
 of the $i$th interpolation order.
+\todo{Replace old notation.}
 
 Lastly we need to define the actual sum weights $\SumWeight_i^h$.
 We note that --- because each order is interpolated with the weight $\gamma$ of
@@ -176,12 +149,12 @@ this solution with you. I'm also a fan ob abstraction but maybe an example
 may be called for here, not just in the appendix.}
 \begin{equation}
   \label{eq:mkn-sumweight}
-  \SumWeight_i^h = \frac{\prod_{j = 1}^{i - 1} \gamma(\History_j(\SeenHistory))}
-                        {\Count(\SeenHistory \Skp) \prod_{k = 2}^{i} \ContCountIp(\WSkp \History_k(\SeenHistory) \WSkp)}
+  \SumWeight_i^h = \frac{\prod_{j = 1}^{i - 1} \gamma(\DerivedHistory[j]}
+                        {\Count(\SeenHistory \Skp) \prod_{k = 2}^{i} \ContCountIp(\WSkp \DerivedHistory[k] \WSkp)}
 \end{equation}
 \todo[inline]{Or better recursively? Or alternatively?}
 \begin{equation}
-  \SumWeight_i^h = \frac{1}{\Count(\SeenHistory \Skp)} \prod_{j = 2}^i \frac{\gamma(\History_{j-1}(\SeenHistory))}{\ContCountIp(\WSkp \History_j(\SeenHistory) \WSkp)}
+  \SumWeight_i^h = \frac{1}{\Count(\SeenHistory \Skp)} \prod_{j = 2}^i \frac{\gamma(\DerivedHistory[j-1])}{\ContCountIp(\WSkp \DerivedHistory[j] \WSkp)}
 \end{equation}
 
 \todo[inline]{Do we prove that this is actually MKN?}
@@ -207,12 +180,12 @@ $\SumWeight_i^h$) is straightforward and given in \cref{alg:weightedsum-mkn}.
         \todo[inline]{Better notation for backoff, maybe
           $\SeenHistory\text{.removeFirstWord()}$?}
     \EndWhile
-    \State $N = \StringLength{\SeenHistory} + 1$
+    \State $N = \NGramLength{\SeenHistory} + 1$
     \State $\SumWeight^h \gets$ new List of size $N$
     \State $\SumWeight_1^h \gets \frac{1}{\Count(\SeenHistory \Skp)}$
       \Comment{Set highest order weight}
     \For{$i \gets 2 \mathinner{\ldotp \ldotp} N$}
-      \State $\SumWeight_i^h \gets \SumWeight_{i-1}^h \frac{\gamma(\History_{i-1}(\SeenHistory))}{\ContCountIp(\WSkp \History_i(\SeenHistory) \WSkp)}$
+      \State $\SumWeight_i^h \gets \SumWeight_{i-1}^h \frac{\gamma(\DerivedHistory[i-1])}{\ContCountIp(\WSkp \DerivedHistory[i] \WSkp)}$
         \Comment{Compute lower orders using previous order}
         \Rene[inline]{Recursive computation is confusing in contrast to
           \cref{eq:mkn-sumweight}.}
@@ -220,44 +193,6 @@ $\SumWeight_i^h$) is straightforward and given in \cref{alg:weightedsum-mkn}.
     \EndFor
   \end{algorithmic}
 \end{algorithm}
-
-% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsection{Proof}
-
-\begin{draft}
-We want to prove that the following equations holds for all $n \in \NaturalNumbers$:
-\begin{align}
-  \ProbMKN {w_n}{w_1^{n-1}} &= \sum_{i=1}^N \SumWeight_i^{w_1^{n-1}} \cdot \SumArg_i^{w_1^{n-1}}(w_n) \\
-  \ProbMKN*{w_n}{w_1^{n-1}} &= \sum_{i=1}^N \SumWeight_i^{w_1^{n-1}} \cdot \SumArg_i^{w_1^{n-1}}(w_n)
-\end{align}
-
-\noindent
-Base case:
-\begin{subequations}
-  \begin{align}
-    \ProbMKN{w_1} &= \sum_{i = 1}^N \SumWeight_i^\varnothing \cdot \SumArg_i^\varnothing(w_1) \\
-                  &= \sum_{i = 1}^1 \SumWeight_i^\varnothing \cdot \SumArg_i^\varnothing(w_1) \\
-                  &= \SumWeight_1^\varnothing \cdot \SumArg_1^\varnothing(w_1) \\
-                  &= \left( \frac{1}{\Count(\SeenHistory \Skp)} \prod_{j = 2}^1 \frac{\gamma(\History_{j-1}(\SeenHistory))}{\ContCountIp(\WSkp \History_j(\SeenHistory) \WSkp)} \right) \cdot \SumArg_1^\varnothing(w_1) \\
-                  &= \left( \frac{1}{\Count(\varnothing \Skp)} \prod_{j = 2}^1 \frac{\gamma(\History_{j-1}(\varnothing))}{\ContCountIp(\WSkp \History_j(\varnothing) \WSkp)} \right) \cdot \SumArg_1^\varnothing(w_1) \\
-                  &= \frac{\SumArg_1^\varnothing(w_1)}{\Count(\Skp)} \\
-                  &= \frac{\Count(w_1)}{\Count(\Skp)} \\
-                  &= \text{\cref{eq:mkn-lowest-abs}}
-  \end{align}
-\end{subequations}
-
-Base case $\ProbMKN*{w_1}$ currently impossible, as $N = 1$ but we then do no
-get continuation counts in $\SumArg$ definition.
-
-Showing $n+1$ from $n$:
-\begin{align}
-  \ProbMKN{w_{n+1}}{w_1^n} &= \sum_{i = 1}^N \SumWeight_i^{w_1^n} \cdot \SumArg_i^{w_1^n}(w_{n+1})
-\end{align}
-
-Extracting one sum term doesn't help here as induction statement is not
-applicable as $\SumWeight$ and $\SumArg$ are defined on highest history, not
-decreasing history.
-\end{draft}
 
 % ------------------------------------------------------------------------------
 \section{Generalized Language Model}
@@ -270,12 +205,12 @@ probabilities of the next lower order is factored into the higher order
 probability.
 
 This section will not consider the general case were one probability
-$\ProbGLM{w}{h}$ incorporates exactly $\NumSkpOp(h)$ probabilities
-$\ProbGLM*{w}{\SkpOp_j h}$ of the next lower order.
+$\ProbGLM{w}{h}$ incorporates exactly $\NumSkpOp{h}$ probabilities
+$\ProbGLM*{w}{\SkpOp[j]{h}}$ of the next lower order.
 Instead only the special case described by \textcite{Pickhardt2014}, that is
 actually used in practice, is examined.
-That is the number of lower order probabilities incorporated $\NumSkpOp(h)$
-is set to the number of non-skip words in $h$, and $\SkpOp_j(h)$ is defined as
+That is the number of lower order probabilities incorporated $\NumSkpOp{h}$
+is set to the number of non-skip words in $h$, and $\SkpOp[j]{h}$ is defined as
 replacing the $j$th non-skip word in $h$ with a skip $\Skp$.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -287,7 +222,7 @@ other.}
 
 The directed graph of \cref{fig:history-glm} visualizes the lower order
 probabilities that factor into those of higher orders, using that definition of
-$\SkpOp_j(h)$.
+$\SkpOp[j]{h}$.
 The nodes represent the histories $h$ of a probability $\ProbGLM{w_4}{h}$.
 The directed edges represent an immediate dependency, for example the
 probabilities that occur in the definition of
@@ -305,7 +240,7 @@ $\ProbGLM*{w_4}{\Skp w_2 \Skp}$.
 
 We call a graph that represents the inter-dependencies of probabilities during
 the calculation of $\ProbGLM{w}{h}$ the \emph{binomial diamond} of order
-$n = \StringLength{h}$, because of its diamond-like shape, and a number of
+$n = \NGramLength{h}$, because of its diamond-like shape, and a number of
 properties:
 
 \begin{enumerate}
@@ -404,7 +339,7 @@ unnecessary sum weights to zero.
 An upper bound for the number of sum weights is the number of derived histories
 times two, as histories can occur both in highest and lower order probabilities:
 \begin{equation}
-  N = 2 \cdot 2^\StringLength{h}
+  N = 2 \cdot 2^\NGramLength{h}
 \end{equation}
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -412,38 +347,38 @@ times two, as histories can occur both in highest and lower order probabilities:
 
 \begin{subequations}
   \begin{align}
+    \SumArg_{2 i - 1}^h(w) &=
+      \begin{dcases*}
+        \DiscountedCount(\DerivedHistory[i] w)        & if $\NumSkpOp{\DerivedHistory[i]} > 0$ \\
+        \Count(\DerivedHistory[i] w)                  & if $\NumSkpOp{\DerivedHistory[i]} = 0$
+      \end{dcases*} \\
     \SumArg_{2 i}^h(w) &=
       \begin{dcases*}
-        \DiscountedCount(\History_i(h) w)        & if $\NumSkpOp(\History_i(h)) > 0$ \\
-        \Count(\History_i(h) w)                  & if $\NumSkpOp(\History_i(h)) = 0$
-      \end{dcases*} \\
-    \SumArg_{2 i + 1}^h(w) &=
-      \begin{dcases*}
-        \DiscountedCount*(\WSkp \History_i(h) w) & if $\NumSkpOp(\History_i(h)) > 0$ \\
-        \ContCountIp(\WSkp \History_i(h) w)      & if $\NumSkpOp(\History_i(h)) = 0$
+        \DiscountedCount*(\WSkp \DerivedHistory[i] w) & if $\NumSkpOp{\DerivedHistory[i]} > 0$ \\
+        \ContCountIp(\WSkp \DerivedHistory[i] w)      & if $\NumSkpOp{\DerivedHistory[i]} = 0$
       \end{dcases*}
   \end{align}
 \end{subequations}
-\Rene{Why no discount in case $\NumSkpOp(\History_i(h)) = 0$? This isn't
+\Rene{Why no discount in case $\NumSkpOp{\DerivedHistory[i]} = 0$? This isn't
 unigram case or is it?}
 \todo[inline]{Or alternatively?}
 \begin{equation}
   \SumArg_{2 i + j}^h(w) =
     \begin{dcases*}
-      \Count(\History_i(h) w)                  & if $j = 0 \land \NumSkpOp(\History_i(h)) = 0$ \\
-      \ContCountIp(\WSkp \History_i(h) w)      & if $j = 1 \land \NumSkpOp(\History_i(h)) = 0$ \\
-      \DiscountedCount(\History_i(h) w)        & if $j = 0 \land \NumSkpOp(\History_i(h)) > 0$ \\
-      \DiscountedCount*(\WSkp \History_i(h) w) & if $j = 1 \land \NumSkpOp(\History_i(h)) > 0$
+      \Count(\DerivedHistory[i] w)                  & if $j = 0 \land \NumSkpOp{\DerivedHistory[i]} = 0$ \\
+      \ContCountIp(\WSkp \DerivedHistory[i] w)      & if $j = 1 \land \NumSkpOp{\DerivedHistory[i]} = 0$ \\
+      \DiscountedCount(\DerivedHistory[i] w)        & if $j = 0 \land \NumSkpOp{\DerivedHistory[i]} > 0$ \\
+      \DiscountedCount*(\WSkp \DerivedHistory[i] w) & if $j = 1 \land \NumSkpOp{\DerivedHistory[i]} > 0$
     \end{dcases*}
 \end{equation}
 \todo[inline]{Or alternatively?}
 \begin{equation}
   \SumArg_{2 i + j}^h(w) =
     \begin{dcases*}
-      \Count(\History_i(h) w)                  & if $j = 0 \land N - i \leq 1$ \\
-      \ContCountIp(\WSkp \History_i(h) w)      & if $j = 1 \land N - i \leq 1$ \\
-      \DiscountedCount(\History_i(h) w)        & if $j = 0 \land N - i > 1$ \\
-      \DiscountedCount*(\WSkp \History_i(h) w) & if $j = 1 \land N - i > 1$
+      \Count(\DerivedHistory[i] w)                  & if $j = 0 \land N - i \leq 1$ \\
+      \ContCountIp(\WSkp \DerivedHistory[i] w)      & if $j = 1 \land N - i \leq 1$ \\
+      \DiscountedCount(\DerivedHistory[i] w)        & if $j = 0 \land N - i > 1$ \\
+      \DiscountedCount*(\WSkp \DerivedHistory[i] w) & if $j = 1 \land N - i > 1$
     \end{dcases*}
 \end{equation}
 
@@ -452,18 +387,18 @@ Coefficient $\mu = \frac{(order - level)!}{order!}$.
 \end{draft}
 
 \begin{draft}
-$\SumWeight_{2 i}^h$ is $\frac{\mu}{\Count(\History_i(h) \Skp)}$ times number
+$\SumWeight_{2 i}^h$ is $\frac{\mu}{\Count(\DerivedHistory[i]) \Skp)}$ times number
 of unseen paths to node.
 
 $\SumWeight_{2 i + 1}^h$ is
-$\frac{\mu}{\ContCountIp(\WSkp \History_i(h) \WSkp)}$ times the sum of paths to
+$\frac{\mu}{\ContCountIp(\WSkp \DerivedHistory[i] \WSkp)}$ times the sum of paths to
 node with each node on path weighted.
 \begin{enumerate}
   \item Weight unseen nodes as zero if they are direct parents of targets and if
     target is seen.
   \item Else weight unseen nodes as one.
-  \item Weight first seen node as $\frac{\gamma(\History_i(h^*))}{\Count(\History_i(h^*) \Skp)}$.
-  \item Weight following nodes as $\frac{\gamma(\History_i(h^*))}{\ContCountIp(\WSkp \History_i(h^*) \WSkp)}$.
+  \item Weight first seen node as $\frac{\gamma(\DerivedHistory[i](h^*))}{\Count(\DerivedHistory[i](h^*) \Skp)}$.
+  \item Weight following nodes as $\frac{\gamma(\DerivedHistory[i](h^*))}{\ContCountIp(\WSkp \DerivedHistory[i](h^*) \WSkp)}$.
 \end{enumerate}
 \end{draft}
 
@@ -480,38 +415,11 @@ Use fact that we can apply distributive property on common roots in paths for
 one node.
 \end{draft}
 
-\begin{algorithm}
-  \caption{Computing Generalized Language Model sum weights}
-  \label{alg:weightedsum-glm}
-  \begin{algorithmic}[1]
-    \Require $h$
-      \Comment{History for which to determinate interpolation weights}
-    \Ensure $\SumWeight_i^h$
-      \Comment{List of interpolation weights}
-
-    \State $N \gets 2 \cdot 2^\StringLength{h}$
-    \For{$i \gets 1 \mathinner{\ldotp \ldotp} \frac{N}{2}$}
-      \State $C_i^a \gets \Count(\History_i(h) \Skp)$
-      \State $C_i^c \gets \ContCountIp(\WSkp \History_i(h) \WSkp)$
-      \State $\Gamma_i \gets \gamma(\History_i(h))$
-      \State $\mu \gets \frac{(\StringLength{h} - level(i))!}{\StringLength{h}!}$
-        \Comment{Could be stored in a Look-up table}
-
-      \If{$C_i^a = 0$}
-        \State $\SumWeight_{2 i}^h \gets 0$
-      \ElsIf{$i = 0$}
-        \State $\SumWeight_{2 i}^h \gets \frac{\mu}{C_i^a}$
-      \Else
-        \State $\SumWeight_{2 i}^h \gets \frac{\mu}{C_i^a}$ \Call{calcAbsoluteWeight}{$0$, $i$}
-      \EndIf
-      \If{$C_i^c = 0$}
-        \State $\SumWeight_{2 i + 1}^h \gets 0$
-      \Else
-        \State $\SumWeight_{2 i + 1}^h \gets \frac{\mu}{C_i^c}$ \Call{calcContinuationWeight}{$0$, $i$, \textbf{true}}
-      \EndIf
-    \EndFor
-  \end{algorithmic}
-\end{algorithm}
+\begin{algorithmic}[1]
+  \State node.\Call{count}{$ $} $= \Count(h_\text{node} \Skp)$
+  \State node.\Call{contCount}{$ $} $= \ContCountIp(\WSkp h_\text{node} \WSkp)$
+  \State node.\Call{gamma}{$ $} $= \gamma(h_\text{node})$
+\end{algorithmic}
 
 %\begin{algorithm}
 %  \begin{algorithmic}[1]
@@ -527,52 +435,104 @@ one node.
 %\end{algorithm}
 
 \begin{algorithm}
+  \caption{Computing Generalized Language Model sum weights}
+  \label{alg:weightedsum-glm}
   \begin{algorithmic}[1]
-    \Function{calcAbsoluteWeight}{$ancestor$, $node$}
-      \If{$C_{absolute}^a \neq 0$}
-        \State \textbf{return} $0$
+    \Require $h$
+      \Comment{history for which to determinate sum weights}
+    \Ensure $\SumWeight_1^h, \: \ldots, \: \SumWeight_N^h$
+      \Comment{list of sum weights}
+
+    \State $n \gets \NGramLength{h}$
+      \Comment{$n$-gram length of history $h$}
+    \State $N \gets 2 \cdot 2^n$
+      \Comment{number of sum factors}
+    \For{\textbf{each} node \textbf{in} graph}
+      \LineComment{precomputation}
+      \State node.count $\gets \Count(h_\text{node.index} \Skp)$
+      \State node.contCount $\gets \ContCountIp(\WSkp h_\text{node.index} \WSkp)$
+      \State node.gamma $\gets \gamma(h_\text{node.index})$
+      \State $\mu \gets \frac{(n - \text{node.layer})!}{n!}$
+
+      \vspace{1.0em}
+      \LineComment{weight for highest order}
+      \If{node.count $= 0$}
+        \State $\SumWeight_{2 \cdot\, \text{node.index} - 1}^h \gets 0$
+      \ElsIf{node $=$ root}
+        \State $\SumWeight_{2 \cdot\, \text{node.index} - 1}^h \gets \dfrac{\mu}{\text{node.count}}$
+      \Else
+        \State $\SumWeight_{2 \cdot\, \text{node.index} - 1}^h \gets \dfrac{\mu \cdot \text{\Call{absoluteWeight}{root, node}}}{\text{node.count}}$
       \EndIf
-      \If{$level(ancestor) = level(node) - 1$}
-        \State \textbf{return} $1$
+
+      \vspace{0.7em}
+      \LineComment{weight for lower orders}
+      \If{node.contCount $= 0$}
+        \State $\SumWeight_{2 \cdot\, \text{node.index}}^h \gets 0$
+      \Else
+        \State $\SumWeight_{2 \cdot\, \text{node.index}}^h \gets \dfrac{\mu \cdot \text{\Call{continuationWeight}{root, node, \textbf{true}}}}{\text{node.contCount}}$
       \EndIf
-      \State $\# \gets 0$
-      \For{$i \gets 1 \mathinner{\ldotp \ldotp} numChilds(ancestor)$}
-        \State $child \gets child(ancestor, i)$
-        \If{$isAncestorOf(child, node)$}
-          \State $\# \gets \# + {}$ \Call{calcAbsoluteWeight}{$child$, $node$}
-        \EndIf
-      \EndFor
-      \State \textbf{return} $\#$
-    \EndFunction
+    \EndFor
+    \algstore{glmbreak}
   \end{algorithmic}
 \end{algorithm}
 
 \begin{algorithm}
+  \caption{Helper functions for GLM sum weight computation}
+  \label{alg:weightedsum-glm-helper}
   \begin{algorithmic}[1]
-    \Function{calcContinuationWeight}{$ancestor$, $node$, $absolute$}
-      \State $mult \gets 1$
-      \If{$absolute$}
-        \If{$C_{ancestor}^a = 0$}
-          \If{$level(ancestor) = level(node) - 1 \land C_{node}^a \neq 0$}
-            \State \textbf{return} $0$
-          \EndIf
-        \Else
-          \State $mult \gets \frac{\Gamma_{ancestor}}{C_{ancestor}^a}$
-          \State $absolute \gets$ \textbf{false}
+    \algrestore{glmbreak}
+    \Function{absoluteWeight}{ancestor, node}
+      \If{ancestor.count $\neq 0$}
+        \Comment{if ancestor is seen}
+        \State \textbf{return} $0$
+          \Comment{this path does not contribute to highest order}
+      \EndIf
+
+      \vspace{0.7em}
+      \If{ancestor.\Call{isDirectParentOf}{node}}
+        \State \textbf{return} $1$
+      \EndIf
+
+      \vspace{0.7em}
+      \State sum $\gets 0$
+      \For{\textbf{each} child \textbf{in} ancestor.\Call{childs}{$ $}}
+        \If{child.\Call{isAncestorOf}{node}}
+          \State sum $\gets$ sum $+ {}$ \Call{absoluteWeight}{child, node}
         \EndIf
-      \ElsIf{$C_{ancestor}^c \neq 0$}
-        \State $mult \gets \frac{\Gamma_{ancestor}}{C_{ancestor}^c}$
+      \EndFor
+      \State \textbf{return} sum
+    \EndFunction
+
+    % --------------------------------------------------------------------------
+    \vspace{0.7em}
+    \Statex\hrule
+
+    \Function{continuationWeight}{ancestor, node, firstSeen}
+      \LineComment{calculate mult}
+      \If{firstSeen \textbf{and} ancestor.count $\neq 0$}
+        \State mult $\gets \frac{\text{ancestor.gamma}}{\text{ancestor.count}}$
+        \State firstSeen $\gets$ \textbf{false}
+      \ElsIf{ancestor.contCount $\neq 0$}
+        \State mult $\gets \frac{\text{ancestor.gamma}}{\text{ancestor.contCount}}$
+      \Else
+        \State mult $\gets 1$
       \EndIf
 
-      \If{$level(ancestor) = level(node) - 1$}
-        \State \textbf{return} $mult$
+      \vspace{0.7em}
+      \If{ancestor.\Call{isDirectParentOf}{node}}
+        \If{firstSeen}
+          \State \textbf{return} $0$
+            \Comment{node occurs as highest order for this path}
+        \EndIf{}
+        \State \textbf{return} mult
       \EndIf
 
-      \State $sum = 0$
-      \For{$i \gets 1 \mathinner{\ldotp \ldotp} numChilds(ancestor)$}
-        \State $child \gets child(ancestor, i$
-        \If{$isAncestorOf{child, node}$}
-          \State $sum \gets sum + {}$ \Call{calcContinuationWeight}{$child$, $node$, $absolute$}
+      \vspace{0.7em}
+      \State sum $\gets 0$
+      \For{\textbf{each} child \textbf{in} ancestor.\Call{childs}{$ $}}
+        \If{child.\Call{isAncestorOf}{node}}
+          \State sum $\gets$\\
+            \hfill sum $+$ \Call{continuationWeight}{child, node, firstSeen}
         \EndIf{}
       \EndFor
       \State \textbf{return} $mult \cdot sum$

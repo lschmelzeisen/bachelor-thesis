@@ -20,18 +20,18 @@
       \State $\SeenHistory \gets \SeenHistory\text{.backoff()}$
              \todo[inline]{Better notation for backoff}
     \EndWhile
-    \State $N = \StringLength{\SeenHistory} + 1$
+    \State $N = \NGramLength{\SeenHistory} + 1$
     \State $\SumWeight^h \gets$ new array of size $N$
     %\State
     \State $nominator \gets 1$
     \State $denominator \gets \Count(\SeenHistory \Skp)$
     \State $\SumWeight_1^h \gets \frac{1}{denominator}$
     %\State
-    \State $\History \gets \SeenHistory$
+    \State $\DerivedHistory \gets \SeenHistory$
     \For{$i \gets 2, N$}
-      \State $nominator \gets \gamma(\History) \frac{nominator}{denominator}$
-      \State $\History \gets \History\text{.backoff()}$
-      \State $denominator \gets \ContCountIp(\WSkp \History \WSkp)$
+      \State $nominator \gets \gamma(\DerivedHistory) \frac{nominator}{denominator}$
+      \State $\DerivedHistory \gets \DerivedHistory\text{.backoff()}$
+      \State $denominator \gets \ContCountIp(\WSkp \DerivedHistory \WSkp)$
       \State $\SumWeight_i^h \gets \frac{nominator}{denominator}$
     \EndFor
   \end{algorithmic}
@@ -149,69 +149,7 @@
   \end{figure}
 \end{landscape}
 
-% ------------------------------------------------------------------------------
-\clearpage
-\section{SQL Query Expansion}
-
-\lstset{
-  language=SQL,
-  emph={token,pattern,pattern1,patternN},
-  emphstyle=\textit,
-  deletekeywords={count} % Used as column name, don't want to escape it though.
-}
-
-\subsection{Modified Kneser Ney Language Model}
-
-\begin{lstlisting}
-  SELECT
-    token.token AS arg,
-    func( 1.count,  11.count, 111.count,
-         x1.count, x11.count)
-      AS score
-  FROM  token
-  LEFT OUTER JOIN    1
-    ON history(  1) + token =   1.sequence
-  LEFT OUTER JOIN   11
-    ON history( 11) + token =  11.sequence
-  LEFT OUTER JOIN  111
-    ON history(111) + token = 111.sequence
-  LEFT OUTER JOIN   x1
-    ON history( x1) + token =  x1.sequence
-  LEFT OUTER JOIN  x11
-    ON history(x11) + token = x11.sequence
-  ORDER BY score DESC;
-  LIMIT k;
-\end{lstlisting}
-
-\subsection{Generalized Language Model}
-
-\begin{lstlisting}
-  SELECT
-    token.token AS arg,
-    func( 001.count,  011.count,  101.count, 111.count,
-         x001.count, x011.count, x101.count)
-      AS score
-  SELECT token, score
-  FROM token
-  LEFT OUTER JOIN  001
-    ON history( 001) + token =  001.sequence
-  LEFT OUTER JOIN  011
-    ON history( 011) + token =  011.sequence
-  LEFT OUTER JOIN  101
-    ON history( 101) + token =  101.sequence
-  LEFT OUTER JOIN  111
-    ON history( 111) + token =  111.sequence
-  LEFT OUTER JOIN x001
-    ON history(x001) + token = x001.sequence
-  LEFT OUTER JOIN x011
-    ON history(x011) + token = x011.sequence
-  LEFT OUTER JOIN x101
-    ON history(x101) + token = x101.sequence
-  ORDER BY score DESC;
-  LIMIT k;
-\end{lstlisting}
-
-
+% ==============================================================================
 \chapter{Timeline}
 
 \begin{itemize}
@@ -244,18 +182,6 @@
 
 \clearpage
 \hrule
-\subsubsection*{Week 29.6. - 5.7.}
-\begin{itemize}
-  \item 29.6. Monday:
-  \item 30.6. Tuesday:
-  \item  1.7. Wednesday:
-  \item  2.7. Thursday:
-  \item  3.7. Friday:
-  \item  4.7. Saturday:
-  \item  5.7. Sunday;
-\end{itemize}
-
-\hrule
 \subsubsection*{Week 6.7. - 12.7.}
 \begin{itemize}
   \item  6.7. Monday:
@@ -279,7 +205,6 @@
   \item 19.7. Sunday;
 \end{itemize}
 
-\clearpage
 \hrule
 \subsubsection*{Week 20.7. - 26.7.}
 \begin{itemize}
@@ -292,6 +217,7 @@
   \item 26.7. Sunday;
 \end{itemize}
 
+\clearpage
 \hrule
 \subsubsection*{Week 27.7. - 2.8.}
 \begin{itemize}

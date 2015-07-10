@@ -95,11 +95,19 @@
 % Color
 \RequireOptionsPackage[dvipsnames, svgnames, x11names]{xcolor}
 
+% Change page layout
+\RequirePackage[
+  pass
+]{geometry}
+
 % Quotations
 \RequirePackage{csquotes}
 
 % Style figure captions
 \RequirePackage{caption}
+
+% Enable sub figures
+\RequirePackage{subcaption}
 
 % Pseudocode
 \RequireOptionsPackage[
@@ -125,6 +133,7 @@
   doi = false, % do not show doi
   isbn = false, % do not show isbn
   url = false, % do not show url
+  urldate = long, % format of urldate field
 ]{biblatex}
 
 % Appendix

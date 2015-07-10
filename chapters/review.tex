@@ -1,34 +1,25 @@
 \chapter{Review of Considered Language Models}
 \label{ch:review}
 
-\todo[inline]{Try to find improvements to $\NumSkpOp$ notation, maybe by
-establishing it as current order?}
+The currently most commonly used \parencite{JurafskyMartin2009,Chelba2013}
+technique for estimating language models is \emph{Modified Kneser-Ney Smoothing}
+by \textcite{ChenGoodman1996,ChenGoodman1998,ChenGoodman1999}, based on
+\emph{Kneser-Ney Smoothing} by \textcite{KneserNey1995}.
+\textcite{BilmesKirchhoff2003} introduced the concept of a \emph{generalized
+parallel backoff}, which very recently \textcite{Pickhardt2014} used to provide
+a generalization of Modified Kneser-Ney Smoothing, the \emph{Generalized
+Language Model}.
+\todo{Justify selection of MKN and GLM over recently popular LMs from
+\textcite{Chelba2013}.}
 
-This chapter will recall language modeling techniques considered in this work,
-and introduce the used notation (\cref{sec:review-notation}).
-Namely, \emph{Modified Kneser-Ney Smoothing} (\cref{sec:review-lm-mkn})
-and the \emph{Generalized Language Model} (\cref{sec:review-lm-glm})
-are described.
-
-\todo[inline, caption = {Citations in Review}]{
-  How do I declare citations for this section?
-  \begin{itemize}
-    \item Do I cite Rene or ChenGoodman?
-    \item Do I cite once or on every definition?
-    \item Some stuff is not published anywhere else yet. (For example new skip
-      notation or new glm notation)
-  \end{itemize}
-}
-\Rene[inline]{In a section like this you would have a sentence like: we follow
-[...] and review basics. for unpublished stuff that is work in progress I think
-marking it and having a statement in the foreword that states that some of the
-stuff in here is new and not your IP seems reasonable.}
-
-\begin{draft}
-$w_1 \ldots w_n$ does not mean that $w_1$ is the first word of a given sentence.
-We rather interpret it as the starting point of an arbitrary subsequence of the
-sentence, to simplify notation.
-\end{draft}
+This chapter will introduce the used notation (\cref{sec:review-notation})
+and recall the language modeling techniques considered in this work,
+namely \emph{Modified Kneser-Ney Smoothing} (\cref{sec:review-lm-mkn}) and the
+\emph{Generalized Language Model} (\cref{sec:review-lm-glm}).
+However we will only give and explain definitions for these language models.
+No motivation or justification of their genesis will be performed, as these are
+not necessary to understand the contribution of this thesis.
+The interested reader is instead hereby referred to the primary sources.
 
 
 % ------------------------------------------------------------------------------
@@ -36,7 +27,16 @@ sentence, to simplify notation.
 \label{sec:review-notation}
 
 Let $\Count(w_1^n)$ denote the frequency count of a sequence's
-$w_1^n = w_1 \ldots w_n$ occurence in training data.
+$w_1^n = w_1 \ldots w_n$ occurrence in training data.
+$w_1^n$ may be any contiguous sequence of length $n$ in a text.
+So $w_1$ does not have to be the first word of a sentence or the like,
+it just designates the first word of the sequence.
+
+By writing two words directly next each other, as in $w_1 w_2$, we mean to
+\emph{concatenate} them to a sequence of words $w_1^2$.
+Sometimes for clarity concatenation is made explicit by writing
+$w_1 \NGramConcat w_2$. We also extend this notation to concatenations of
+sequences.
 
 Let $\Skp$ be a wildcard (called \emph{``skip''}), that can take the place
 of any word at its location.
@@ -46,7 +46,7 @@ words are $w_1^n$:
 \begin{equation}
   \Count(\Skp w_1^n) = \sum_{x \in \Sigma} \Count(x \: w_1^n)
 \end{equation}
-Where $\Sigma$ is the set of all words in a language
+Where $\Sigma$ is the \emph{vocabulary}, the set of all words in a language
 $\Language \subseteq \Sigma^{*}$.
 It is easy to extend this definition to sequences with multiple skips:
 \begin{equation}
@@ -85,19 +85,27 @@ To make a clear distinction between ``normal'' counts $\Count(\DummyArg)$ and
 continuation counts $\ContCount_{\DummyIndex}(\DummyArg)$, we
 sometimes call the former \emph{absolute} counts.
 
-\todo[inline]{Examples of counting with small text corpus.}
+This notation mirrors that of previous publications in the field by
+\textcite{ChenGoodman1996,ChenGoodman1998,ChenGoodman1999,Goodman2001,Pickhardt2014}.
+With the exception of the new skip $\Skp$ wildcard, which is primarily based
+on yet unpublished work by \textsc{Ren{\'e} Pickhardt}.
+\todo{Examples of counting with small text corpus?}
 
 % ------------------------------------------------------------------------------
 \section{Modified Kneser-Ney Smoothing}
 \label{sec:review-lm-mkn}
 
-\begin{draft}
-Modified Kneser-Ney smoothed language models are computed by interpolating
-between higher and lower order $n$-gram language models.
-The highest order distribution is interpolated with lower order distirbutions
+Our definition of Modified Kneser-Ney Smoothing is that of an
+\emph{interpolated} language model.
+It directly follows \textcite{ChenGoodman1999}, who report interpolated
+techniques to be superior to the previous work of \emph{backoff} language
+models by \textcite{KneserNey1995}.
+
+Therefore Modified Kneser-Ney smoothed language models are calculated as an
+interpolation of higher and lower order $n$-gram language models
+\parencite{Pickhardt2014}.
+The highest order model $\ProbMKN$ is interpolated with lower orders $\ProbMKN*$
 as follows:
-\todo{(Copied from Rene)}
-\end{draft}
 \begin{equation}
   \label{eq:mkn-high}
   \ProbMKN{w_n}{w_1^{n-1}} =
@@ -111,6 +119,9 @@ The exact definitions of $D(\DummyArg)$ and $\gamma(w_1^{n-1})$ are not
 important in our context, however for the sake of completeness they are given
 in \cref{sec:discounts-interpolation-weights}.
 
+We call the word $w_n$ for which we calculate the probability the
+\emph{argument}, and the conditional sequence $w_1^{n-1}$ the \emph{history}.
+
 Naturally \cref{eq:mkn-high} is only defined if the denominator
 ${\Count(w_1^{n-1} \Skp) > 0}$, that is if the history $w_1^{n-1} \Skp$ was seen
 in training.
@@ -123,11 +134,8 @@ and set:
 \end{align}
 It is common to perform multiple back-offs until the history was actually seen.
 
-\begin{draft}
-Essentially, interpolation with a lower order model corresponds to leaving out
-the first word in the considered sequence.
-\todo{(Copied from Rene)}
-\end{draft}
+Thus, interpolation with lower order models correspond to leaving out the first
+word of the history, on which our probabilities are conditioned.
 Lower order models are computed differently, and in turn interpolated with
 further lower orders:
 \begin{equation}
@@ -147,7 +155,6 @@ The lowest order (the probability of a single word) can not be further
 interpolated and we use the relative continuation frequency of that word.
 Similarly if we only want to compute the probability of a single word on the
 highest order, we compute it as the relative frequency of that word:
-\Rene[noline]{Let us discuss this.}
 \begin{subequations}
   \label{eq:mkn-lowest}
   \begin{align}
@@ -158,39 +165,48 @@ highest order, we compute it as the relative frequency of that word:
   \end{align}
 \end{subequations}
 
+Note that this definition of lowest order probabilities deviates from
+\textcite{ChenGoodman1999}.
+They instead smooth the lowest order with the uniform distribution of
+$\frac{1}{\Cardinality{\Vocab}}$.
+\todo{Why don't we do this?}
+
+
 % ------------------------------------------------------------------------------
 \section{Generalized Language Model}
 \label{sec:review-lm-glm}
+
+The equations of this section match the ones from \textcite{Pickhardt2014},
+but are given in a slightly modified own notation that enables easier proceeding
+in \cref{ch:weightedsum}.
 
 The Generalized Language Model is a natural extension to Modified Kneser-Ney
 Smoothing.
 It is again based on interpolation, though it differs in the way lower order
 models are interpolated.
 The highest order is computed as:
-\Rene[noline]{I'm unsure whether I understand the semantics of $\NumSkpOp$
-correctly.}
 \begin{equation}
   \label{eq:glm-high}
   \ProbGLM{w_n}{w_1^{n-1}} =
-    \frac{\DiscountedCount(w_1^n) + \frac{\gamma(w_1^{n-1})}{\NumSkpOp(w_1^{n-1})}
-                                    \sum_{j=1}^{\NumSkpOp(w_1^{n-1})} \ProbGLM*{w_n}{\SkpOp_j w_1^{n-1}}}
+    \frac{\DiscountedCount(w_1^n) + \frac{\gamma(w_1^{n-1})}{\NumSkpOp{w_1^{n-1}}}
+                                    \sum_{j=1}^{\NumSkpOp{w_1^{n-1}}} \ProbGLM*{w_n}{\SkpOp[j]{w_1^{n-1}}}}
          {\Count(w_1^{n-1} \Skp)}
 \end{equation}
-Auxiliary definitions $\DiscountedCount, \DiscountedCount*, \gamma$ are the same
-as for Modified Kneser-Ney Smoothing and given in \cref{sec:review-lm-mkn}.
+Auxiliary definitions $\DiscountedCount$, $\DiscountedCount*$, $\gamma$ are the
+same as for Modified Kneser-Ney Smoothing and given in \cref{sec:review-lm-mkn}.
 
-The skip operator $\SkpOp_j w_1^{n-1}$ can be any mapping that relates
-$w_1^{n-1}$ to exactly $\NumSkpOp(w_1^{n-1})$ many derived sequences.
-It is easy to see that for $\NumSkpOp(w_1^{n-1}) = 1$ and
-$\SkpOp_1 w_1^{n-1} = w_2^{n-1}$ \cref{eq:glm-high} is an
+The skip operator $\SkpOp[j]{w_1^{n-1}}$ can be any mapping that relates
+$w_1^{n-1}$ to exactly $\NumSkpOp{w_1^{n-1}}$ many derived sequences.
+It is easy to see that for $\NumSkpOp{w_1^{n-1}} = 1$ and
+$\SkpOp[1]{w_1^{n-1}} = w_2^{n-1}$ \cref{eq:glm-high} is an
 instantiation of \cref{eq:mkn-high} (Modified Kneser-Ney Smoothing), and thus
 a true generalization.
 
 In practice only one definition for $\SkpOp$ is used though.
-That is $\NumSkpOp(w_1^{n-1})$ is set to the number of non-skip words in
-$w_1^{n-1}$ and $\SkpOp_j(w_1^{n-1})$ replaces the $j$th non-skip word with
+That is $\NumSkpOp{w_1^{n-1}}$ is set to the number of non-skip words in
+$w_1^{n-1}$ and $\SkpOp[j]{w_1^{n-1}}$ replaces the $j$th non-skip word with
 a skip.
-For instance: $\SkpOp_2(w_1^3) = w_1 \Skp w_3$.
+For instance: $\SkpOp[2]{w_1^3} = w_1 \Skp w_3$.
 
 Again as with Modified Kneser-Ney Smoothing, \cref{eq:glm-high} is not
 defined if $w_1^{n-1}$ is unseen and thus our denominator would be zero.
@@ -198,38 +214,33 @@ The back-off step is then performed as:
 \begin{equation}
   \label{eq:glm-backoff}
   \begin{split}
-    \ProbGLM{w_n}{w_1^{n-1}} = \frac{1}{\NumSkpOp(w_1^{n-1})}
-                               \sum_{j=1}^{\NumSkpOp(w_1^{n-1})} \ProbGLM{w_n}{\SkpOp_j w_1^{n-1}} \\
+    \ProbGLM{w_n}{w_1^{n-1}} = \frac{1}{\NumSkpOp{w_1^{n-1}}}
+                               \sum_{j=1}^{\NumSkpOp{w_1^{n-1}}} \ProbGLM{w_n}{\SkpOp[j]{w_1^{n-1}}} \\
       \hfill \Condition{\Count(w_1^{n-1} \Skp) = 0}
   \end{split}
 \end{equation}
 
 Subsequently lower order models are computed as:
+\todo{Replace \Skp with \WSkp in $\ContCountIp$ in GLM?}
+\todo{\WSkp at end of $\ContCountIp$ correct?}
 \begin{equation}
   \label{eq:glm-low}
   \ProbGLM*{w_n}{w_1^{n-1}} =
-    \frac{\DiscountedCount*(\WSkp w_1^n) + \frac{\gamma(w_1^{n-1})}{\NumSkpOp(w_1^{n-1})}
-                                     \sum_{j=1}^{\NumSkpOp(w_1^{n-1})} \ProbGLM*{w_n}{\SkpOp_j w_1^{n-1}}}
+    \frac{\DiscountedCount*(\WSkp w_1^n) + \frac{\gamma(w_1^{n-1})}{\NumSkpOp{w_1^{n-1}}}
+                                     \sum_{j=1}^{\NumSkpOp{w_1^{n-1}}} \ProbGLM*{w_n}{\SkpOp[j]{w_1^{n-1}}}}
          {\ContCountIp(\WSkp w_1^{n-1} \WSkp)}
 \end{equation}
 
-\todo[inline, caption={Switch of \Skp and \WSkp in GLM $\ContCountIp$}]{
-\begin{itemize}
-  \item Replace \Skp with \WSkp in $\ContCountIp$ in GLM?
-  \item \WSkp at end of $\ContCountIp$ correct?
-\end{itemize}
-}
-
-The case of the lowest order occurs when $\NumSkpOp(w_1^{n-1}) = 0$ and is
+The case of the lowest order occurs when $\NumSkpOp{w_1^{n-1}} = 0$ and is
 handled similarly to Modified Kneser-Ney Smoothing.
 In practice this is the case when $w_1^{n-1}$ only consists of skips.
 \begin{subequations}
   \label{eq:glm-lowest}
   \begin{align}
     \ProbGLM {w_n}{w_1^{n-1}} &= \frac{\Count(w_1^n)}{\Count(w_1^{n-1} \Skp)}
-      & \Condition{\NumSkpOp(w_1^{n-1}) = 0} \\
+      & \Condition{\NumSkpOp{w_1^{n-1}} = 0} \\
     \ProbMKN*{w_n}{w_1^{n-1}} &= \frac{\ContCountIp(\WSkp w_1^n)}{\ContCountIp(\WSkp w_1^{n-1} \WSkp)}
-      & \Condition{\NumSkpOp(w_1^{n-1}) = 0}
+      & \Condition{\NumSkpOp{w_1^{n-1}} = 0}
   \end{align}
 \end{subequations}
 

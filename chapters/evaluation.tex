@@ -3,13 +3,7 @@
 
 \begin{draft}
 GLMTK by me was used for evaluation.
-
-Experiment with runtime of $\ProbGLM{w_n}{w_1^{n-1}}$ from $n=1$ to some upper
-bound to showcase complexity improvement of weighted sum to na{\"\i}ve,
-recursive approach.
-
-Experiment with top-k join algorithm vs stupid weighted sum argmax, to showcase
-runtime improvement of top-k join.
+Commit before bachelor-thesis release.
 
 Experiment to showcase (dis-)advantages of GLM to MKN.
 
@@ -21,19 +15,120 @@ Experiments over time and space complexity.
 \end{draft}
 
 % ------------------------------------------------------------------------------
-\section{Experimental setup}
+\section{Normalized Keystroke Savings}
+
+\begin{draft}
+How are they defined?
+How do we calculate them?
+
+From \textcite{Trnka2011}:
+\begin{equation}
+  \frac{\text{keystrokes}_\text{normal} - \text{keystrokes}_\text{with prediction}}
+       {\text{keystrokes}_\text{normal}}
+\end{equation}
+We differ on how we count spaces, newlines, etc...
+No keystroke for accepting completion.
+
+\end{draft}
 
 % ------------------------------------------------------------------------------
-\section{Estimator time}
+\section{Experimental setup}
+
+\begin{draft}
+Computer.
+
+Corpora.
+\textcite{OANC}
+How to tokenize corpus?
+Hard to without semantic knowledge.
+Currently: all special characters are surrounded by spaces.
+But \texttt{you're} becomes \texttt{you ' re}.
+No stemming to normalize word forms.
+Case-sensitive training and test data.
+Kept names.
+
+How to scale completion trie depth for word prediction experiments?
+Remove sentences from corpus?
+Remove entries of from completion trie?
+
+Avoid unknown words / unknown ngrams in testing?
+
+Because of JVM experiments need to be run multiple times.
+Graphs then show average + variance (or rather standard deviation)?
+
+How to calculate standard derivation?
+Use \emph{sample standard deviation}?
+Why divide by $N-1$ there?
+\end{draft}
+
+% ------------------------------------------------------------------------------
+\section{Probability calculation}
+
+\begin{draft}
+Experiment: Calculate one probability $\Prob{w_n}{w_1^{n-1}}$ with MKN and GLM
+for recursive and weighted sum implementations for increasing $n$ and track
+execution time.
+
+Experiment: Calculate one probability $\Prob{w_n}{w_1^{n-1}}$ with weighted sum
+MKN and GLM for increasing $n$ and track execution times of $\SumWeight^h_i$
+calculation and remaining calculations.
+
+For different percentages of seen sequences?
+
+To showcase usefulness of weighted sum approach.
+
+WSA as maximal optimization / baseline.
+What is WSA again?
+
+Number of weights per model.
+\end{draft}
 
 \begin{figure}
+  \hspace{-5em}
   \centering
-  \input{figures/timemkn}
-  \caption{\todo[inline]{TimeMKN-Caption}}
+  \begin{subfigure}{.45\textwidth}
+    \input{figures/timemkn}
+  \end{subfigure}
+  \hspace{4em}
+  \begin{subfigure}{.45\textwidth}
+    \input{figures/timeglm}
+  \end{subfigure}
+  \caption{TimeMKN+TimeGLM-Caption}
 \end{figure}
 
-\begin{figure}
-  \centering
-  \input{figures/timeglm}
-  \caption{\todo[inline]{TimeGLM-Caption}}
-\end{figure}
+% ------------------------------------------------------------------------------
+\section{Word prediction calculation}
+
+\begin{draft}
+Experiment: top-$1$ word prediction with na\"{\i}ve method, TA and NRA scale
+trie depth track execution time and space requirements.
+
+Experiment: top-$k$ word prediction with na\"{\i}ve method, TA and NRA scale
+$k$ track execution time and space requirements.
+
+Experiment: NKSS calculation with na\"{\i}ve method, TA and NRA for some fixed
+$k$ scale completion trie depth.
+
+Experiment with prefix?
+
+How many words in vocab does each algorithm compute probability of?
+
+All experiments for MKN and GLM?
+Probably yes, to see if difference matters.
+
+Completion Trie memory consumption relevant?
+
+Random access from completion trie or from hash map?
+
+Mention decreasingness (?) of data sets.
+\end{draft}
+
+% ------------------------------------------------------------------------------
+\section{Word prediction quality}
+
+\begin{draft}
+Is this section relevant for this thesis?
+
+Experiment: NKSS quality of MKN vs GLM prediction for different $n$ and corpus
+sizes.
+\end{draft}

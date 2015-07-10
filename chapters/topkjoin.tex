@@ -191,8 +191,8 @@ Since speed is the primary concern of this thesis these alternatives
 were not further considered.
 
 For $1 \leq i \leq N$ we maintain $N$ many completion trie instances and store
-pairs $\left(h \Concat w, \SumArg^h_i(w)\right)$ in each trie for all possible
-histories $h$ and words $w$, where $h \Concat w$ is the concatenation of
+pairs $\left(h \NGramConcat w, \SumArg^h_i(w)\right)$ in each trie for all possible
+histories $h$ and words $w$, where $h \NGramConcat w$ is the concatenation of
 $h$ and $w$.
 This enables all our desired accessing schemes:
 \begin{itemize}
@@ -205,10 +205,10 @@ This enables all our desired accessing schemes:
     Results are sorted on the score $\SumArg^h_i(w)$.
     \todo{Querying $i$-th trie is only said implicitly.}
   \item A prefix $p$ with which $w$ has to start is easily included.
-    Querying for completions of $h \Concat p$ returns the same pairs as above, but only
+    Querying for completions of $h \NGramConcat p$ returns the same pairs as above, but only
     those where $p$ is a prefix in $w$.
   \item Random access for a fixed history $h$ and fixed word $w$ is achieved by
-    walking the path along the trie that is described by $h \Concat w$.
+    walking the path along the trie that is described by $h \NGramConcat w$.
     If that path ends in a leaf node, this node's score is $\SumArg^h_i(w)$.
     If that path does not exists, or the found node is not a leaf node,
     $\SumArg^h_i(w)$ is zero.
@@ -222,7 +222,7 @@ The \emph{Threshold Algorithm}, applied to our problem $\NWP[p][k](w)$, roughly
 works as follows \parencite{Fagin2001}:
 \begin{enumerate}
   \item We perform sorted access to data sources (in our case completion tries
-    are queried with prefix $h \Concat p$) in any order.
+    are queried with prefix $h \NGramConcat p$) in any order.
     One strategy might be a round robin approach, that is each source is
     accessed once in turn.
   \item Every time a pair $(w, \SumArg^h_i(w))$ is a encountered with a new word
@@ -257,9 +257,9 @@ works as follows \parencite{Fagin2001}:
     \State $\SumWeight_1, \: \ldots, \: \SumWeight_N \gets$ \Call{calcSumWeights}{history}
       \Comment{see \cref{ch:weightedsum}}
       \label{ln:ta-sumweights}
-    \For{$i \gets 1$ \textbf{to} $N$}
+    \For{$i$ \textbf{from} $1$ \textbf{to} $N$}
       \label{ln:ta-bara-for}
-      \State $\overline{\SumArg}_i \gets C_i$.\Call{peekCount}{history $\Concat$ prefix}
+      \State $\overline{\SumArg}_i \gets C_i$.\Call{peekCount}{history $\NGramConcat$ prefix}
         \Comment{threshold factors}
         \label{ln:ta-bara-peek}
     \EndFor
@@ -274,7 +274,7 @@ works as follows \parencite{Fagin2001}:
     \While{$i \gets$ \Call{nextTrie}{$ $}}
       \LineComment{perform sorted access, track seen words}
       \label{ln:ta-while}
-      \State word$,$ count $\gets C_i$.\Call{next}{history $\Concat$ prefix}
+      \State word$,$ count $\gets C_i$.\Call{next}{history $\NGramConcat$ prefix}
         \label{ln:ta-next}
       \If{seen.\Call{contains}{word}}
         \label{ln:ta-isseen-if}
@@ -288,7 +288,7 @@ works as follows \parencite{Fagin2001}:
 
       \vspace{0.7em}
       \LineComment{compute word probability}
-      \For{$j \gets 1$ \textbf{to} $N$}
+      \For{$j$ \textbf{from} $1$ \textbf{to} $N$}
         \If{j == i}
           \State $\SumArg_j \gets$ count
             \label{ln:ta-a-sorted}
@@ -425,7 +425,7 @@ The \emph{No Random Access Algorithm}, applied to our problem $\NWP[p][k](w)$,
 roughly works as follows \parencite{Fagin2001}:
 \begin{enumerate}
   \item We perform sorted access to data sources (in our case completion tries
-    are queried with prefix $h \Concat p$) in any order.
+    are queried with prefix $h \NGramConcat p$) in any order.
     One strategy might be a round robin approach, that is each source is
     accessed once in turn.
   \item We maintain a mapping that initially maps all words to \emph{unkown}
@@ -458,9 +458,9 @@ roughly works as follows \parencite{Fagin2001}:
     \State $\SumWeight_1, \: \ldots, \: \SumWeight_N \gets$ \Call{calcSumWeights}{history}
       \Comment{see \cref{ch:weightedsum}}
       \label{ln:nra-sumweights}
-    \For{$i \gets 1$ \textbf{to} $N$}
+    \For{$i$ \textbf{from} $1$ \textbf{to} $N$}
       \label{ln:nra-bara-for}
-      \State $\overline{\SumArg}_i \gets C_i$.\Call{peekCount}{history $\Concat$ prefix}
+      \State $\overline{\SumArg}_i \gets C_i$.\Call{peekCount}{history $\NGramConcat$ prefix}
         \label{ln:nra-bara-peek}
     \EndFor
     \State wordCounts $\gets$ \textbf{new} \Call{Map}{$ $}
@@ -476,7 +476,7 @@ roughly works as follows \parencite{Fagin2001}:
     \While{$i \gets$ \Call{nextTrie}{$ $}}
       \label{ln:nra-while}
       \LineComment{perform sorted access, track known counts per word}
-      \State word$,$ count $\gets C_i$.\Call{next}{history $\Concat$ prefix}
+      \State word$,$ count $\gets C_i$.\Call{next}{history $\NGramConcat$ prefix}
         \label{ln:nra-next}
       \If{\textbf{not} wordCounts.\Call{contains}{word}}
         \label{ln:nra-contains}
@@ -501,7 +501,7 @@ roughly works as follows \parencite{Fagin2001}:
         \label{ln:nra-upperbound-init}
       \State lowerBound $\gets 0$
         \label{ln:nra-lowerbound-init}
-      \For{$j \gets 1$ \textbf{to} $N$}
+      \For{$j$ \textbf{from} $1$ \textbf{to} $N$}
         \If{$\SumArg_j =$ \textbf{unknown}}
           \State upperBround $\gets$ upperBound $+ \SumWeight_j \overline{\SumArg}_j$
             \label{ln:nra-upperbound-unknown}
@@ -540,7 +540,7 @@ roughly works as follows \parencite{Fagin2001}:
     \EndWhile
 
     \vspace{0.7em}
-    \For{$i \gets$ predictions.\Call{size}{$ $} \textbf{to} limit}
+    \For{$i$ \textbf{from} predictions.\Call{size}{$ $} \textbf{to} limit}
       \label{ln:nra-for-limit}
       \State word, upperBound, lowerBound $\gets$ queue.\Call{pop}{$ $}
         \label{ln:nra-pop-2}
