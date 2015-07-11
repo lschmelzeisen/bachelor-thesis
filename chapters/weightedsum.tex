@@ -1,22 +1,8 @@
 \chapter{Formulating Language Models as Weighted Sums}
 \label{ch:weightedsum}
 
-
-% ------------------------------------------------------------------------------
-\section{Notation}
-
-\begin{itemize}
-  \item N-Gram length (absolute bars)
-  \item N-Gram concatenation (side by side or with star)
-  \item Empty N-Gram (epsilon)
-\end{itemize}
-
-\todo[inline]{Call $\SumArg$: (count-) function.}
-
-\Rene[noline]{I'm unsure whether you want to describe it in this way. Actually
-you also want to state that you can calculate alphas relatively easy in
-descending order. Does it make sense to discuss the general problem here
-with respect to used memory, indices and runtime?}
+\todo{Introduce notation: (1) N-Gram length (absolute bars) (2) N-Gram
+concatenation (side by side or with star) (3) Empty N-Gram (epsilon).}
 This chapter will show how to represent  $\ProbMKN{w_n}{w_1^{n-1}}$ and
 $\ProbGLM{w_n}{w_1^{n-1}}$ as weighted sums of terms depending on $w_n$ for a
 fixed history $h = w_1^{n-1}$ and an  arbitrary probability event $w = w_n$.
@@ -27,30 +13,26 @@ equations of the following form:
   \Prob{w}{h} = \sum_{i = 1}^{N} \SumWeight_i^h \cdot \SumArg_i^h(w_n)
 \end{equation}
 
-\begin{draft}
-Using this it is possible to calculate queries of type ``Noisy Channel Argmax''
-(\cref{eq:noisychannel}) much more efficiently, as it is possible to perform the
-(potentially expensive) calculation of $\SumWeight_i^h$ in advance.
-To compute every $\Prob{w}{h}$ we now just have to calculate the
-$\SumArg_i^h(w)$.
+Being able to accurately represent probabilities in a form like this is highly
+beneficial for word prediction.
+As we can see in \cref{eq:prefixquery} the computation for next word prediction
+is based on calculating multiple probabilities $\Prob{w}{h}$ with a fixed
+history $h$ but varying arguments $w$.
+As has been specified in \cref{ch:review} probability calculation is based on
+complex recursive formulas.
+Using our weighted sum representation this computation can be speed up by
+a huge factor since computation of the sum weights $\SumWeight^h_i$ can
+be performed once beforehand.
+For each final probability we then only have to perform the $N$ remaining
+lookups $\SumArg^h_i(w)$ that actually depend on $w$.
 
-Another benefit of this representation is that it is a prerequisite of Top-$k$
-joining to supply a monotone scoring function, which only depends on the
-joined arguments.
-Weighted sums are trivially monotone \todo{really?} and we will be able to
-select our join arguments to exactly match $\SumArg_i^h$.
-In addition further optimized top-$k$ joining algorithms exists, that require
-weighted sum scoring functions.
-However we will not use these algorithms in this work.
-For a detailed discussion see \cref{ch:topkjoin}.
-
-In the case of Generalized Language Models our solution will also have a
-considerably better computational complexity to calculate probabilities than the
-na{\"\i}ve \Rene{replace na{\"\i}ve with recursive?} approach of just computing
-the formulas given in
-\cref{sec:review-lm-glm}.
-This will counter biggest disadvantage of GLM.
-\end{draft}
+Another handy benefit is that by this representation we have all terms that
+change with $w$ explicitly available, which is a prerequisite for top-$k$
+joining and will be explained in \cref{ch:topkjoin}.
+Lastly our algorithms for calculating sum weights turn out to be performing
+faster
+then the direct recursive implementations.
+We will measure that effect in \cref{sec:evaluation-probability}.
 
 We will now present the basic idea of how to transform $\Prob{w_n}{w_1^{n-1}}$
 into weighted sums, that applies to both Modified Kneser-Ney Smoothing and
@@ -61,18 +43,19 @@ probability event $w_n$ only appears in the nominator of fractions, specifically
 in the argument terms of $\DiscountedCount$ or $\DiscountedCount*$.
 Additionally $w_n$ occurs as arguments for $\Count$ and $\ContCountIp$ in the
 lowest order \cref{eq:mkn-lowest,eq:glm-lowest}.
-
 Our general idea is thus, to first expand recursive calls to
 $\Prob(\DummyArg)$ or $\Prob*(\DummyArg)$, and second to factor
 out those terms that do not depend on $w_n$ by the distributive property.
-Examples of this idea are given in \cref{app:expansion}.
-However they assume the history to be seen in training.
-Forfeiting this assumption will add considerable complexity in the case
-of Generalized Language Models.
+
+\Cref{sec:weightedsum-mkn} discusses our aprroach for Modified Kneser-Ney
+smoothing, while \cref{sec:weightedsum-glm} deals with the Generalized
+Language Model.
 
 
 % ------------------------------------------------------------------------------
+\clearpage
 \section{Modified Kneser-Ney Smoothing}
+\label{sec:weightedsum-mkn}
 
 Modified Kneser-Ney Smoothed probabilities $\ProbMKN{w}{h}$ are calculated as
 follows:
@@ -87,13 +70,55 @@ follows:
   \item Lowest order: Take continuation counts $\ContCountIp(\WSkp w)$ and
     $\ContCountIp(\WSkp \WSkp)$ (\cref{eq:mkn-lowest}).
 \end{enumerate}
+
+\newcommand{\ProbMKNcab}[1]
+  {\frac{\DiscountedCount(w_1 w_2 w_3) + \gamma(w_1 w_2) #1}{\Count(w_1 w_2 \Skp)}}
+\newcommand{\ProbMKNcb}[1]
+  {\frac{\DiscountedCount*(\WSkp w_2 w_3) + \gamma(w_2) #1}{\ContCountIp(\WSkp w_2 \WSkp)}}
+\newcommand{\ProbMKNc}
+  {\frac{\ContCountIp(\WSkp w_3)}{\ContCountIp(\text{\WSkp \WSkp})}}
+
+As an example we will give the full formula expansion necessary to calculate
+$\ProbMKN{w_3}{w_1 w_2}$ for any sequence $w_1 w_2 w_3$, assuming that sequence
+was seen:
+\begin{subequations}
+  \begin{align}
+    \ProbMKN {w_3}{w_1 w_2} &= \ProbMKNcab{\ProbMKN*{w_3}{w_2}} \\
+    \ProbMKN*{w_3}{w_2}     &= \ProbMKNcb{\ProbMKN*{w_3}} \\
+    \ProbMKN*{w_3}          &= \ProbMKNc
+  \end{align}
+\end{subequations}
+Inserting the lower orders results in:
+\begin{equation}
+  \ProbMKN {w_3}{w_1 w_2} = \ProbMKNcab{\ProbMKNcb{\ProbMKNc}}
+\end{equation}
+By using the distributive property we obtain:
+\begin{align}
+  \label{eq:probmknexpansion-final}
+  \hspace{-2.5em}\ProbGLM {w_3}{w_1 w_2} = {}
+    & & \DiscountedCount (w_1 w_2 w_3)   & \cdot\ \frac{1}{\Count(w_1 w_2 \Skp)} \\
+    &+& \DiscountedCount*(\WSkp w_3 w_3) & \cdot\ \frac{\gamma(w_1 w_2)}{\Count(w_1 w_2 \Skp) \ContCountIp(\WSkp w_2 \WSkp)} \nonumber \\
+    &+& \ContCountIp(\WSkp w_3)          & \cdot\ \frac{\gamma(w_1 w_2) \: \gamma(w_2)}{\Count(w_1 w_2 \Skp) \ContCountIp(\WSkp w_2 \WSkp) \ContCountIp(\WSkp \WSkp)} \nonumber
+\end{align}
+
+In the final equation \cref{eq:probmknexpansion-final} we can clearly see
+those terms that do depend on $w$ and those that do not.
+Per line the left part of the multiplication dot are the terms $\SumArg^h_i(w)$,
+while the terms on the right form the sum weights $\SumWeight^h_i$.
+
+But note that this is only valid if the sequence $w_1 w_2 w_3$ was seen in
+the training corpus, that is $\Count(w_1 w_2 w_3) \geq 1$.
+If this is not the case, backoff steps have to be performed, and a different
+resulting formula is obtained.
+
 All counts except those of the lowest order are discounted using
 $\DiscountedCount$ and $\DiscountedCount*$ to interpolate that order with the
 following by the weight $\gamma(h)$.
-This process of interpolation different orders is visualized in
-\cref{fig:history-mkn}.
+This process of interpolating different orders is visualized in
+\cref{fig:history-mkn} for the case of a history of length three.
+Building similiar graphs for other history lengths is straightforward.
 
-\begin{figure}[htb]
+\begin{figure}[tb]
   \centering
   \input{figures/historiesmkn}
   \caption{
@@ -107,35 +132,40 @@ This process of interpolation different orders is visualized in
   \label{fig:history-mkn}
 \end{figure}
 
+Each order with a history $h$ is interpolated with the following order where
+the first word of $h$ is removed.
+Thus a total ordering on the histories of the orders can be specified.
+In \cref{fig:history-mkn} we have thus assigned each history a number from
+$1$~to~$4$.
+Let $\DerivedHistory[i]$ denote the history of that graph with number $i$.
+
 The first step in expressing $\ProbMKN{w}{h}$ as a weighted sum is finding the
 number $N$ of sum weights.
 In the case of Modified Kneser-Ney Smoothing this is exactly the number of
 interpolation orders.
-Let $\SeenHistory$ be the first seen history that may be the result of backing
-off given history $h$ a number of times.
-The number $N$ of sum weights is then the number of words in the first seen
-history $\SeenHistory$ plus one.
+Let $\DerivedHistory[s]$ be the first seen history that is the result of
+backing off given history $h$ exaclty $s$ many times.
+The number $N$ of sum weights is then the number of words of that history plus
+one for the empty history.
 \begin{equation}
-  N = \NGramLength{\SeenHistory} + 1
+  N = \NGramLength{\DerivedHistory[s]} + 1
 \end{equation}
+Where $\NGramLength{w_1^n} = n$ is the length of the $n$-gram $w_1^n$.
 
 The next step is to find the actual terms $\SumArg_i^h(w)$ that shall be
-weighted added.
+weightedly added.
 When looking at the equations that define Modified Kneser-Ney we note the fact
 that only the count terms in the numerators depend on the probability event $w$.
 Exactly these terms compose our sum arguments:
 \begin{equation}
   \SumArg_i^h(w) =
     \begin{dcases*}
-      \Count(w)                                        & if $N = 1$ \\
-      \DiscountedCount(\SeenHistory \: w)              & if $N \neq 1 \land i = 1$ \\
-      \DiscountedCount*(\WSkp \DerivedHistory[i] \: w) & if $N \neq 1 \land 1 < i < N$ \\
-      \ContCountIp(\WSkp w)                            & if $N \neq 1 \land i = N$
+      \Count(w)                                             & if $N = 1$ \\
+      \DiscountedCount(\DerivedHistory[s] w)                & if $N \neq 1 \land i = 1$ \\
+      \DiscountedCount*(\WSkp \DerivedHistory[s + i - 1] w) & if $N \neq 1 \land 1 < i < N$ \\
+      \ContCountIp(\WSkp w)                                 & if $N \neq 1 \land i = N$
     \end{dcases*}
 \end{equation}
-Where $\DerivedHistory[i](w_1^n) = w_i^n$ is a helper mapping that gives the history
-of the $i$th interpolation order.
-\todo{Replace old notation.}
 
 Lastly we need to define the actual sum weights $\SumWeight_i^h$.
 We note that --- because each order is interpolated with the weight $\gamma$ of
@@ -145,12 +175,17 @@ Additionally lower order models occur in the numerators of fractions, because of
 that they are weighted by all previous denominator counts as well.
 Building on this we can define:
 \begin{equation}
-  \SumWeight_i^h = \frac{1}{\Count(\SeenHistory \Skp)} \prod_{j = 2}^i \frac{\gamma(\DerivedHistory[j-1])}{\ContCountIp(\WSkp \DerivedHistory[j] \WSkp)}
+  \label{eq:mkn-sumweight}
+  \SumWeight_i^h = \frac{1}{\Count(\DerivedHistory[s] \Skp)} \prod_{j = 2}^i \frac{\gamma(\DerivedHistory[s+i-2])}{\ContCountIp(\WSkp \DerivedHistory[s+i-1] \WSkp)}
 \end{equation}
 
 Specifying an algorithm to compute interpolation weights $\SumWeight_i^h$ that
 minimizes frequency count lookup (using the iterative definition of
 $\SumWeight_i^h$) is straightforward and given in \cref{alg:weightedsum-mkn}.
+In \cref{ln:alg-mkn-lowerorders} the lower order sum weights are assigned.
+It takes advantage of the fact that \cref{eq:mkn-sumweight} can easily be
+written in a recursive manner.
+This is done to avoid repeated count lookups and multiplications.
 
 \begin{algorithm}
   \caption{Computing Modified Kneser-Ney sum weights}
@@ -161,33 +196,32 @@ $\SumWeight_i^h$) is straightforward and given in \cref{alg:weightedsum-mkn}.
     \Ensure $\SumWeight_1^h, \: \ldots, \: \SumWeight_N^h$
       \Comment{list of sum weights}
 
-    \State $N \gets \NGramLength{h} + 1$
-
-    \vspace{0.7em}
     \LineComment{find first seen history}
-    \State $i \gets 0$
-    \While{$\Count(\DerivedHistory[i] \Skp) = 0$}
+    \State $s \gets 1$
+    \While{$\Count(\DerivedHistory[s] \Skp) = 0$}
       \Comment{while history is unseen}
-      \State $\SumWeight_i^h \gets 0$
-        \Comment{unseen histories have no influence on probability}
-      \State $i \gets i + 1$
+      \State $s \gets s + 1$
     \EndWhile
 
     \vspace{0.7em}
     \LineComment{compute sum weights}
-    \State $\SumWeight_i^h \gets \dfrac{1}{\Count(\DerivedHistory[i] \Skp)}$
-      \Comment{set highest order weight}
-    \While{$i < N$}
-      \State $i \gets i + 1$
-      \State $\SumWeight_i^h \gets \SumWeight_{i-1}^h \dfrac{\gamma(\DerivedHistory[i-1])}{\ContCountIp(\WSkp \DerivedHistory[i] \WSkp)}$
-        \Comment{lower orders from previous orders}
-    \EndWhile
+    \State $N \gets \NGramLength{\DerivedHistory[s]} + 1$
+      \Comment{number of sum weights}
+    \vspace{0.1em}
+    \State $\SumWeight_1^h \gets \dfrac{1}{\Count(\DerivedHistory[s] \Skp)}$
+      \Comment{set weight of highest order}
+    \For{$i$ \textbf{from} $2$ \textbf{to} $N$}
+      \State $\SumWeight_i^h \gets \SumWeight_{i-1}^h \dfrac{\gamma(\DerivedHistory[s + i - 2])}{\ContCountIp(\WSkp \DerivedHistory[s + i - 1] \WSkp)}$
+        \Comment{weight of lower orders}
+        \label{ln:alg-mkn-lowerorders}
+    \EndFor
   \end{algorithmic}
 \end{algorithm}
 
 
 % ------------------------------------------------------------------------------
 \section{Generalized Language Model}
+\label{sec:weightedsum-glm}
 
 The difference between a Modified Kneser-Ney language model and a
 Generalized Language Model is the way in which orders are interpolated.
