@@ -1,6 +1,8 @@
 \chapter{Formulating Language Models as Weighted Sums}
 \label{ch:weightedsum}
 
+
+% ------------------------------------------------------------------------------
 \section{Notation}
 
 \begin{itemize}
@@ -15,7 +17,6 @@
 you also want to state that you can calculate alphas relatively easy in
 descending order. Does it make sense to discuss the general problem here
 with respect to used memory, indices and runtime?}
-
 This chapter will show how to represent  $\ProbMKN{w_n}{w_1^{n-1}}$ and
 $\ProbGLM{w_n}{w_1^{n-1}}$ as weighted sums of terms depending on $w_n$ for a
 fixed history $h = w_1^{n-1}$ and an  arbitrary probability event $w = w_n$.
@@ -26,6 +27,7 @@ equations of the following form:
   \Prob{w}{h} = \sum_{i = 1}^{N} \SumWeight_i^h \cdot \SumArg_i^h(w_n)
 \end{equation}
 
+\begin{draft}
 Using this it is possible to calculate queries of type ``Noisy Channel Argmax''
 (\cref{eq:noisychannel}) much more efficiently, as it is possible to perform the
 (potentially expensive) calculation of $\SumWeight_i^h$ in advance.
@@ -47,17 +49,16 @@ considerably better computational complexity to calculate probabilities than the
 na{\"\i}ve \Rene{replace na{\"\i}ve with recursive?} approach of just computing
 the formulas given in
 \cref{sec:review-lm-glm}.
-\begin{draft}
 This will counter biggest disadvantage of GLM.
 \end{draft}
 
 We will now present the basic idea of how to transform $\Prob{w_n}{w_1^{n-1}}$
 into weighted sums, that applies to both Modified Kneser-Ney Smoothing and
-the Generalized Language Model as well:
+the Generalized Language Model:
 
 Note that in all \cref{eq:mkn-high,eq:mkn-low,eq:glm-high,eq:glm-low} the
-probability event $w_n$ only appears in the argument terms of
-$\DiscountedCount$ or $\DiscountedCount*$.
+probability event $w_n$ only appears in the nominator of fractions, specifically
+in the argument terms of $\DiscountedCount$ or $\DiscountedCount*$.
 Additionally $w_n$ occurs as arguments for $\Count$ and $\ContCountIp$ in the
 lowest order \cref{eq:mkn-lowest,eq:glm-lowest}.
 
@@ -69,8 +70,8 @@ However they assume the history to be seen in training.
 Forfeiting this assumption will add considerable complexity in the case
 of Generalized Language Models.
 
+
 % ------------------------------------------------------------------------------
-\clearpage %TODO
 \section{Modified Kneser-Ney Smoothing}
 
 Modified Kneser-Ney Smoothed probabilities $\ProbMKN{w}{h}$ are calculated as
@@ -92,7 +93,7 @@ following by the weight $\gamma(h)$.
 This process of interpolation different orders is visualized in
 \cref{fig:history-mkn}.
 
-\begin{figure}
+\begin{figure}[htb]
   \centering
   \input{figures/historiesmkn}
   \caption{
@@ -143,22 +144,9 @@ $\gamma$s of all previous orders.
 Additionally lower order models occur in the numerators of fractions, because of
 that they are weighted by all previous denominator counts as well.
 Building on this we can define:
-\Rene[noline]{I understand how to formally derive \cref{eq:mkn-sumweight} but
-I'm asking myself whether that it because I understand theory resp. I derived
-this solution with you. I'm also a fan ob abstraction but maybe an example
-may be called for here, not just in the appendix.}
-\begin{equation}
-  \label{eq:mkn-sumweight}
-  \SumWeight_i^h = \frac{\prod_{j = 1}^{i - 1} \gamma(\DerivedHistory[j]}
-                        {\Count(\SeenHistory \Skp) \prod_{k = 2}^{i} \ContCountIp(\WSkp \DerivedHistory[k] \WSkp)}
-\end{equation}
-\todo[inline]{Or better recursively? Or alternatively?}
 \begin{equation}
   \SumWeight_i^h = \frac{1}{\Count(\SeenHistory \Skp)} \prod_{j = 2}^i \frac{\gamma(\DerivedHistory[j-1])}{\ContCountIp(\WSkp \DerivedHistory[j] \WSkp)}
 \end{equation}
-
-\todo[inline]{Do we prove that this is actually MKN?}
-\Rene[inline]{Should be relatively easy with induction, would be nice.}
 
 Specifying an algorithm to compute interpolation weights $\SumWeight_i^h$ that
 minimizes frequency count lookup (using the iterative definition of
@@ -169,30 +157,34 @@ $\SumWeight_i^h$) is straightforward and given in \cref{alg:weightedsum-mkn}.
   \label{alg:weightedsum-mkn}
   \begin{algorithmic}[1]
     \Require $h$
-      \Comment{History for which to determinate interpolation weights}
-    \Ensure $\SumWeight_i^h$
-      \Comment{List of interpolation weights}
+      \Comment{history for which to determinate sum weights}
+    \Ensure $\SumWeight_1^h, \: \ldots, \: \SumWeight_N^h$
+      \Comment{list of sum weights}
 
-    \State $\SeenHistory \gets h$
-      \Comment{Find first seen history $\SeenHistory$}
-    \While{$\Count(\SeenHistory \Skp) = 0$}
-      \State $\SeenHistory \gets \SeenHistory\text{.backoff()}$
-        \todo[inline]{Better notation for backoff, maybe
-          $\SeenHistory\text{.removeFirstWord()}$?}
+    \State $N \gets \NGramLength{h} + 1$
+
+    \vspace{0.7em}
+    \LineComment{find first seen history}
+    \State $i \gets 0$
+    \While{$\Count(\DerivedHistory[i] \Skp) = 0$}
+      \Comment{while history is unseen}
+      \State $\SumWeight_i^h \gets 0$
+        \Comment{unseen histories have no influence on probability}
+      \State $i \gets i + 1$
     \EndWhile
-    \State $N = \NGramLength{\SeenHistory} + 1$
-    \State $\SumWeight^h \gets$ new List of size $N$
-    \State $\SumWeight_1^h \gets \frac{1}{\Count(\SeenHistory \Skp)}$
-      \Comment{Set highest order weight}
-    \For{$i \gets 2 \mathinner{\ldotp \ldotp} N$}
-      \State $\SumWeight_i^h \gets \SumWeight_{i-1}^h \frac{\gamma(\DerivedHistory[i-1])}{\ContCountIp(\WSkp \DerivedHistory[i] \WSkp)}$
-        \Comment{Compute lower orders using previous order}
-        \Rene[inline]{Recursive computation is confusing in contrast to
-          \cref{eq:mkn-sumweight}.}
-        \todo[inline]{Replace fraction with $x^{-1}$ for better visual?}
-    \EndFor
+
+    \vspace{0.7em}
+    \LineComment{compute sum weights}
+    \State $\SumWeight_i^h \gets \dfrac{1}{\Count(\DerivedHistory[i] \Skp)}$
+      \Comment{set highest order weight}
+    \While{$i < N$}
+      \State $i \gets i + 1$
+      \State $\SumWeight_i^h \gets \SumWeight_{i-1}^h \dfrac{\gamma(\DerivedHistory[i-1])}{\ContCountIp(\WSkp \DerivedHistory[i] \WSkp)}$
+        \Comment{lower orders from previous orders}
+    \EndWhile
   \end{algorithmic}
 \end{algorithm}
+
 
 % ------------------------------------------------------------------------------
 \section{Generalized Language Model}
@@ -282,6 +274,7 @@ we obtain $\sum_{k=0}^n \binom{n}{k} = 2^n$.
 Following the model of the binomial diamond will be a major aid in understanding
 the weighted sum representation of the Generalized Language Model.
 
+
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Number of sum weights}
 
@@ -341,6 +334,7 @@ times two, as histories can occur both in highest and lower order probabilities:
 \begin{equation}
   N = 2 \cdot 2^\NGramLength{h}
 \end{equation}
+
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Sum factors}
@@ -404,6 +398,7 @@ node with each node on path weighted.
 
 \Lukas[inline]{I have no idea for a good notation for this concept of a path in binomial
 diamond.}
+
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Algorithm}
@@ -542,6 +537,7 @@ one node.
 
 \todo[inline]{Can we improve algorithm if we just walk each path once?}
 
+
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Computational Complexity}
 
@@ -553,6 +549,7 @@ finding paths for this.}
 \Rene[inline]{Finding paths is breath or depth first search. I think you text
 fails to differentiate between training and query time. Your whole approach is
 to optimize query time, although this is implicit in argmax.}
+
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Bitmagic}

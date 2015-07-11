@@ -19,7 +19,7 @@ namely \emph{Modified Kneser-Ney Smoothing} (\cref{sec:review-lm-mkn}) and the
 However we will only give and explain definitions for these language models.
 No motivation or justification of their genesis will be performed, as these are
 not necessary to understand the contribution of this thesis.
-The interested reader is instead hereby referred to the primary sources.
+Instead the interested reader is hereby referred to the primary sources.
 
 
 % ------------------------------------------------------------------------------
@@ -49,12 +49,11 @@ words are $w_1^n$:
 Where $\Sigma$ is the \emph{vocabulary}, the set of all words in a language
 $\Language \subseteq \Sigma^{*}$.
 It is easy to extend this definition to sequences with multiple skips:
+\todo{Do we mention the difference of $\Count(\Skp w_1^n)$ to $\Count(w_1^n)$
+in absence of Beginning of Sentence tags?}
 \begin{equation}
   \Count(w_1 \Skp \Skp w_2) = \sum_{x, y \in \Sigma} \Count(w_1 \: x \: y \: w_2)
 \end{equation}
-
-\todo[inline]{Do we mention the difference of $\Count(\Skp w_1^n)$ to $\Count(w_1^n)$
-in absence of Beginning of Sentence tags?}
 
 Additionally we define \emph{continuation} counts $\ContCount_k(\DummyArg)$ as
 the number of sequences from the training data that occur exactly $k$ times and
@@ -144,8 +143,10 @@ further lower orders:
     \frac{\DiscountedCount*(\WSkp w_1^n) + \gamma(w_1^{n-1}) \ProbMKN*{w_n}{w_2^{n-1}}}
          {\ContCountIp(\WSkp w_1^{n-1} \WSkp)} \\
 \end{equation}
-With the \emph{discounted} continuation count
+With
 ${\DiscountedCount*(\WSkp w_1^n) = \max\Set{ \ContCountIp(\WSkp w_1^n) - \Discount(\Count(w_1^n)), 0 }}$.
+the \emph{discounted} continuation count.
+
 Backing-off to compute lower orders is never necessary, because
 if history $w_1^{n-1}$ was seen, $w_2^{n-1}$ was seen as well.
 \todo{This should actually not be true, because we increase n-gram length for
@@ -193,7 +194,8 @@ The highest order is computed as:
          {\Count(w_1^{n-1} \Skp)}
 \end{equation}
 Auxiliary definitions $\DiscountedCount$, $\DiscountedCount*$, $\gamma$ are the
-same as for Modified Kneser-Ney Smoothing and given in \cref{sec:review-lm-mkn}.
+same as for Modified Kneser-Ney Smoothing and given in
+\cref{sec:discounts-interpolation-weights}.
 
 The skip operator $\SkpOp[j]{w_1^{n-1}}$ can be any mapping that relates
 $w_1^{n-1}$ to exactly $\NumSkpOp{w_1^{n-1}}$ many derived sequences.
@@ -248,11 +250,22 @@ In practice this is the case when $w_1^{n-1}$ only consists of skips.
 \section{Discounting and Interpolation Weights}
 \label{sec:discounts-interpolation-weights}
 
-\begin{draft}
-Explain Discounting and Smoothing.
-\end{draft}
+The purpose of the discounted count functions $\DiscountedCount(\DummyArg)$
+and $\DiscountedCount*(\DummyArg)$ is to reduce the absolute values of
+higher order probability of the language model.
+This is done in order to have \enquote{left over probability mass} to assign
+to lower orders \parencite{NeyEssen1991,NeyKneser1994}.
 
-\begin{draft}
+These discounted counts are defined as:
+\begin{subequations}
+  \begin{align}
+    \DiscountedCount(w_1^n)        &= \max \Set{\Count(w_1^n) - \Discount(\Count(w_1^n)), \, 0} \\
+    \DiscountedCount*(\WSkp w_1^n) &= \max \Set{ \ContCountIp(\WSkp w_1^n) - \Discount(\Count(w_1^n)), \, 0 }
+  \end{align}
+\end{subequations}
+
+Discounting is done by subtracting a value $\Discount(c)$ from each count.
+The higher the count value $c$ the higher it is discounted:
 \begin{equation}
   \Discount(c) =
     \begin{dcases*}
@@ -262,7 +275,7 @@ Explain Discounting and Smoothing.
       D_{3+} & if $c \geq 3$
     \end{dcases*}
 \end{equation}
-
+With the the discounting values $D_\DummyIndex$ defined as:
 \begin{subequations}
   \begin{align}
     D_1    &= 1 - 2 Y \frac{n_2}{n_1} \\
@@ -270,14 +283,17 @@ Explain Discounting and Smoothing.
     D_{3+} &= 3 - 4 Y \frac{n_4}{n_3}
   \end{align}
 \end{subequations}
+Where $Y = \frac{n_1}{n_1 + n_2}$, and where $n_i$ denotes the total number of
+of \mbox{$n$-grams} which appear exactly $i$ times \parencite{Pickhardt2014}.
+\todo{This doesn't really fully explain how $n_i$ works does it?}
 
-\begin{equation}
-  Y = \frac{n_1}{n_1 + n_2}
-\end{equation}
-
+Based on this we can define the interpolation weight $\gamma(\DummyArg)$ that
+determines how much lower order probabilities factor into those of higher
+orders \parencite{Pickhardt2014}:
 \begin{equation}
   \gamma(w_1^{n-1}) =   D_1    \ContCountI    (w_1^{n-1} \WSkp)
                       + D_2    \ContCountII   (w_1^{n-1} \WSkp)
                       + D_{3+} \ContCountIIIp (w_1^{n-1} \WSkp)
 \end{equation}
-\end{draft}
+For the given discounted count functions $\DiscountedCount$ and
+$\DiscountedCount*$ it has to be chosen like this to ensure true probabilities.
