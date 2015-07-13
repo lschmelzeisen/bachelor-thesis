@@ -1,50 +1,6 @@
 \chapter{Related Work}
 \label{ch:relatedwork}
 
-\begin{draft}
-\begin{displayquote}[\textcite{JurafskyMartin2009}]
-Because in practice most implementations of Viterbi use beam
-search, some of the literature uses the term beam search or time-synchronous beam
-search instead of Viterbi.
-\end{displayquote}
-\end{draft}
-
-% ------------------------------------------------------------------------------
-\section{Noisy Channel Queries}
-
-The established way to solve noisy channel type queries is to use
-\emph{Viterbi-} or \emph{beam-search-algorithms}
-\parencite{JurafskyMartin2009,Bickel2005}.
-These algorithms are based on following most promising looking paths and
-pruning the search space with some heuristic.
-Trough this pruning, remarkable runtime performance can be achieved, however it
-has other undesirable effects, for instance these algorithms are not guaranteed
-to always find (optimal) solutions \parencite{Bickel2005}.
-
-This thesis' approach using top-$k$ joining does not have these drawbacks, it
-will always find the best solution(s).
-
-% ------------------------------------------------------------------------------
-\section{State-of-the-art Language Models}
-
-
-
-An in-depth summary of Modified Kneser-Ney Smoothing and the Generalized
-Language Model is given in \cref{ch:review}.
-
-We will then express these language models as weighted sums of their occurrence
-counts in \cref{ch:weightedsum}.
-To the authors knowledge, there is no other work on expressing language models
-as weighted sums.
-However, \textcite{JelinekMercer1980} already experimented with trying to learn
-weighted sum parameters automatically for language modeling.
-
-\begin{draft}
-Mention \emph{Nerual Network Language Models} \parencite{Bengio2003,Mikolov2012}
-(do we not use them because they can not be represented as weighted sums?), as
-they seem to be in favor of academic research recently.
-\end{draft}
-
 % ------------------------------------------------------------------------------
 \section{Top-\emph{k} Joining Techniques}
 

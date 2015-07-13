@@ -1,17 +1,21 @@
 \chapter{Formulating Language Models as Weighted Sums}
 \label{ch:weightedsum}
 
-\todo{Introduce notation: (1) N-Gram length (absolute bars) (2) N-Gram
-concatenation (side by side or with star) (3) Empty N-Gram (epsilon).}
-This chapter will show how to represent  $\ProbMKN{w_n}{w_1^{n-1}}$ and
-$\ProbGLM{w_n}{w_1^{n-1}}$ as weighted sums of terms depending on $w_n$ for a
-fixed history $h = w_1^{n-1}$ and an  arbitrary probability event $w = w_n$.
+In this chapter we will present our way to represent the probabilities
+$\ProbMKN{w_n}{w_1^{n-1}}$ and $\ProbGLM{w_n}{w_1^{n-1}}$ as weighted sums of
+terms depending on $w_n$ for a fixed history $h = w_1^{n-1}$ and an  arbitrary
+probability event $w = w_n$.
 In other words we will express the formulas given in \cref{ch:review} as
 equations of the following form:
 \begin{equation}
   \label{eq:weightedsum}
   \Prob{w}{h} = \sum_{i = 1}^{N} \SumWeight_i^h \cdot \SumArg_i^h(w_n)
 \end{equation}
+
+To the authors knowledge, there is no other work on expressing language models
+as weighted sums.
+However, \textcite{JelinekMercer1980} already experimented with trying to learn
+weighted sum parameters automatically for language modeling.
 
 Being able to accurately represent probabilities in a form like this is highly
 beneficial for word prediction.
@@ -78,9 +82,12 @@ follows:
 \newcommand{\ProbMKNc}
   {\frac{\ContCountIp(\WSkp w_3)}{\ContCountIp(\text{\WSkp \WSkp})}}
 
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Example}
+
 As an example we will give the full formula expansion necessary to calculate
-$\ProbMKN{w_3}{w_1 w_2}$ for any sequence $w_1 w_2 w_3$, assuming that sequence
-was seen:
+$\ProbMKN{w_3}{w_1 w_2}$ for any sequence $w_1 w_2 w_3$, assuming sequence
+$w_1 w_2 \Skp$ was seen:
 \begin{subequations}
   \begin{align}
     \ProbMKN {w_3}{w_1 w_2} &= \ProbMKNcab{\ProbMKN*{w_3}{w_2}} \\
@@ -111,19 +118,22 @@ the training corpus, that is $\Count(w_1 w_2 w_3) \geq 1$.
 If this is not the case, backoff steps have to be performed, and a different
 resulting formula is obtained.
 
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Sum terms}
+
 All counts except those of the lowest order are discounted using
 $\DiscountedCount$ and $\DiscountedCount*$ to interpolate that order with the
 following by the weight $\gamma(h)$.
 This process of interpolating different orders is visualized in
 \cref{fig:history-mkn} for the case of a history of length three.
-Building similiar graphs for other history lengths is straightforward.
+Building similiar backoff graphs for other history lengths is straightforward.
 
 \begin{figure}[tb]
   \centering
   \input{figures/historiesmkn}
   \caption{
-    Interpolation of different orders during computation of
-    $\ProbMKN{w_4}{w_1 w_2 w_3}$.
+    The \emph{backoff graphs} shows the interpolation of different orders during
+    computation of $\ProbMKN{w_4}{w_1 w_2 w_3}$.
     Centered are the histories for each probability.
     It is assumed that the history $w_1 w_2 w_3$ was seen during training, so
     that no backing-off is necessary.
@@ -220,10 +230,11 @@ This is done to avoid repeated count lookups and multiplications.
 
 
 % ------------------------------------------------------------------------------
+\clearpage
 \section{Generalized Language Model}
 \label{sec:weightedsum-glm}
 
-The difference between a Modified Kneser-Ney language model and a
+The difference between the Modified Kneser-Ney smoothed language model and the
 Generalized Language Model is the way in which orders are interpolated.
 Instead of just one probability --- that of shortening the history by one ---
 being factored in, in the Generalized Language Model the average of multiple
@@ -240,39 +251,85 @@ is set to the number of non-skip words in $h$, and $\SkpOp[j]{h}$ is defined as
 replacing the $j$th non-skip word in $h$ with a skip $\Skp$.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsection{Binomial Diamond}
+\subsection{Example}
+\label{subsec:weightedsum-glm-example}
 
-\todo[inline]{Do we mention \emph{Hasse diagrams} in this subsection?}
-\Rene[inline]{Let us discuss ``Hasse'' vs ``diamond''. Only use one term or the
-other.}
+\newcommand{\ProbGLMcab}[2]
+  {\frac{\DiscountedCount(w_1 w_2 w_3) + \frac{\gamma(w_1 w_2)}{2}\left(#1 + #2\right)}{\Count(w_1 w_2 \Skp)}}
+\newcommand{\ProbGLMcsb}[1]
+  {\frac{\DiscountedCount*(\WSkp \Skp w_2 w_3) + \frac{\gamma(\Skp w_2)}{1} #1}{\ContCountIp(\WSkp \Skp w_2 \WSkp)}}
+\newcommand{\ProbGLMcas}[1]
+  {\frac{\DiscountedCount*(\WSkp w_1 \Skp w_3) + \frac{\gamma(w_1 \Skp)}{1} #1}{\ContCountIp(\WSkp w_1 \Skp \WSkp)}}
+\newcommand{\ProbGLMcss}
+  {\frac{\ContCountIp(\WSkp \Skp \Skp w_3)}{\ContCountIp(\WSkp \Skp \Skp \WSkp)}}
 
-The directed graph of \cref{fig:history-glm} visualizes the lower order
-probabilities that factor into those of higher orders, using that definition of
-$\SkpOp[j]{h}$.
-The nodes represent the histories $h$ of a probability $\ProbGLM{w_4}{h}$.
+Examplatory the full formula expansion for $\ProbGLM{w_3}{w_1 w_2}$, assuming
+the sequence $w_1 w_2 \Skp$ was seen:
+\begin{subequations}
+  \begin{align}
+    \hspace{-2.5em}\ProbGLM {w_3}{w_1 w_2}   &= \ProbGLMcab{\ProbGLM*{w_3}{\Skp w_2}}{\ProbGLM*{w_3}{w_1 \Skp}} \\
+    \hspace{-2.5em}\ProbGLM*{w_3}{\Skp w_2}  &= \ProbGLMcsb{\ProbGLM*{w_3}{\Skp \Skp}} \\
+    \hspace{-2.5em}\ProbGLM*{w_3}{w_1 \Skp}  &= \ProbGLMcas{\ProbGLM*{w_3}{\Skp \Skp}} \\
+    \hspace{-2.5em}\ProbGLM*{w_3}{\Skp \Skp} &= \ProbGLMcss
+  \end{align}
+\end{subequations}
+After insertion of lower order probabilities:
+\begin{align}
+  \label{eq:probglmexpansion-inserted}
+  \hspace{-2.5em}&\ProbGLM{w_3}{w_1 w_2} =\\
+  \hspace{-2.5em}&\qquad \ProbGLMcab{\ProbGLMcsb{\ProbGLMcss}}
+                                    {\ProbGLMcas{\ProbGLMcss}} \nonumber
+\end{align}
+Finally, by using the distributive property, we arrive at the weighted sum
+representation: $\SumArg^h_i(w)$ left of the multiplication dot,
+$\SumWeight^h_i$ right.
+\begin{align}
+  \label{eq:probglmexpansion-final}
+  \hspace{-2.5em}\ProbGLM {w_3}{w_1 w_2} =
+    & & \DiscountedCount (w_1 w_2 w_3)        &             \cdot\  \frac{1}{\Count(w_1 w_2 \Skp)} \\
+    &+& \DiscountedCount*(\WSkp \Skp w_2 w_3) &             \cdot\  \frac{\gamma(w_1 w_2)}{2 \Count(w_1 w_2 \Skp) \ContCountIp(\WSkp \Skp w_2 \WSkp)} \nonumber \\
+    &+& \DiscountedCount*(\WSkp w_1 \Skp w_3) &             \cdot\  \frac{\gamma(w_1 w_2)}{2 \Count(w_1 w_2 \Skp) \ContCountIp(\WSkp w_1 \Skp \WSkp)} \nonumber \\
+    &+& \ContCountIp(\WSkp\Skp \Skp w_3)      &             \cdot\  \frac{\gamma(w_1 w_2)}{2 \cdot 1 \Count(w_1 w_2 \Skp)} \bigg(  \frac{\gamma(\Skp w_2)}{\ContCountIp(\WSkp \Skp w_2 \WSkp) \ContCountIp(\WSkp \Skp \Skp \WSkp)} \: + \nonumber \\
+    & &                                       & \phantom{{} \cdot\  \frac{\gamma(w_1 w_2)}{2 \cdot 1 \Count(w_1 w_2 \Skp)} \bigg(} \frac{\gamma(w_1 \Skp)}{\ContCountIp(\WSkp w_1 \Skp \WSkp) \ContCountIp(\WSkp \Skp \Skp \WSkp)} \ \bigg) \nonumber
+\end{align}
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Backoff graph}
+
+\Cref{fig:history-glm} shows the \emph{backoff graph} introduced by
+\textcite{BilmesKirchhoff2003}.
+It visualizes the lower order probabilities that factor into those of higher
+orders, using that definition of $\SkpOp[j]{h}$.
+The nodes represent the histories $h = w_1 w_2 w_3$ of a probability
+$\ProbGLM{w_4}{w_1 w_2 w_3}$.
 The directed edges represent an immediate dependency, for example the
 probabilities that occur in the definition of
 $\ProbGLM*{w_4}{w_1 w_2 \Skp}$ are $\ProbGLM*{w_4}{w_1 \Skp \Skp}$ and
 $\ProbGLM*{w_4}{\Skp w_2 \Skp}$.
+In order theory, graphs that generalize this idea are also known as
+\emph{hasse diagrams}.
 
 \begin{figure}
   \centering
   \input{figures/historiesglm}
   \caption{
-    Binomial diamond of order 3 for history $h = w_1 \: w_2 \: w_3$.
+    Backoff graph of order 3 for history $h = w_1 w_2 w_3$.
   }
   \label{fig:history-glm}
 \end{figure}
 
-We call a graph that represents the inter-dependencies of probabilities during
-the calculation of $\ProbGLM{w}{h}$ the \emph{binomial diamond} of order
+
+We also call a graph that represents the inter-dependencies of probabilities
+during the calculation of $\ProbGLM{w}{h}$ the \emph{binomial diamond} of order
 $n = \NGramLength{h}$, because of its diamond-like shape, and a number of
 properties:
 
 \begin{enumerate}
-  \item \label{itm:num-layers} If the graph is partitioned into layers, where
-    layer $k$ contains the histories that have exactly $k$ skip words, the graph
-    has $n + 1$ layers.
+  \item \label{itm:num-layers} Unlike the case of Modified Kneser-Ney Smoothing
+    there is no longer one clear way to define a total order of all the
+    histories in the graph.
+    Instead if we partitioned the graph into layers, where layer $k$ contains
+    the histories that have exactly $k$ skip words, the graph has $n + 1$ layers.
   \item \label{itm:num-childs} Layer $k$ contains exactly $\binom{n}{k}$ nodes.
   \item \label{itm:num-edges}  Nodes in layer $k$ have exactly $n - k$ outgoing
     and $k$ incoming edges.
@@ -284,8 +341,6 @@ histories that are part of the $k$th highest order of probability.
 
 To explain \cref{itm:num-childs}, it is helpful to imagine replacing words in
 a history as laying a mask of either a skip or a non-skip on top of each word.
-\todo{Add small figure to visualize this idea?}
-\Rene[noline]{Unnecessary, but if you have time.}
 Then the number of nodes in each layer can be understood as permuting the
 skip and non-skip masks on top of the history.
 It is a well known fact that there are exactly $\binom{n}{k}$ permutations of
@@ -305,15 +360,18 @@ We can also infer this from \cref{itm:num-childs} via the binomial theorem
 $(x+ y)^n = \sum_{k=0}^n \binom{n}{k} x^{n-k} y^k$, if we set ${x = y = 1}$,
 we obtain $\sum_{k=0}^n \binom{n}{k} = 2^n$.
 
-Following the model of the binomial diamond will be a major aid in understanding
+Following the model of the backoff graph will be a major aid in understanding
 the weighted sum representation of the Generalized Language Model.
 
+In order to have a notation avaialbe for all derived histories, we impose an
+arbitrary total ordering one those histories.
+One such ordering is given in \cref{fig:history-glm} and assigns each history
+a number between $1$ and $8$.
+Let $\DerivedHistory[i]$ than be the $i$th history of an arbitrary ordering.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Number of sum weights}
 
-\Rene[noline]{Such announcements are hard to read, either discuss when necessary
-or here completely, don't split over multiple pages.}
 In the previous subsection, it was reasoned that, in the Generalized Language
 Model, for a history of length $n$ there are exactly $2^n$ possible derivative
 histories.
@@ -327,38 +385,42 @@ probability $\ProbGLM*{w}{h^*}$ in the presence of unseen histories, as will
 shown in the next paragraph.
 
 \begin{subequations}
-  Let us for example calculate the probability $\ProbGLM{c}{a \: b}$ on
-  hypothetical training data. Were the history $a b$ not to occur in that training
-  corpus, we would have to substitute the average of back-off probabilities
-  following \cref{eq:glm-backoff}:
+  Let us for example calculate the probability $\ProbGLM{w_3}{w_1 w_2}$ on
+  hypothetical training data.
+  That hypothetical training data shall be different from
+  \cref{subsec:weightedsum-glm-example} and now $w_1 w_2$ shall be unseen,
+  that is $\Count(w_1 w_2) = 0$.
+  Because of this the average of back-off probabilities following
+  \cref{eq:glm-backoff} has to be formed:
   \begin{equation}
-    \ProbGLM{c}{a \: b} = \frac{1}{2} \left( \ProbGLM{c}{\Skp b} + \ProbGLM{c}{a \Skp}\right)
+    \ProbGLM{w_3}{w_1 w_2} = \frac{1}{2} \left( \ProbGLM{w_3}{\Skp w_2} + \ProbGLM{w_3}{w_1 \Skp}\right)
   \end{equation}
-  Note that these back-off probabilities for histories $\Skp b$ and $a \Skp$
+  Note that these back-off probabilities for histories $\Skp w_2$ and $w_1 \Skp$
   are still of the highest order $\ProbGLM$.
-  We now further assume history $\Skp b$ to also not occur in training, so that
+  We now further assume history $\Skp w_2$ to also not occur in training, so that
   further back-off is necessary.
-  History $a \Skp$ however is treated as seen:
+  History $w_1 \Skp$ however is treated as seen:
   \begin{align}
     \label{eq:glm-example-unseen}
-    \ProbGLM{c}{\Skp b} &= \ProbGLM{c}{\Skp \Skp} \\
+    \ProbGLM{w_3}{\Skp w_2} &= \ProbGLM{w_3}{\Skp \Skp} \\
     \label{eq:glm-example-seen}
-    \ProbGLM{c}{a \Skp} &= \frac{\Count(a \Skp \: c) + \gamma(a \Skp) \ProbGLM*{c}{\Skp \Skp}}
-                                 {\Count(a \Skp \Skp)}
+    \ProbGLM{w_3}{w_1 \Skp} &= \frac{\Count(w_1 \Skp w_3) + \gamma(w_1 \Skp) \ProbGLM*{w_3}{\Skp \Skp}}
+                                    {\Count(w_2 \Skp \Skp)}
   \end{align}
-  We can see, that both $\ProbGLM{c}{\Skp \Skp}$ (\cref{eq:glm-example-unseen}) and
-  $\ProbGLM*{c}{\Skp \Skp}$ (\cref{eq:glm-example-seen}) factor into probability
-  $\ProbGLM{c}{a b}$.
+  We can see, that $\ProbGLM{w_3}{\Skp \Skp}$ (\cref{eq:glm-example-unseen}) and
+  $\ProbGLM*{w_3}{\Skp \Skp}$ (\cref{eq:glm-example-seen}) both factor into
+  probability $\ProbGLM{w_3}{w_1 w_2}$.
   They would be evaluated as:
   \begin{align}
-    \ProbGLM {c}{\Skp \Skp} &= \frac{\Count(\Skp \Skp c)}{\Count(\Skp \Skp \Skp)} \\
-    \ProbGLM*{c}{\Skp \Skp} &= \frac{\ContCountIp(\WSkp \Skp \Skp c)}{\ContCountIp(\WSkp \Skp \Skp \WSkp)}
+    \ProbGLM {w_3}{\Skp \Skp} &= \frac{\Count(\Skp \Skp w_3)}{\Count(\Skp \Skp \Skp)} \\
+    \ProbGLM*{w_3}{\Skp \Skp} &= \frac{\ContCountIp(\WSkp \Skp \Skp w_3)}{\ContCountIp(\WSkp \Skp \Skp \WSkp)}
   \end{align}
 \end{subequations}
 
-Because of this, it is possible that one history $h^*$ might both occur as
-highest order probability $\ProbGLM{w}{h^*}$ and lower order probability
-$\ProbGLM*{w}{h^*}$.
+Because of this, it is possible that one history $\DerivedHistory[\DummyIndex]$
+might both occur as highest order probability
+$\ProbGLM{w}{\DerivedHistory[\DummyIndex]}$ and lower order probability
+$\ProbGLM*{w}{\DerivedHistory[\DummyIndex]}$.
 It is non-trivial to decide exactly how many derived histories occur both as
 highest and lower order probabilities, and to fit algorithms to this finding.
 Consequently we only employ an upper bound of sum weights $N$ and set all
@@ -369,17 +431,19 @@ times two, as histories can occur both in highest and lower order probabilities:
   N = 2 \cdot 2^\NGramLength{h}
 \end{equation}
 
-
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsection{Sum factors}
+\subsection{Sum terms}
 
+Based on this we can define the sum terms for $1 \leq i \leq N$.
 \begin{subequations}
   \begin{align}
+    \label{eq:glmarg-high}
     \SumArg_{2 i - 1}^h(w) &=
       \begin{dcases*}
         \DiscountedCount(\DerivedHistory[i] w)        & if $\NumSkpOp{\DerivedHistory[i]} > 0$ \\
         \Count(\DerivedHistory[i] w)                  & if $\NumSkpOp{\DerivedHistory[i]} = 0$
       \end{dcases*} \\
+    \label{eq:glmarg-low}
     \SumArg_{2 i}^h(w) &=
       \begin{dcases*}
         \DiscountedCount*(\WSkp \DerivedHistory[i] w) & if $\NumSkpOp{\DerivedHistory[i]} > 0$ \\
@@ -387,68 +451,67 @@ times two, as histories can occur both in highest and lower order probabilities:
       \end{dcases*}
   \end{align}
 \end{subequations}
-\Rene{Why no discount in case $\NumSkpOp{\DerivedHistory[i]} = 0$? This isn't
-unigram case or is it?}
-\todo[inline]{Or alternatively?}
-\begin{equation}
-  \SumArg_{2 i + j}^h(w) =
-    \begin{dcases*}
-      \Count(\DerivedHistory[i] w)                  & if $j = 0 \land \NumSkpOp{\DerivedHistory[i]} = 0$ \\
-      \ContCountIp(\WSkp \DerivedHistory[i] w)      & if $j = 1 \land \NumSkpOp{\DerivedHistory[i]} = 0$ \\
-      \DiscountedCount(\DerivedHistory[i] w)        & if $j = 0 \land \NumSkpOp{\DerivedHistory[i]} > 0$ \\
-      \DiscountedCount*(\WSkp \DerivedHistory[i] w) & if $j = 1 \land \NumSkpOp{\DerivedHistory[i]} > 0$
-    \end{dcases*}
-\end{equation}
-\todo[inline]{Or alternatively?}
-\begin{equation}
-  \SumArg_{2 i + j}^h(w) =
-    \begin{dcases*}
-      \Count(\DerivedHistory[i] w)                  & if $j = 0 \land N - i \leq 1$ \\
-      \ContCountIp(\WSkp \DerivedHistory[i] w)      & if $j = 1 \land N - i \leq 1$ \\
-      \DiscountedCount(\DerivedHistory[i] w)        & if $j = 0 \land N - i > 1$ \\
-      \DiscountedCount*(\WSkp \DerivedHistory[i] w) & if $j = 1 \land N - i > 1$
-    \end{dcases*}
-\end{equation}
+The terms with an odd index (\cref{eq:glmarg-high}) correspond to
+$\DerivedHistory[i]$ occuring as the highest order of probability, the terms
+with even index (\cref{eq:glmarg-low}) to lower orders.
+The case of $\NumSkpOp{\DerivedHistory[i]} = 0$ occurs when $\DerivedHistory[i]$
+consists only of skips, it thus no longer be backoffed, and therefore
+presents the unigram case.
 
-\begin{draft}
-Coefficient $\mu = \frac{(order - level)!}{order!}$.
-\end{draft}
+Finding the sum weights $\SumWeight^h_i$ is more complex.
+We will first discuss weights for $\SumArg^h_{2 i - 1}(w)$, that is for the
+terms that compose the highest order.
+Our solution is oriented along the backoff graph.
+The weight of a history is exactly then zero, if no backoff step of
+\cref{eq:glm-backoff} reaches that history.
+This occurs if for that history's node all histories of immediate parent nodes
+are seen.
+Parents of a node $A$ are all nodes $B$ that have a directed edge from $B$ to
+$A$.
+Conversly this means that the sum weights $\SumWeight^h_{2 i - 1}$ are proportional
+to the number of paths from the root note to the current node, for which the
+current node's history is seen but the histories of all others nodes in the
+path are not.
+A path exists to node $A_1$ from node $A_m$, if there is a set of nodes
+$\Set{A_1, \ldots, A_m}$ such that it holds for all nodes $A_i$ in that set,
+that $A_{i+1}$ is a parent of $A_i$ for $1 \leq i < m$.
+% The path to $A_1$ from $A_m$ then consists of all the nodes of that set.
 
-\begin{draft}
-$\SumWeight_{2 i}^h$ is $\frac{\mu}{\Count(\DerivedHistory[i]) \Skp)}$ times number
-of unseen paths to node.
+What also has to be considered is that in \cref{eq:glm-backoff} we devide the
+sum of all backoff probabilities by their count.
+The more backoff steps that have to be performed to reach a node, the lower its
+influence is.
+However in turn it also can be reached via more paths as seen in the backoff
+graph of \cref{fig:history-glm}.
+In total there exist two paths from the root node to any node in layer $2$.
+But there exists a total of six paths from the root node to the node in layer
+$3$.
+We define a coefficient $\mu = \frac{(n - l)!}{n!}$, where $n$
+is the length of the current history and $l$ is the layer in the backoff graph
+in which its node occurs.
+Sum weights $\SumWeight^h_i$ are also proportional to that coefficient $\mu$.
 
-$\SumWeight_{2 i + 1}^h$ is
-$\frac{\mu}{\ContCountIp(\WSkp \DerivedHistory[i] \WSkp)}$ times the sum of paths to
-node with each node on path weighted.
-\begin{enumerate}
-  \item Weight unseen nodes as zero if they are direct parents of targets and if
-    target is seen.
-  \item Else weight unseen nodes as one.
-  \item Weight first seen node as $\frac{\gamma(\DerivedHistory[i](h^*))}{\Count(\DerivedHistory[i](h^*) \Skp)}$.
-  \item Weight following nodes as $\frac{\gamma(\DerivedHistory[i](h^*))}{\ContCountIp(\WSkp \DerivedHistory[i](h^*) \WSkp)}$.
-\end{enumerate}
-\end{draft}
+The final influence on $\SumWeight^h_{2 i - 1}$ stems from the fact that we
+defined \cref{eq:glmarg-high} to only consist of the numerator of
+\cref{eq:glm-high}.
+Because of this we also have to devide the sum weight by the denominator of
+that equotion.
 
-\Lukas[inline]{I have no idea for a good notation for this concept of a path in binomial
-diamond.}
+Sum weights $\SumWeight^h_{2 i}$ for terms that occurs in lower orders are
+calculated in a analogous way.
+For the same argument as above they are also influenced by the coefficient
+$\mu$ and a denominator, but this time that of \cref{eq:glm-low}.
+However for lower order weights they are also influenced by the denominators
+of equations that included them.
+This fact is especially visible by the nesting of fractions in
+\cref{eq:probglmexpansion-inserted}.
+\todo{Additional explanation of $factor \cdot sum$ property.}
 
-
-% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsection{Algorithm}
-
-\begin{draft}
-Counts usually stored in hash maps, so we get them to avoid look up.
-
-Use fact that we can apply distributive property on common roots in paths for
-one node.
-\end{draft}
-
-\begin{algorithmic}[1]
-  \State node.\Call{count}{$ $} $= \Count(h_\text{node} \Skp)$
-  \State node.\Call{contCount}{$ $} $= \ContCountIp(\WSkp h_\text{node} \WSkp)$
-  \State node.\Call{gamma}{$ $} $= \gamma(h_\text{node})$
-\end{algorithmic}
+Because of the complexity of factors we will not try to find a mathematical
+expression that defines these sum weights.
+Instead we will find them by specifying the algorithm that computes them:
+Sum weights $\SumWeight^h_i$ are calculated by \cref{alg:weightedsum-glm} which
+uses the helper functions of \cref{alg:weightedsum-glm-helper}.
 
 %\begin{algorithm}
 %  \begin{algorithmic}[1]
@@ -490,7 +553,7 @@ one node.
       \ElsIf{node $=$ root}
         \State $\SumWeight_{2 \cdot\, \text{node.index} - 1}^h \gets \dfrac{\mu}{\text{node.count}}$
       \Else
-        \State $\SumWeight_{2 \cdot\, \text{node.index} - 1}^h \gets \dfrac{\mu \cdot \text{\Call{absoluteWeight}{root, node}}}{\text{node.count}}$
+        \State $\SumWeight_{2 \cdot\, \text{node.index} - 1}^h \gets \dfrac{\mu \cdot \text{\Call{highestOrderWeight}{root, node}}}{\text{node.count}}$
       \EndIf
 
       \vspace{0.7em}
@@ -498,7 +561,7 @@ one node.
       \If{node.contCount $= 0$}
         \State $\SumWeight_{2 \cdot\, \text{node.index}}^h \gets 0$
       \Else
-        \State $\SumWeight_{2 \cdot\, \text{node.index}}^h \gets \dfrac{\mu \cdot \text{\Call{continuationWeight}{root, node, \textbf{true}}}}{\text{node.contCount}}$
+        \State $\SumWeight_{2 \cdot\, \text{node.index}}^h \gets \dfrac{\mu \cdot \text{\Call{lowerOrdersWeight}{root, node, \textbf{true}}}}{\text{node.contCount}}$
       \EndIf
     \EndFor
     \algstore{glmbreak}
@@ -510,7 +573,7 @@ one node.
   \label{alg:weightedsum-glm-helper}
   \begin{algorithmic}[1]
     \algrestore{glmbreak}
-    \Function{absoluteWeight}{ancestor, node}
+    \Function{heighestOrderWeight}{ancestor, node}
       \If{ancestor.count $\neq 0$}
         \Comment{if ancestor is seen}
         \State \textbf{return} $0$
@@ -519,6 +582,7 @@ one node.
 
       \vspace{0.7em}
       \If{ancestor.\Call{isDirectParentOf}{node}}
+        \Comment{end of path?}
         \State \textbf{return} $1$
       \EndIf
 
@@ -526,7 +590,7 @@ one node.
       \State sum $\gets 0$
       \For{\textbf{each} child \textbf{in} ancestor.\Call{childs}{$ $}}
         \If{child.\Call{isAncestorOf}{node}}
-          \State sum $\gets$ sum $+ {}$ \Call{absoluteWeight}{child, node}
+          \State sum $\gets$ sum $+ {}$ \Call{highestOrderWeight}{child, node}
         \EndIf
       \EndFor
       \State \textbf{return} sum
@@ -536,19 +600,20 @@ one node.
     \vspace{0.7em}
     \Statex\hrule
 
-    \Function{continuationWeight}{ancestor, node, firstSeen}
+    \Function{lowerOrdersWeight}{ancestor, node, firstSeen}
       \LineComment{calculate mult}
       \If{firstSeen \textbf{and} ancestor.count $\neq 0$}
-        \State mult $\gets \frac{\text{ancestor.gamma}}{\text{ancestor.count}}$
+        \State factor $\gets \frac{\text{ancestor.gamma}}{\text{ancestor.count}}$
         \State firstSeen $\gets$ \textbf{false}
       \ElsIf{ancestor.contCount $\neq 0$}
-        \State mult $\gets \frac{\text{ancestor.gamma}}{\text{ancestor.contCount}}$
+        \State factor $\gets \frac{\text{ancestor.gamma}}{\text{ancestor.contCount}}$
       \Else
-        \State mult $\gets 1$
+        \State factor $\gets 1$
       \EndIf
 
       \vspace{0.7em}
       \If{ancestor.\Call{isDirectParentOf}{node}}
+        \Comment{end of path?}
         \If{firstSeen}
           \State \textbf{return} $0$
             \Comment{node occurs as highest order for this path}
@@ -561,31 +626,19 @@ one node.
       \For{\textbf{each} child \textbf{in} ancestor.\Call{childs}{$ $}}
         \If{child.\Call{isAncestorOf}{node}}
           \State sum $\gets$\\
-            \hfill sum $+$ \Call{continuationWeight}{child, node, firstSeen}
+            \hfill sum $+$ \Call{lowerOrdersWeight}{child, node, firstSeen}
         \EndIf{}
       \EndFor
-      \State \textbf{return} $mult \cdot sum$
+      \State \textbf{return} factor $\cdot$ sum
     \EndFunction
   \end{algorithmic}
 \end{algorithm}
 
-\todo[inline]{Can we improve algorithm if we just walk each path once?}
-
-
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsection{Computational Complexity}
+\subsection{Implementation}
 
-\todo[inline]{Find complexity of naive approach.}
-
-\todo[inline]{Find complexity of my algorithm. Need to find complexity of
-finding paths for this.}
-
-\Rene[inline]{Finding paths is breath or depth first search. I think you text
-fails to differentiate between training and query time. Your whole approach is
-to optimize query time, although this is implicit in argmax.}
+Bit magic goes here.
 
 
-% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsection{Bitmagic}
-
-\todo[inline]{Better subsection name.}
+% ------------------------------------------------------------------------------
+\section{Monotony}

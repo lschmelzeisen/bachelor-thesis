@@ -227,3 +227,23 @@ techniques and their implementations will be discussed in \cref{ch:topkjoin}.
 In \cref{ch:evaluation} the given approach will be evaluated using empirical
 results.
 \Cref{ch:conclusion} concludes.
+
+\begin{draft}
+\begin{displayquote}[\textcite{JurafskyMartin2009}]
+Because in practice most implementations of Viterbi use beam
+search, some of the literature uses the term beam search or time-synchronous beam
+search instead of Viterbi.
+\end{displayquote}
+\end{draft}
+
+The established way to solve noisy channel type queries is to use
+\emph{Viterbi-} or \emph{beam-search-algorithms}
+\parencite{JurafskyMartin2009,Bickel2005}.
+These algorithms are based on following most promising looking paths and
+pruning the search space with some heuristic.
+Trough this pruning, remarkable runtime performance can be achieved, however it
+has other undesirable effects, for instance these algorithms are not guaranteed
+to always find (optimal) solutions \parencite{Bickel2005}.
+
+This thesis' approach using top-$k$ joining does not have these drawbacks, it
+will always find the best solution(s).

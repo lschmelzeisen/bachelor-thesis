@@ -12,6 +12,12 @@ Language Model}.
 \todo{Justify selection of MKN and GLM over recently popular LMs from
 \textcite{Chelba2013}.}
 
+\begin{draft}
+Mention \emph{Nerual Network Language Models} \parencite{Bengio2003,Mikolov2012}
+(do we not use them because they can not be represented as weighted sums?), as
+they seem to be in favor of academic research recently.
+\end{draft}
+
 This chapter will introduce the used notation (\cref{sec:review-notation})
 and recall the language modeling techniques considered in this work,
 namely \emph{Modified Kneser-Ney Smoothing} (\cref{sec:review-lm-mkn}) and the
@@ -121,7 +127,7 @@ in \cref{sec:discounts-interpolation-weights}.
 We call the word $w_n$ for which we calculate the probability the
 \emph{argument}, and the conditional sequence $w_1^{n-1}$ the \emph{history}.
 
-Naturally \cref{eq:mkn-high} is only defined if the denominator
+\Cref{eq:mkn-high} is only defined if the denominator
 ${\Count(w_1^{n-1} \Skp) > 0}$, that is if the history $w_1^{n-1} \Skp$ was seen
 in training.
 If $w_1^{n-1} \Skp$ was not seen, we perform a so called \emph{``back-off''}
