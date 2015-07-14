@@ -295,6 +295,7 @@ $\SumWeight^h_i$ right.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Backoff graph}
+\label{subsec:backoff-graph}
 
 \Cref{fig:history-glm} shows the \emph{backoff graph} introduced by
 \textcite{BilmesKirchhoff2003}.
@@ -328,24 +329,24 @@ properties:
   \item \label{itm:num-layers} Unlike the case of Modified Kneser-Ney Smoothing
     there is no longer one clear way to define a total order of all the
     histories in the graph.
-    Instead if we partitioned the graph into layers, where layer $k$ contains
-    the histories that have exactly $k$ skip words, the graph has $n + 1$ layers.
-  \item \label{itm:num-childs} Layer $k$ contains exactly $\binom{n}{k}$ nodes.
-  \item \label{itm:num-edges}  Nodes in layer $k$ have exactly $n - k$ outgoing
-    and $k$ incoming edges.
+    Instead if we partitioned the graph into layers, where layer $l$ contains
+    the histories that have exactly $l$ skip words, the graph has $n + 1$ layers.
+  \item \label{itm:num-childs} Layer $l$ contains exactly $\binom{n}{l}$ nodes.
+  \item \label{itm:num-edges}  Nodes in layer $l$ have exactly $n - l$ outgoing
+    and $l$ incoming edges.
   \item \label{itm:num-nodes}  There are $2^n$ nodes in the graph.
 \end{enumerate}
 
-\Cref{itm:num-layers} is due to the fact that layer $k$ includes exactly those
+\Cref{itm:num-layers} is due to the fact that layer $l$ includes exactly those
 histories that are part of the $k$th highest order of probability.
 
 To explain \cref{itm:num-childs}, it is helpful to imagine replacing words in
 a history as laying a mask of either a skip or a non-skip on top of each word.
 Then the number of nodes in each layer can be understood as permuting the
 skip and non-skip masks on top of the history.
-It is a well known fact that there are exactly $\binom{n}{k}$ permutations of
-$k$ tokens of type A (skips) and $l$ tokens of type B (non-skips) when
-$n = k + l$.
+It is a well known fact that there are exactly $\binom{n}{l}$ permutations of
+$l$ tokens of type A (skips) and $k$ tokens of type B (non-skips) when
+$n = l + k$.
 
 \Cref{itm:num-edges} directly follows from the fact, that each non-skip word
 in a history can be replaced by a skip, and that each skip is the result
@@ -357,8 +358,8 @@ the original history.
 All possible masks are then all permutations of two elements (skips or
 non-skips) with repetition of length $n$, which there are $2^n$ arrangements of.
 We can also infer this from \cref{itm:num-childs} via the binomial theorem
-$(x+ y)^n = \sum_{k=0}^n \binom{n}{k} x^{n-k} y^k$, if we set ${x = y = 1}$,
-we obtain $\sum_{k=0}^n \binom{n}{k} = 2^n$.
+$(x+ y)^n = \sum_{l=0}^n \binom{n}{l} x^{n-l} y^l$, if we set ${x = y = 1}$,
+we obtain $\sum_{k=0}^n \binom{n}{l} = 2^n$.
 
 Following the model of the backoff graph will be a major aid in understanding
 the weighted sum representation of the Generalized Language Model.
@@ -459,25 +460,24 @@ consists only of skips, it thus no longer be backoffed, and therefore
 presents the unigram case.
 
 Finding the sum weights $\SumWeight^h_i$ is more complex.
-We will first discuss weights for $\SumArg^h_{2 i - 1}(w)$, that is for the
-terms that compose the highest order.
+We will first reason about how those weights have to be structured and then
+give a more rigorous definition.
+%We will first discuss weights for $\SumArg^h_{2 i - 1}(w)$, that is for the
+%terms that compose the highest order.
+The sum weights $\SumWeight^h_{2 i - 1}$, that are multiplied with
+$\SumArg^h_{2 i - 1}(w)$ which compose the highest order weight, will be
+discussed first.
 Our solution is oriented along the backoff graph.
 The weight of a history is exactly then zero, if no backoff step of
 \cref{eq:glm-backoff} reaches that history.
 This occurs if for that history's node all histories of immediate parent nodes
 are seen.
-Parents of a node $A$ are all nodes $B$ that have a directed edge from $B$ to
-$A$.
 Conversly this means that the sum weights $\SumWeight^h_{2 i - 1}$ are proportional
 to the number of paths from the root note to the current node, for which the
 current node's history is seen but the histories of all others nodes in the
 path are not.
-A path exists to node $A_1$ from node $A_m$, if there is a set of nodes
-$\Set{A_1, \ldots, A_m}$ such that it holds for all nodes $A_i$ in that set,
-that $A_{i+1}$ is a parent of $A_i$ for $1 \leq i < m$.
-% The path to $A_1$ from $A_m$ then consists of all the nodes of that set.
 
-What also has to be considered is that in \cref{eq:glm-backoff} we devide the
+What also has to be considered is that in \cref{eq:glm-backoff} we divide the
 sum of all backoff probabilities by their count.
 The more backoff steps that have to be performed to reach a node, the lower its
 influence is.
@@ -486,30 +486,38 @@ graph of \cref{fig:history-glm}.
 In total there exist two paths from the root node to any node in layer $2$.
 But there exists a total of six paths from the root node to the node in layer
 $3$.
-We define a coefficient $\mu = \frac{(n - l)!}{n!}$, where $n$
-is the length of the current history and $l$ is the layer in the backoff graph
-in which its node occurs.
+We define a coefficient $\mu = \frac{(\NGramLength{h} - l_i)!}{\NGramLength{h}!}$,
+where $l_i$ is the layer in the backoff graph in which the node of history
+$\DerivedHistory[i]$ lies.
 Sum weights $\SumWeight^h_i$ are also proportional to that coefficient $\mu$.
 
 The final influence on $\SumWeight^h_{2 i - 1}$ stems from the fact that we
 defined \cref{eq:glmarg-high} to only consist of the numerator of
 \cref{eq:glm-high}.
-Because of this we also have to devide the sum weight by the denominator of
-that equotion.
+Because of this we also have to divide the sum weight by the denominator of
+that equation.
 
 Sum weights $\SumWeight^h_{2 i}$ for terms that occurs in lower orders are
-calculated in a analogous way.
+calculated in an analogous way.
 For the same argument as above they are also influenced by the coefficient
 $\mu$ and a denominator, but this time that of \cref{eq:glm-low}.
 However for lower order weights they are also influenced by the denominators
 of equations that included them.
 This fact is especially visible by the nesting of fractions in
 \cref{eq:probglmexpansion-inserted}.
+From this equation we can conclude that a sum weight $\SumWeight^h_{2 i}$ of a
+node is as sum of recursive calls from the root probability $\Prob{w}{h}$ to
+the current node.
+The chains of recursive calls that can reach a history $\DerivedHistory[i]$ are
+exactly represented by the paths to it in the backoff graph.
+Each node contributes a $\frac{\gamma}{\text{denominator}}$ weight.
+Lower order sum weights thus consists of sums of multiplications, where the
+factors are based on the nodes along a path to the current node.
 \todo{Additional explanation of $factor \cdot sum$ property.}
 
-Because of the complexity of factors we will not try to find a mathematical
-expression that defines these sum weights.
-Instead we will find them by specifying the algorithm that computes them:
+Because of this complexity of terms that compose the sum weights we will not try
+to find a mathematical expression that defines these sum weights.
+Instead we will define them by specifying the algorithm that computes them:
 Sum weights $\SumWeight^h_i$ are calculated by \cref{alg:weightedsum-glm} which
 uses the helper functions of \cref{alg:weightedsum-glm-helper}.
 
@@ -526,7 +534,7 @@ uses the helper functions of \cref{alg:weightedsum-glm-helper}.
 %  \end{algorithmic}
 %\end{algorithm}
 
-\begin{algorithm}
+\begin{algorithm}[t]
   \caption{Computing Generalized Language Model sum weights}
   \label{alg:weightedsum-glm}
   \begin{algorithmic}[1]
@@ -535,65 +543,90 @@ uses the helper functions of \cref{alg:weightedsum-glm-helper}.
     \Ensure $\SumWeight_1^h, \: \ldots, \: \SumWeight_N^h$
       \Comment{list of sum weights}
 
-    \State $n \gets \NGramLength{h}$
-      \Comment{$n$-gram length of history $h$}
-    \State $N \gets 2 \cdot 2^n$
+    %\State $n \gets \NGramLength{h}$
+    %  \Comment{$n$-gram length of history $h$}
+    \State $N \gets 2 \cdot 2^\NGramLength{h}$
       \Comment{number of sum factors}
+      \label{ln:glm-numfactors}
     \For{\textbf{each} node \textbf{in} graph}
-      \LineComment{precomputation}
-      \State node.count $\gets \Count(h_\text{node.index} \Skp)$
-      \State node.contCount $\gets \ContCountIp(\WSkp h_\text{node.index} \WSkp)$
-      \State node.gamma $\gets \gamma(h_\text{node.index})$
-      \State $\mu \gets \frac{(n - \text{node.layer})!}{n!}$
+      \label{ln:glm-fornodesingraph}
+      \LineComment{data lookup}
+      \State node.count $\gets \Count(\DerivedHistory[\text{node.index}] \Skp)$
+        \label{ln:glm-lookup-count}
+      \State node.contCount $\gets \ContCountIp(\WSkp \DerivedHistory[\text{node.index}] \WSkp)$
+        \label{ln:glm-lookup-contcount}
+      \State node.gamma $\gets \gamma(\DerivedHistory[\text{node.index}])$
+        \label{ln:glm-lookup-gamma}
+      \State $\mu \gets \frac{(\NGramLength{h} - \text{node.layer})!}{\NGramLength{h}!}$
+        \label{ln:glm-lookup-coeff}
 
       \vspace{1.0em}
       \LineComment{weight for highest order}
       \If{node.count $= 0$}
+        \label{ln:glm-if-highweight-zero}
         \State $\SumWeight_{2 \cdot\, \text{node.index} - 1}^h \gets 0$
+          \label{ln:glm-highweight-zero}
       \ElsIf{node $=$ root}
-        \State $\SumWeight_{2 \cdot\, \text{node.index} - 1}^h \gets \dfrac{\mu}{\text{node.count}}$
+        \label{ln:glm-if-highweight-root}
+        \State $\SumWeight_{2 \cdot\, \text{node.index} - 1}^h \gets \frac{1}{\text{node.count}}$
+          \label{ln:glm-highweight-frac}
       \Else
+        \label{ln:glm-if-highweight-else}
         \State $\SumWeight_{2 \cdot\, \text{node.index} - 1}^h \gets \dfrac{\mu \cdot \text{\Call{highestOrderWeight}{root, node}}}{\text{node.count}}$
+          \label{ln:glm-highweight-rec}
       \EndIf
 
       \vspace{0.7em}
       \LineComment{weight for lower orders}
-      \If{node.contCount $= 0$}
+      \If{node.contCount $= 0$ \textbf{or} node $=$ root}
+        \label{ln:glm-if-lowweight-zero}
         \State $\SumWeight_{2 \cdot\, \text{node.index}}^h \gets 0$
+          \label{ln:glm-lowweight-zero}
       \Else
+        \label{ln:glm-if-lowweight-else}
         \State $\SumWeight_{2 \cdot\, \text{node.index}}^h \gets \dfrac{\mu \cdot \text{\Call{lowerOrdersWeight}{root, node, \textbf{true}}}}{\text{node.contCount}}$
+          \label{ln:glm-lowweight-rec}
       \EndIf
     \EndFor
     \algstore{glmbreak}
   \end{algorithmic}
 \end{algorithm}
 
-\begin{algorithm}
+\begin{algorithm}[t]
   \caption{Helper functions for GLM sum weight computation}
   \label{alg:weightedsum-glm-helper}
   \begin{algorithmic}[1]
     \algrestore{glmbreak}
-    \Function{heighestOrderWeight}{ancestor, node}
+    \Function{highestOrderWeight}{ancestor, node}
       \If{ancestor.count $\neq 0$}
+        \label{ln:highhlp-count-nonzero}
         \Comment{if ancestor is seen}
         \State \textbf{return} $0$
           \Comment{this path does not contribute to highest order}
+          \label{ln:highhlp-return-zero}
       \EndIf
 
       \vspace{0.7em}
-      \If{ancestor.\Call{isDirectParentOf}{node}}
+      \If{ancestor.\Call{isParentOf}{node}}
+        \label{ln:highhlp-isparent}
         \Comment{end of path?}
         \State \textbf{return} $1$
+          \label{ln:highhlp-return-one}
       \EndIf
 
       \vspace{0.7em}
       \State sum $\gets 0$
+        \label{ln:highhlp-init-sum}
       \For{\textbf{each} child \textbf{in} ancestor.\Call{childs}{$ $}}
+        \label{ln:highhlp-for}
         \If{child.\Call{isAncestorOf}{node}}
+          \label{ln:highhlp-isancestor}
           \State sum $\gets$ sum $+ {}$ \Call{highestOrderWeight}{child, node}
+            \label{ln:highhlp-add}
         \EndIf
       \EndFor
       \State \textbf{return} sum
+        \label{ln:highhlp-return}
     \EndFunction
 
     % --------------------------------------------------------------------------
@@ -603,42 +636,278 @@ uses the helper functions of \cref{alg:weightedsum-glm-helper}.
     \Function{lowerOrdersWeight}{ancestor, node, firstSeen}
       \LineComment{calculate mult}
       \If{firstSeen \textbf{and} ancestor.count $\neq 0$}
+        \label{ln:lowhlp-count-nonzero}
         \State factor $\gets \frac{\text{ancestor.gamma}}{\text{ancestor.count}}$
+          \label{ln:lowhlp-from-highhlp}
         \State firstSeen $\gets$ \textbf{false}
+          \label{ln:lowhlp-firstseen}
       \ElsIf{ancestor.contCount $\neq 0$}
+        \label{ln:lowhlp-contcount-nonzero}
         \State factor $\gets \frac{\text{ancestor.gamma}}{\text{ancestor.contCount}}$
+          \label{ln:lowhlp-from-lowhlp}
       \Else
+        \label{ln:lowhlp-else}
         \State factor $\gets 1$
+          \label{ln:lowhlp-one}
       \EndIf
 
       \vspace{0.7em}
-      \If{ancestor.\Call{isDirectParentOf}{node}}
+      \If{ancestor.\Call{isParentOf}{node}}
+        \label{ln:lowhlp-isparent}
         \Comment{end of path?}
         \If{firstSeen}
+          \label{ln:lowhlp-isseen}
           \State \textbf{return} $0$
+            \label{ln:lowhlp-return-zero}
             \Comment{node occurs as highest order for this path}
         \EndIf{}
         \State \textbf{return} mult
+          \label{ln:lowhlp-return-mult}
       \EndIf
 
       \vspace{0.7em}
       \State sum $\gets 0$
+        \label{ln:lowhlp-init-sum}
       \For{\textbf{each} child \textbf{in} ancestor.\Call{childs}{$ $}}
+        \label{ln:lowhlp-for}
         \If{child.\Call{isAncestorOf}{node}}
-          \State sum $\gets$\\
+          \label{ln:lowhlp-isancestor}
+          \State sum $\gets$
+            \label{ln:lowhlp-add-1}\\
             \hfill sum $+$ \Call{lowerOrdersWeight}{child, node, firstSeen}
+            \label{ln:lowhlp-add-2}
         \EndIf{}
       \EndFor
       \State \textbf{return} factor $\cdot$ sum
+        \label{ln:lowhlp-return}
     \EndFunction
   \end{algorithmic}
 \end{algorithm}
 
+The algorithm works with the notion of a backoff graph as shown in
+\cref{fig:history-glm}.
+That graph is unique for every history $h$ and consist of $2^\NGramLength{h}$
+nodes.
+Each node is assigned a derived history.
+A directed edge from node $A$ to node $B$ is drawn if $B$'s history can be
+created by replacing one word in $A$'s history with a skip $\Skp$.
+
+\emph{Parents} of a node $A$ are all nodes $B$ that have a directed edge from
+$B$ to $A$.
+\emph{Childrens} of a node $A$ are all the nodes, that $A$ is a parent of.
+\emph{Ancestors} of a node $A$ are all nodes that can be reached from $A$
+by repeated application of the parent relation.
+A \emph{path} exists to node $A_1$ from node $A_m$, if there is a set of nodes
+$\Set{A_1, \ldots, A_m}$ such that it holds for all nodes $A_i$ in that set,
+that $A_{i+1}$ is a parent of $A_i$ for $1 \leq i < m$.
+The \emph{root} of a graph is the node that has no parents and is an ancestor
+to all other nodes.
+% The path to $A_1$ from $A_m$ then consists of all the nodes of that set.
+
+To assign sum weights $\SumWeight^h_{2 i - 1}$ and $\SumWeight^h_{2 i}$ to
+every history $\DerivedHistory[i]$ of the backoff graph we iterate over all
+nodes in the graph in \cref{ln:glm-fornodesingraph}.
+First some required date is looked-up
+(\cref{ln:glm-lookup-count,ln:glm-lookup-contcount,ln:glm-lookup-gamma,ln:glm-lookup-coeff}),
+then the highest order weight is computed
+(\cref{ln:glm-if-highweight-zero,ln:glm-highweight-zero,ln:glm-if-highweight-root,ln:glm-highweight-frac,ln:glm-if-highweight-else,ln:glm-highweight-rec}),
+and lastly that for lower orders
+(\cref{ln:glm-if-lowweight-zero,ln:glm-lowweight-zero,ln:glm-if-lowweight-zero,ln:glm-if-lowweight-else,ln:glm-lowweight-rec}).
+
+\emph{node.index} is simply the position of the total ordering of the backoff
+graph the node got assigned.
+The actual ordering does not matter, it however has to be consistent such that
+$\DerivedHistory[\text{node.index}]$ is the history that belongs to that node.
+Accessing a count value like $\Count(\DerivedHistory[\text{node.index}] \Skp)$
+in \cref{ln:glm-lookup-count} is a potentially expensive operation, as a
+separate data structure has to be queried.
+\emph{node.count}, \emph{node.contCount}, and \emph{node.gamma} shall simply be
+floating point variables that are stored local to each node and easy thus to
+access.
+A possible implementation that supports this is showcased in
+\cref{subsec:weightedsum-glm-implementation}.
+\Cref{ln:glm-lookup-coeff} is listed under data lookup because the computation
+of $\mu$ can simply be replaced by a lookup to a precomputed table with
+two-dimensional keys. \emph{node.layer} is the layer of the node in the
+backoff graph.
+
+The properties \emph{node.count}, \emph{node.contCount}, and
+\emph{node.gamma} are not only needed for calculations of the current node, but
+also those of all its descendants (for example \cref{ln:highhlp-count-nonzero}).
+Because of this an implementation has to ensure that the for-each loop in
+\cref{ln:glm-fornodesingraph} only iterates over a node in layer $l$ if all
+nodes of $l-1$ have been previously iterated.
+
+Next the highest order weight $\SumWeight^h_{2 i - 1}$ is calculated.
+That weight is zero if the node's history is unseen
+(\cref{ln:glm-if-highweight-zero,ln:glm-highweight-zero}), as of
+\cref{eq:glm-backoff}.
+If the current node is the root node, we can specify the weight directly
+(\cref{ln:glm-if-highweight-root,ln:glm-highweight-frac}), as of
+\cref{eq:glm-high}.
+Else we will have to apply the reasoning we outlined above and define the sum
+weight as the fraction of coefficient $\mu$, number of paths, and denominator
+(\cref{ln:glm-if-highweight-else,ln:glm-highweight-rec}).
+\Call{highestOrderWeight}{\emph{ancestor}, \emph{node}} is a helper function
+that just counts the number of paths that only spans unseen nodes from
+an \emph{ancestor} node to the current \emph{node} in a recursive manner.
+
+Lastly the weight $\SumWeight^h_{2 i}$ for lower orders is calculated.
+Again if the term that would occur in the denominator \emph{node.contCount} is
+zero, that term is assigned a weight of zero.
+This also happens for the root note, as it can never occur in a lower order term
+(\cref{ln:glm-if-lowweight-zero,ln:glm-lowweight-zero}).
+Else a similar term to the highest order weight is computed, however with a
+different helper function
+(\cref{ln:glm-if-lowweight-else,ln:glm-lowweight-rec}).
+
+That helper function \Call{lowerOrdersWeight}{\emph{ancestor}, \emph{node},
+\emph{firstSeen}} forms the core of the algorithm.
+We have reasoned above that the weight for lower orders is proportional to
+a sum of multiplication, where each multiplication is built from one path
+from the root to the current node and each node contributes a
+$\frac{\gamma}{\text{denominator}}$ factor.
+This however depends on the node: if a node is the first seen one on the path
+it contributes a
+$\frac{\gamma(\DerivedHistory[\DummyIndex])}{\Count(\DerivedHistory[\DummyIndex] \Skp)}$
+factor (\cref{ln:lowhlp-count-nonzero,ln:lowhlp-from-highhlp}) as of
+\cref{eq:glm-high}. Following nodes on the path contribute a
+$\frac{\gamma(\DerivedHistory[\DummyIndex])}{\ContCount(\WSkp \DerivedHistory[\DummyIndex] \WSkp)}$
+factor (\cref{ln:lowhlp-contcount-nonzero,ln:lowhlp-from-lowhlp}) as of
+\cref{eq:glm-low}.
+Nodes that are unseen contribute the neutral element of multiplication, i.e.\
+they don't change the weight (\cref{ln:lowhlp-else,ln:lowhlp-one}) as of
+\cref{eq:glm-backoff}.
+
+Also we don't just compute sums of multiplications but instead apply
+the distributive property were possible to reduce computational cost.
+Each recursive step of the helper function thus returns only a \emph{factor}
+times \emph{sum} product, where the sum consists of incarnations of further
+recursion depth
+(\cref{ln:lowhlp-init-sum,ln:lowhlp-for,ln:lowhlp-isancestor,ln:lowhlp-add-1,ln:lowhlp-add-2,ln:lowhlp-return}).
+
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Implementation}
+\label{subsec:weightedsum-glm-implementation}
 
-Bit magic goes here.
+This subsection will explain our way to implement the backoff graph that both
+consumes as little space as possible while being fast to traverse.
+Our representation fits into a small contiguous amount of memory on the stack,
+which will prevent cache misses, and thus resulst in access time improvements.
 
+We reasoned in \cref{subsec:backoff-graph} A backoff graph for a history $h$
+with length $\NGramLength{h}$ has $2^\NGramLength{h}$ nodes.
+Our core idea is to now store the graph into an array of $2^\NGramLength{h}$
+\texttt{struct}s.
+
+\begin{lstlisting}[
+  label = {lst:backoff-graph-c},
+  float,
+  caption = {C data structures to implement the backoff graph},
+  language = C,
+]
+  struct node {
+    int count;
+    int contCount;
+    double gamma;
+  };
+
+  struct graph {
+    char* history[n];
+    struct node nodes[n * n]
+  };
+\end{lstlisting}
+
+We will interpret each node's history as a binary number, where each set word
+in the history becomes a zero and each skip becomes a one.
+That is the node of history $w_1 \Skp w_3 w_4 \Skp$ for a graph of order $5$
+is stored at the index $\texttt{01001}_2 = 9$.
+That number is used as the index for each node in the array.
+This representation makes it very fast to compute the layer, all parents, or
+all children of a node.
+These tasks can be specified entirely as bit operations, which should be
+available as direct machine instructions for most architectures.
+No materialized lists of all parents or all children are necessary.
+
+The C code of \Cref{lst:backoff-graph-c} exhaustively lists necessary data
+structures to implement \cref{alg:weightedsum-glm,alg:weightedsum-glm-helper}.
+\texttt{n} has to be predefined constant that specifies the (maximal) length of
+histories.
+The \texttt{struct} \texttt{node} consists of exactly those data members that are
+used for data lookup storage in the algorithm.
+\texttt{history} stores the $n$-gram $h$, and \texttt{nodes} bundles all nodes
+of a graph in one instance.
+
+We will now explain how all necessary data can be retrieved from that
+representation:
+\begin{itemize}
+  \item The history $\DerivedHistory[i]$ of a node at index $i$ is simple
+    the original \texttt{history}, where a skip $\Skp$ is placed at each
+    position, where the node's index has a set bit.
+  \item A node is the top root node if its index has no set bits, and in turn a
+    node is the bottom leap node if all bits in the index is set.
+  \item The layer of a node is the number of set bits in its index.
+  \item As explained in \cref{subsec:backoff-graph} a node at layer $l$ has
+    exactly $l$ parents and $\NGramLength{h} - l$ children.
+  \item The index of the $i$th parent (child) of a node is found by unsetting
+    (setting) the $i$th set (unset) bit.
+  \item A node \texttt{A} is an ancestor of another node \texttt{B}
+    if it the bitwise and operation on their indices returns \texttt{A}'s index
+    respectively it is an descendant if the same holds for the bitwise or
+    operation:
+    \begin{align*}
+      \text{\texttt{A} ancestor of \texttt{B}} \: &\Leftrightarrow \: \texttt{A.index \& B.index == A.index} \\
+      \text{\texttt{A} descendant of \texttt{B}} \: &\Leftrightarrow \: \texttt{A.index | B.index == B.index}
+    \end{align*}
+    with \texttt{\&} the bitwise-and, and \texttt{|} the bitwise-or.
+\end{itemize}
+
+\begin{lstlisting}[
+  label = {lst:next-in-order-index},
+  float,
+  caption = {C code to compute the next iteration index},
+  language = C,
+]
+  if (index == 0)
+      index = 1:
+      return;
+
+  int x = numberOfSetBits(index);
+
+  // compute lexicographically next bit permutation
+  // with x bits set
+  int t = (index | (index - 1)) + 1;
+  index = t | ((((t & -t) / (index & -index)) >> 1) - 1);
+
+  // highest number with x bits set
+  int m = ((1 << x) - 1) << (n - x);
+  if (index > m)
+      // next is smallest number with (x+1) bits
+      index = (1 << (x + 1)) - 1;
+  if (index > (1 << n) - 1)
+      // restart, if next number would be more than n bits
+      index = 0;
+\end{lstlisting}
+
+The only non-trivial problem that follows from that representation is finding
+the proper ordering of indices in which they should be accessed during an
+in-order loop over the graph.
+An in-order loop over the backoff graph iterates all nodes, such that a node
+of layer $l$ is only accessed once all nodes of layer $l-1$ have been processed.
+
+\Cref{lst:next-in-order-index} gives an algorithm in C code that generates the
+next in-order index\footnote{The code to compute the lexicographically next bit
+permutation is courtesy of
+\mbox{\url{http://graphics.stanford.edu/~seander/bithacks.html\#NextBitPermutation}}
+(visited on July 14th 2015).
+It requires an architecture the stores negative integers in two's complement
+format.}.
+As input it requires the previous \texttt{index} and the backoff graph's order
+$\texttt{n} = \NGramLength{h}$.
+The algorithms aims to be a minimal composition of low-level operations, to be
+fast to execute.
 
 % ------------------------------------------------------------------------------
 \section{Monotony}
+
+\todo[inline]{Section Monotony}

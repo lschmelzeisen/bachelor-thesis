@@ -29,6 +29,7 @@ From \textcite{Trnka2011}:
 We differ on how we count spaces, newlines, etc...
 No keystroke for accepting completion.
 
+NKSS for top-1 or top-5 completion.
 \end{draft}
 
 % ------------------------------------------------------------------------------
@@ -101,6 +102,8 @@ Number of weights per model.
 \section{Word prediction calculation}
 
 \begin{draft}
+Experiment: show completion trie memory for n-gram lengths and MKN vs GLM.
+
 Experiment: top-$1$ word prediction with na\"{\i}ve method, TA and NRA scale
 trie depth track execution time and space requirements.
 
@@ -123,6 +126,13 @@ Random access from completion trie or from hash map?
 
 Mention decreasingness (?) of data sets.
 \end{draft}
+
+\begin{figure}
+  \centering
+  \input{figures/timeargmaxn}
+  \caption{Todo}
+\end{figure}
+
 
 % ------------------------------------------------------------------------------
 \section{Word prediction quality}
