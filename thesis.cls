@@ -1,5 +1,5 @@
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesClass{thesis}[2005/04/01 v1.0 Thesis]
+\ProvidesClass{thesis}[2015/07/21 v1.0 Thesis]
 
 % Options ======================================================================
 
@@ -88,8 +88,6 @@
 
 % Math
 \RequireOptionsPackage[fleqn]{amsmath}
-\RequirePackage{amssymb}
-\RequirePackage{mathtools}
 \RequirePackage{thesismath}
 
 % Color
@@ -101,10 +99,15 @@
 ]{geometry}
 
 % Quotations
-\RequirePackage{csquotes}
+\RequirePackage[
+  strict % Turn warnings into errors
+]{csquotes}
 
 % Style figure captions
-\RequirePackage{caption}
+\RequirePackage[bf]{caption}
+\captionsetup{
+  format = plain, % No hanging indent for captions
+}
 
 % Enable sub figures
 \RequirePackage{subcaption}

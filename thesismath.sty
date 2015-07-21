@@ -1,4 +1,5 @@
 % Math packages
+\RequirePackage{amsmath}
 \RequirePackage{amssymb}
 \RequirePackage{mathtools}
 
@@ -36,7 +37,7 @@
 % Argmax
 \DeclareMathOperator*{\ArgmaxOp}{arg\,max}
 \NewDocumentCommand{\Argmax}{s o g}{
-  \ArgmaxOp_{#3}\IfNoValueTF{#2}{}{\!{}_{#2}^{\IfBooleanTF{#1}{\star}{}}\,}
+  \ArgmaxOp_{\IfNoValueTF{#3}{}{#3}}\IfNoValueTF{#2}{}{\!{}_{#2}^{\IfBooleanTF{#1}{\star}{}}\,}
 }
 
 % Cardinality of a set
