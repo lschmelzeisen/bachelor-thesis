@@ -1,14 +1,201 @@
 \chapter{Introduction}
 \label{ch:introduction}
 
-\todo[inline]{
-  Rewrite introduction with new title in mind:
-  NWP is important.
-  NWP is hard and slow.
-  NWP quality is measured with NKSS.
-  NWP and NKSS form prefix queries.
-  I make fast prefix queries.
-}
+\emph{Word prediction} or autocompletion is the art of inferring the next
+word (or words) a user intents to type from the previous words they have
+entered.
+The user can then either select a completion, or in the case that it did not
+match, type the next indented character, with which more accurate completions
+can be given.
+
+In the context of \emph{natural language processing} the prediction requires
+understanding of the user's language.
+A successful general purpose word prediction will have knowledge about a
+language's grammar, word frequencies, idioms, and much more.
+This is in contrast to simpler solutions, like selecting the best matching word
+from a list of previously entered ones in a word processing software.
+
+\todo{For more benefits and citations read \url{http://trace.wisc.edu/docs/wordprediction2001/}.}
+Word prediction has many benefits.
+Most obviously it may speed up text entry \parencite{Trnka2007}.
+Furthermore it may be of assistance to users with spelling disorders
+\parencite{Newell1992}.
+But it may also be of used as a method to start computing answers to a user
+query that they have not even finished typing \noref.
+
+Today word prediction is a part of various software systems.
+Although word prediction has been primarily used to augment the communication of
+users with a difficulty to express themselves verbally
+\parencite{Swiffin1987,Trnka2011}, the benefits of a strong word prediction
+should be obvious to anyone typing large amounts of text on a computer:
+be it the list of possible queries offered by popular search engines such as
+Google, or the next word suggestions that many modern mobile phones provide, to
+speed up the slow two-thumbs typing.
+
+This thesis will address the problem of \emph{next} word prediction.
+Our viewpoint is that we predict only one following word, although the
+techniques described in this thesis can also be applied to the prediction
+of whole sequences.
+Good interfaces usually suggest a list of next word predictions and allow the
+user to select from these.
+This is done to mitigate the error should the top prediction turn out to not
+match the user's intend.
+
+We formalize the task of next word prediction as follows:
+\begin{equation}
+  \label{eq:prefixquery}
+  \NWP[p][k]{h} =
+    \Argmax*[k]{\mathclap{\substack{w \in \Vocab,\\p \: \text{prefix of} \: w}}}
+      \Prob{w}{h}
+\end{equation}
+Our task is such: given a history $h$ of entered words and an already entered
+prefix $p$ of the intended word, we predict $k$ completions.
+Of course $p$ may also be empty which corresponds to the case that the user has
+not yet typed any prefix.
+We subsume next word prediction with or without a prefix under the title of
+\emph{prefix queries}, with a possibly empty prefix.
+We solve this task by finding the $k$ words $w$ in the vocabulary $\Vocab$, the
+set of all words, that maximize the probability $\Prob{w}{h}$.
+That probability models the likelihood that the word $w$ follows the history
+$h$.
+$\Argmax*[k]$ is a helper used to model the $k$ words that maximize the
+probability and an extension to the conventional $\Argmax$ function:
+\begin{subequations}
+  \begin{align}
+    \Argmax [1]{x} f(x) &= \big\{ x \,\Given\, \forall y : f(y) \leq f(x) \big\} \\
+    \Argmax [k]{x} f(x) &= \big\{ x \,\Given\, \forall y \notin \Argmax*[k-1]{z} f(z) : f(y) \leq f(x) \big\} \\
+    \Argmax*[k]{x} f(x) &= \bigcup_{{1 \leq i \leq k}} \Argmax[i]{x} f(x)
+  \end{align}
+\end{subequations}
+
+The quality of predictions directly correlates with the aptitude of the chosen
+probabilities $\Prob{w}{h}$.
+Finding good ways to estimate these probabilities is the art of
+\emph{statistical language models} (\cref{sec:introduction-langmodels}).
+
+Computing next word predictions following \cref{eq:prefixquery} is a very time
+expensive operation.
+Depending on the chosen probability estimate more or less complex calculations
+have to be performed, which usually require access to backing data structures.
+Furthermore that probability is calculated for all words in the vocabulary
+$\Vocab$, or at least for the set of all words one wants to use for prediction.
+
+Multi-word prediction is typically implemented using \emph{Viterbi-} or
+\emph{beam search}-algorithms \parencite{Bickel2005,JurafskyMartin2009}.
+These algorithms are based on following most promising prediction paths and
+pruning the search space with some heuristic.
+They however are not applicable to the problem of predicting only the next
+word, and at least \textcite{Bickel2005} still employ the na\"{\i}ve method of
+querying all known words to find the next word in a multi-word prediction.
+
+This thesis concerns itself with improving the query time of prefix queries.
+To this end two independent optimizations will be presented:
+\begin{enumerate}
+  \item We will show a novel way to rewrite the recursive definitions for
+    $\Prob{w}{h}$ of the two state-of-the-art language modeling techniques
+    \emph{Modified Kneser-Ney Smoothing} and the \emph{Generalized Language
+    Model} as weighted sums.
+    In this representation the com\-pu\-ta\-tion-costly weights will be
+    independent of $w$ and can be calculated once in a precomputation step for
+    each query.
+    This will significantly reduce the computation time of $\Prob{w}{h}$ for
+    varying words~$w$ but a fixed history~$h$.
+  \item We will apply well known \emph{top-$k$ joining techniques}
+    (\cref{sec:introduction-topkjoin}) to the problem of next word prediction.
+    By utilizing a sophisticated data structure that allows retrieval of
+    sequence-count-lists sorted by counts for arbitrary sequence prefixes,
+    we will be able to considerably reduce execution time of next word
+    prediction by avoiding to enumerate all words in the vocabulary.
+\end{enumerate}
+
+These optimizations will allow us to give fast, \emph{non-approximative}
+predictions.
+That is the predictions will be as good as the underlying language model allows:
+the system will always predict exactly these words that maximize the
+probability.
+No pruning of the word distribution's long tail is necessary.
+
+The remainder of this chapter will introduce the two main subjects of this
+thesis: statistical language models (\cref{sec:introduction-langmodels}) and
+top-$k$ join queries (\cref{sec:introduction-topkjoin}).
+
+
+
+% ------------------------------------------------------------------------------
+\section{Statistical Language Models}
+\label{sec:introduction-langmodels}
+
+\emph{Statistical language models} assign a probability $\Prob[\text{LM}]{s}$ to
+a sequence of words $s = w_1^l = w_1 \ldots w_l$ by means of a probability
+distribution, created through statistical analysis of text corpora.
+Through their use we model knowledge of the user's language in the word
+prediction application.
+
+A major problem in creating statistical language models from text corpora, is
+that even for very large corpora, most possible word sequences in a language
+will not be observed in training \noref.
+A common approximation is to make a $n$th-order \emph{markov assumption},
+i.e.\ to assume that the probability of the word to be predicted $w_l$ only
+depends on the $n\!-\!1$~previous words $w_{l-n+1}^{l-1}$ rather than the full
+sequence $w_1^{l-1}$.
+Thus only sequences of length $n$ have to be considered.
+The resulting language models are called \emph{$n$-gram models}.
+State-of-the-art language modeling uses $n$-grams with $n$ as large as $5$
+\parencite{JurafskyMartin2009,Goodman2001,Stolcke2000}.
+
+Most language model probability formulas are given in recursive form, that only
+implicitly depend on the occurrence count of sequences in the corpus \noref.
+If these probabilities can be expressed as monotone scoring functions of
+occurrence counts, we can apply top-$k$ joining techniques in order to solve
+noisy channel type queries.
+
+
+% ------------------------------------------------------------------------------
+\section{Top-\emph{k} Join Queries}
+\label{sec:introduction-topkjoin}
+
+Top-$k$ queries are queries whose results are limited to only the $k$ most
+important ones.
+These top-$k$ results are identified by scoring all answers with a
+\emph{scoring function}, and selecting the $k$ highest scoring.
+\emph{Top-$k$ join queries} are these top-$k$ queries that produce
+their results trough combination of multiple data sources \parencite{Ilyas2008}.
+
+One example might be the query to a web search engine.
+Search results are ranked by relevance, as computed by several criteria
+(matching keywords, links from other sites, popularity, \ldots).
+Users generally require more than just the one highest ranking search result, as
+it may not be exactly what they are they were looking for.
+On the other hand it would be infeasible to relevance-rank all sites in the
+search engine's database.
+Many search engines solve this by only displaying the top 10 sites, deemed most
+relevant to the user's query, and querying more if required.
+
+\begin{draft}
+Top-$k$ joining techniques have widespread use and are of importance in
+many applications \noref.
+\end{draft}
+
+As can be seen by the example, the na\"{\i}ve way to solve top-$k$ join
+queries, i.e.\ to aggregate all possible join results, sort all of them by
+score, and then to discard non top-$k$ results, is in most cases far to
+slow to be of any use.
+There are of plethora of different top-$k$ processing techniques, but most
+of them achieve efficiency by requiring \emph{monotone scoring functions} and
+then sorting data sources on each predicate of that function
+\parencite{Ilyas2008}.
+
+
+% ------------------------------------------------------------------------------
+\section{Thesis Overview}
+
+
+% ==============================================================================
+% ==============================================================================
+% ==============================================================================
+\clearpage
+
+\textbf{Old stuff only kept here for reference. Continue with next chapter.}
 
 \begin{draft}
 \textcite{Bickel2005} actually does trivial argmax and calculates probabilities
@@ -97,24 +284,6 @@ occur after $w_1^{n-1}$ \parencite{Bickel2005}:
   \label{eq:nwp}
   w_n = \Argmax{w \in \Vocab} \Prob{w}{w_1^{n-1}}
 \end{equation}
-\begin{draft}
-\begin{equation}
-  \label{eq:prefixquery}
-  \NWP[p][k]{h} =
-    \Argmax*[k]{\mathclap{\substack{w \in \Vocab,\\p \: \text{prefix of} \: w}}}
-      \Prob{w}{h}
-\end{equation}
-\begin{subequations}
-  \begin{align}
-    \Argmax [1]{x} f(x) &= \big\{ x \,\Given\, \forall y : f(y) \leq f(x) \big\} \\
-    \Argmax [k]{x} f(x) &= \big\{ x \,\Given\, \forall y \notin \Argmax*[k-1]{z} f(z) : f(y) \leq f(x) \big\} \\
-    \Argmax*[k]{x} f(x) &= \bigcup_{{1 \leq i \leq k}} \Argmax[i]{x} f(x)
-  \end{align}
-\end{subequations}
-\todo{Notation for $w\ \text{prefix of}\ p$?}
-\todo{How do we define NWP, in case there is not one clear argmax?}
-We call $h$ the history and $p$ the prefix.
-\end{draft}
 With vocabulary $\Vocab$, the set of all words.
 
 We can see that next word prediction is an instance of the noisy channel model,
@@ -137,68 +306,12 @@ next keystroke savings.
 % ------------------------------------------------------------------------------
 \section{Top-\emph{k} Join Queries}
 
-Top-$k$ queries are queries whose results are limited to only the $k$ most
-important ones.
-These top-$k$ results are identified by scoring all answers with a
-\emph{scoring function}, and selecting the $k$ highest scoring.
-\emph{Top-$k$ join queries} are these top-$k$ queries that produce
-their results trough combination of multiple data sources \parencite{Ilyas2008}.
 
-One example might be the query to a web search engine.
-Search results are ranked by relevance, as computed by several criteria
-(matching keywords, links from other sites, popularity, \ldots).
-Users generally require more than just the one highest ranking search result, as
-it may not be exactly what they are they were looking for.
-On the other hand it would be infeasible to relevance-rank all sites in the
-search engine's database.
-Many search engines solve this by only displaying the top 10 sites, deemed most
-relevant to the user's query, and querying more if required.
-
-\begin{draft}
-Top-$k$ joining techniques have widespread use and are of importance in
-many applications \noref.
-\end{draft}
-
-As can be seen by the example, the na\"{\i}ve way to solve top-$k$ join
-queries, i.e.\ to aggregate all possible join results, sort all of them by
-score, and then to discard non top-$k$ results, is in most cases far to
-slow to be of any use.
-There are of plethora of different top-$k$ processing techniques, but most
-of them achieve efficiency by requiring \emph{monotone scoring functions} and
-then sorting data sources on each predicate of that function
-\parencite{Ilyas2008}.
 
 % ------------------------------------------------------------------------------
 \section{Statistical Language Models}
 
-\emph{Statistical language models} assign a probability $\Prob[\text{LM}]{s}$ to
-a sequence of words $s = w_1^n = w_1 \ldots w_n$ by means of a probability
-distribution, created through statistical analysis of text corpora.
 
-A major problem in creating statistical language models from text corpora, is
-that even for very large corpora, most possible word sequences in a language
-will not be observed in training \noref.
-A common approximation is to make a $n$th-order \emph{markov assumption},
-i.e.\ to assume that the probability of the $n$th word $w_n$ only depends on
-the $n\!-\!1$~previous words $w_1^{n-1}$.
-\todo{Problem with indices: They suggest that there are no words before $w_1$.}
-Thus only sequences of length $n$ have to be considered.
-The resulting language models are called \emph{$n$-gram models}.
-State-of-the-art language modeling uses $n$-grams with $n$ as large as $5$
-\parencite{JurafskyMartin2009,Goodman2001,Stolcke2000}.
-
-\begin{draft}
-Calculating noisy channel type queries (\cref{eq:noisychannel}) is a very time
-expensive operation, as for each.
-\Cref{eq:noisychannel} is hard to calculate for such large $n$.
-So we want to optimize that.
-\end{draft}
-
-Most language model probability formulas are given in recursive form, that only
-implicitly depend on the occurrence count of sequences in the corpus \noref.
-If these probabilities can be expressed as monotone scoring functions of
-occurrence counts, we can apply top-$k$ joining techniques in order to solve
-noisy channel type queries.
 
 % ------------------------------------------------------------------------------
 \section{Thesis' contribution}

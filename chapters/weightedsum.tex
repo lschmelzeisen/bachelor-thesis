@@ -9,7 +9,7 @@ In other words we will express the formulas given in \cref{ch:review} as
 equations of the following form:
 \begin{equation}
   \label{eq:weightedsum}
-  \Prob{w}{h} = \sum_{i = 1}^{N} \SumWeight_i^h \cdot \SumArg_i^h(w_n)
+  \Prob{w}{h} = \sum_{i = 1}^{N} \SumWeight_i^h \cdot \SumArg_i^h(w)
 \end{equation}
 
 To the authors knowledge, there is no other work on expressing language models
@@ -900,12 +900,12 @@ next in-order index\footnote{The code to compute the lexicographically next bit
 permutation is courtesy of
 \mbox{\url{http://graphics.stanford.edu/~seander/bithacks.html\#NextBitPermutation}}
 (visited on July 14th 2015).
-It requires an architecture the stores negative integers in two's complement
+It requires an architecture that stores negative integers in two's complement
 format.}.
 As input it requires the previous \texttt{index} and the backoff graph's order
 $\texttt{n} = \NGramLength{h}$.
-The algorithms aims to be a minimal composition of low-level operations, to be
-fast to execute.
+To ensure the fastest possible execution time the algorithm aims to be a minimal
+composition of bit-level operations.
 
 % ------------------------------------------------------------------------------
 \section{Monotony}

@@ -85,18 +85,24 @@ What is WSA again?
 Number of weights per model.
 \end{draft}
 
-\begin{figure}
-  \hspace{-5em}
-  \centering
-  \begin{subfigure}{.45\textwidth}
-    \input{figures/timemkn}
-  \end{subfigure}
-  \hspace{4em}
-  \begin{subfigure}{.45\textwidth}
-    \input{figures/timeglm}
-  \end{subfigure}
-  \caption{TimeMKN+TimeGLM-Caption}
-\end{figure}
+%\begin{figure}
+%  \centering
+%  \begin{addmargin}
+%  %\begin{subfigure}{.45\textwidth}
+%  \begin{minipage}{.6\textwidth}
+%    \includestandalone[width=\textwidth]{figures/timemkn}
+%    \caption{Lol the fuck you think you are doing?}
+%  \end{minipage}
+%  %\end{subfigure}
+%  %\hspace{7.5em}
+%  %\begin{subfigure}{.45\textwidth}
+%  \begin{minipage}{.6\textwidth}
+%    \includestandalone[width=\textwidth]{figures/timeglm}
+%    \caption{TimeMKN + TimeGLM-Caption}
+%  \end{minipage}
+%  %\end{subfigure}
+%  \end{addmargin}
+%\end{figure}
 
 % ------------------------------------------------------------------------------
 \section{Word prediction calculation}
@@ -127,11 +133,149 @@ Random access from completion trie or from hash map?
 Mention decreasingness (?) of data sets.
 \end{draft}
 
-\begin{figure}
+% ------------------------------------------------------------------------------
+\clearpage
+\thispagestyle{empty}
+\newgeometry{left = 1cm, right = 1cm, top = 1cm, bottom = 1cm}
+\begin{figure}[p]
   \centering
-  \input{figures/timeargmaxn}
-  \caption{Todo}
+  \vspace*{\fill}
+
+  \begin{minipage}{.45\textwidth}
+    \includestandalone[width=\textwidth]{figures/timemkn}
+    \caption{Time to calculate one probability using different
+      $n$-gram models.}
+  \end{minipage}
+  \hspace{.02\textwidth}
+  \begin{minipage}{.45\textwidth}
+    \includestandalone[width=\textwidth]{figures/timeglm}
+    \caption{Time to calculate one probability using different
+      $n$-gram models.}
+  \end{minipage}
+
+  \vspace*{.02\textwidth}
+
+  \begin{minipage}{0.45\textwidth}
+    \includestandalone[width=\textwidth]{figures/timeargmaxn}
+    \caption{Calculation time for top-$1$ prediction using different
+      $n$-gram models.}
+  \end{minipage}
+  \hspace{.02\textwidth}
+  \begin{minipage}{0.45\textwidth}
+    \includestandalone[width=\textwidth]{figures/timeargmaxk}
+    \caption{Calculation time for top-$k$ prediction using $5$-gram models.}
+  \end{minipage}
+
+  \vspace*{.02\textwidth}
+
+  \begin{minipage}{0.45\textwidth}
+    \includestandalone[width=\textwidth]{figures/timeargmaxnkss}
+    \caption{Time to calculate NKSS using different $n$-gram models.}
+  \end{minipage}
+  \hspace{.02\textwidth}
+  \begin{minipage}{0.45\textwidth}
+    \includestandalone[width=\textwidth]{figures/numaccessargmax}
+    \caption{Number of access for top-$k$ prediction using $5$-gram models.}
+  \end{minipage}
+
+  \vspace*{\fill}
 \end{figure}
+\restoregeometry
+\clearpage
+
+% ------------------------------------------------------------------------------
+\clearpage
+\thispagestyle{empty}
+\newgeometry{left = 1cm, right = 1cm, top = 1cm, bottom = 1cm}
+\begin{figure}[p]
+  \centering
+  \vspace*{\fill}
+
+  \begin{minipage}{.45\textwidth}
+    \includestandalone[width=\textwidth]{figures/argmax_time_n_ta}
+    \caption{TODO}
+  \end{minipage}
+  \hspace{.02\textwidth}
+  \begin{minipage}{.45\textwidth}
+    \includestandalone[width=\textwidth]{figures/argmax_time_k_ta}
+    \caption{TODO}
+  \end{minipage}
+
+  \vspace*{.02\textwidth}
+
+  \begin{minipage}{0.45\textwidth}
+    \includestandalone[width=\textwidth]{figures/argmax_time_n_nra}
+    \caption{TODO}
+  \end{minipage}
+  \hspace{.02\textwidth}
+  \begin{minipage}{0.45\textwidth}
+    \includestandalone[width=\textwidth]{figures/argmax_time_k_nra}
+    \caption{TODO}
+  \end{minipage}
+
+  \vspace*{.02\textwidth}
+
+  \begin{minipage}{0.45\textwidth}
+    \includestandalone[width=\textwidth]{figures/argmax_time_n_smpl}
+    \caption{TODO}
+  \end{minipage}
+  \hspace{.02\textwidth}
+  \begin{minipage}{0.45\textwidth}
+    \includestandalone[width=\textwidth]{figures/argmax_time_k_smpl}
+    \caption{TODO}
+  \end{minipage}
+
+  \vspace*{\fill}
+\end{figure}
+\restoregeometry
+\clearpage
+
+% ------------------------------------------------------------------------------
+\clearpage
+\thispagestyle{empty}
+\newgeometry{left = 1cm, right = 1cm, top = 1cm, bottom = 1cm}
+\begin{figure}[p]
+  \centering
+  \vspace*{\fill}
+
+  \begin{minipage}{.45\textwidth}
+    \includestandalone[width=\textwidth]{figures/argmax_numaccesses_mkn}
+    \caption{TODO}
+  \end{minipage}
+  \hspace{.02\textwidth}
+  \begin{minipage}{.45\textwidth}
+    \includestandalone[width=\textwidth]{figures/argmax_numaccesses_glm}
+    \caption{TODO}
+  \end{minipage}
+
+  \vspace*{.02\textwidth}
+
+  \begin{minipage}{0.45\textwidth}
+    \includestandalone[width=\textwidth]{figures/timeglm}
+    \caption{TODO}
+  \end{minipage}
+  \hspace{.02\textwidth}
+  \begin{minipage}{0.45\textwidth}
+    \includestandalone[width=\textwidth]{figures/timeglm}
+    \caption{TODO}
+  \end{minipage}
+
+  \vspace*{.02\textwidth}
+
+  \begin{minipage}{0.45\textwidth}
+    \includestandalone[width=\textwidth]{figures/timeglm}
+    \caption{TODO}
+  \end{minipage}
+  \hspace{.02\textwidth}
+  \begin{minipage}{0.45\textwidth}
+    \includestandalone[width=\textwidth]{figures/timeglm}
+    \caption{TODO}
+  \end{minipage}
+
+  \vspace*{\fill}
+\end{figure}
+\restoregeometry
+\clearpage
 
 
 % ------------------------------------------------------------------------------
