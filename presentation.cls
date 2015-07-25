@@ -102,7 +102,9 @@
 \usefonttheme{professionalfonts,serif,structuresmallcapsserif}
 \linespread{1.05}
 
+\definecolor{Bright maroon}{RGB}{205, 0, 5}
 \usecolortheme[named=Maroon]{structure} % General theme color
+\setbeamercolor{alerted text}{fg=Bright maroon} % Color of alerted text
 \setbeamercolor{subtitle}{fg=black} % Make subtitle in titlepage-frame black
 %\setbeamercolor{section in toc}{fg=black} % Make toc entries black
 \hypersetup{ % color for links

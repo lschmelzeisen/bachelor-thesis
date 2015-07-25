@@ -26,6 +26,10 @@
 % Absolute text positioning
 \usepackage{textpos}
 
+% Tables
+%\usepackage{booktabs}
+\usepackage{tabu}
+
 \usepackage{appendixnumberbeamer}
 
 \addbibresource{bibliography.bib}
@@ -137,7 +141,7 @@
     \large
     We will use two state-of-the-art Language Models:
     \begin{itemize}
-      \item Modified Kneser Ney Smoothing\\[-0.4ex]{\small\parencite{ChenGoodman1999}}
+      \item Modified Kneser Ney Smoothing\\[-0.4ex]{\small\parencite{ChenGoodman1309}}
       \item Generalized Language Model\\[-0.4ex]{\small\parencite{Pickhardt2014}}
     \end{itemize}
   }
@@ -415,7 +419,7 @@
     arrow/.style = {Maroon, thick, ->, >=latex},
   ]
     \node<2->[expl]
-      (sumarg_expl) at (7.6,-1.2cm) {dependent on argument $w$};
+      (sumarg_expl) at (7.6,-1.2cm) {depends on argument $w$};
     \node<3->[expl]
       (sumweight_expl) at (6.37,3.5cm) {independent of argument $w$};
     \LARGE % restore equation size so font relative units are correct
@@ -436,6 +440,120 @@
 \section{Top-k Joining Techniques}
 \subsection{}
 
+\begin{frame}
+  \frametitle{Completion Trie}
+
+  \parencite{HsuOttaviano2013}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Threshold Algorithm}
+
+  \begin{columns}[T]
+    \begin{column}{.4\textwidth}
+      \begin{enumerate}
+        \item<3-> \alert< 9,13,17,19,23>{\emph{Sorted Access} to lists in any order (e.g.~round~robin)}
+        \vspace{0.1cm}
+        \item<4-> \alert<10,14,20>{For new words, \emph{Random Access} to to all other lists}
+        \vspace{0.1cm}
+        \item<5-> \alert<12,16,18,22,24>{Compute \emph{threshold} of highest possible unseen probability}
+        \vspace{0.1cm}
+        \item<6-> \alert<25>{Terminate when $k$ probabilities greater threshold have been found}
+      \end{enumerate}
+    \end{column}
+    \begin{column}{.6\textwidth}
+      %\vspace{-0.15cm}
+      \onslide<1->{
+        \begin{equation*}
+          \textstyle{\Argmax{w \in \Vocab}\ProbMKN{w}{\text{I love}}}
+        \end{equation*}}
+      \vspace{-0.25cm}
+      \onslide<2->{
+        \tabulinesep=2mm
+        \begin{tabu}{ l r | l r | l r }
+          \tabucline[1pt]-
+          \multicolumn{2}{ c }{$\EmptyNGram$} &
+          \multicolumn{2}{ c }{love} &
+          \multicolumn{2}{ c }{I love} \\
+          \tabucline[1pt]-
+
+          \tikzmark{tar1c1s} ~\action< 9->{the} & \action< 9->{50}~~\tikzmark{tar1c1e}&
+          \tikzmark{tar1c2s}~~\action<13->{you} & \action<13->{30}~~\tikzmark{tar1c2e}&
+          \tikzmark{tar1c3s}~~\action<14->{you} & \action<14->{25}~ \tikzmark{tar1c3e}\\
+
+          \tikzmark{tar2c1s} ~\action<19->{a}   & \action<19->{40}~~\tikzmark{tar2c1e}&
+          \tikzmark{tar2c2s}~~\action<10->{the} & \action<10->{20}~~\tikzmark{tar2c2e}&
+          \tikzmark{tar2c3s}~~\action<20->{a}   & \action<20->{ 5}~ \tikzmark{tar2c3e}\\
+
+          \tikzmark{tar3c1s} ~\action<14->{you} & \action<14->{35}~~\tikzmark{tar3c1e}&
+          \tikzmark{tar3c2s}~~\action<20->{a}   & \action<20->{10}~~\tikzmark{tar3c2e}&
+          \tikzmark{tar3c3s}~~\action<10->{the} & \action<10->{ 3}~ \tikzmark{tar3c3e}\\
+        \end{tabu}}
+
+        \vspace{-0.35cm}
+        \begin{minipage}[t][3cm]{\textwidth}
+          \begin{align*}
+            \only< 8-11>{         \Prob[\text{threshold}] &= \infty + \infty + \infty \hspace{-0.6em} &=& \; \infty \\}
+            \only<12-15>{         \Prob[\text{threshold}] &= \alert<12>{50} + \infty + \infty \hspace{-0.6em} &=& \; \infty \\}
+            \only<16-17>{         \Prob[\text{threshold}] &=     50 + \alert<16>{30} + \infty \hspace{-0.6em} &=& \; \infty \\}
+            \only<18-21>{         \Prob[\text{threshold}] &=     50 +     30 + \alert<18>{25} \hspace{-0.6em} &=& \;    105 \\}
+            \only<22-23>{         \Prob[\text{threshold}] &=\alert<22>{40} +     30 +     25 \hspace{-0.6em} &=& \;     95 \\}
+            \only<15->{\Prob{\text{you}}{\text{I love}} &= 35 + 30 + 25             \hspace{-0.6em} &=& \;  90 \\}
+            \only<24-  >{         \Prob[\text{threshold}] &=     40 + \alert<24>{20} +     25 \hspace{-0.6em} &=& \;     85 \\}
+            \only<11->{\Prob{\text{the}}{\text{I love}} &= 50 + 20 +  3             \hspace{-0.6em} &=& \;  73 \\}
+            \only<21->{\Prob{\text{a  }}{\text{I love}} &= 40 + 10 +  5             \hspace{-0.6em} &=& \;  55 \\}
+            \onslide<0>{\Prob{\text{you}}{\text{I love}} &= 50 + 30 + 25 \hspace{-0.6em} &=& \;  105}
+          \end{align*}
+        \end{minipage}
+
+        \begin{tikzpicture}[
+          remember picture,
+          overlay,
+          iter/.style = {Maroon, thick},
+        ]
+          \draw< 9-18>[iter] ([yshift=-1.1ex]{pic cs:tar1c1s}) rectangle ([yshift=2.2ex]{pic cs:tar1c1e});
+          \draw<13-22>[iter] ([yshift=-1.1ex]{pic cs:tar1c2s}) rectangle ([yshift=2.2ex]{pic cs:tar1c2e});
+          \draw<17-  >[iter] ([yshift=-1.1ex]{pic cs:tar1c3s}) rectangle ([yshift=2.2ex]{pic cs:tar1c3e});
+          \draw<19-  >[iter] ([yshift=-1.1ex]{pic cs:tar2c1s}) rectangle ([yshift=2.2ex]{pic cs:tar2c1e});
+          \draw<23-  >[iter] ([yshift=-1.1ex]{pic cs:tar2c2s}) rectangle ([yshift=2.2ex]{pic cs:tar2c2e});
+        \end{tikzpicture}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}
+  \frametitle{No Random Access Algorithm}
+
+  \begin{columns}[c]
+     \begin{column}{.4\textwidth}
+      \begin{enumerate}
+        \item<2-> \emph{Sorted Access} to tries in any order
+        \vspace{0.1cm}
+        \item<3-> Keep track of all seen counts
+        \vspace{0.1cm}
+        \item<4-> Compute \emph{upper} and \emph{lower bounds} for each probability
+        \vspace{0.1cm}
+        \item<5-> Terminate when $k$ lower bounds greater than all other upper bounds have been found
+      \end{enumerate}
+     \end{column}
+     \begin{column}{.6\textwidth}
+     \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Comparison}
+
+  TODO
+\end{frame}
+
+\begin{frame}
+  \frametitle{Evaluation}
+
+  TODO
+\end{frame}
+
 
 % ==============================================================================
 \appendix
@@ -445,7 +563,7 @@
 
 \section{References}
 \subsection{}
-\begin{frame}[t, allowframebreaks]
+\begin{frame}[allowframebreaks]
   \frametitle{References}
 
   \printbibliography[heading = none]
