@@ -9,67 +9,68 @@
 
 \begin{axis}[
   xlabel = {$n$-gram length},
-  xtick = {1, ..., 10},
-  ylabel = {Calcluation time [${\mu}s$]},
+  xtick = {1, ..., 8},
+  ylabel = {Calcluation time [$\mu s$]},
+  yticklabel pos = right,
   ymode = log,
+  log ticks with fixed point,
   %yticklabel pos = right,
   minor y tick num = 4,
   grid = major,
-  legend entries = {{GLM}, {WGLM}, {WSA}},
+  legend entries = {{Rec-GLM}, {GLM}, {WSA}},
   legend pos = north west,
+  width = \textwidth,
 ]
 
-% GLM
-\addplot table {
-  n   us
-  % sampled at N = 1000
-  1   0.776
-  2   4.296
-  3   12.188
-  4   40.981
-  5   172.271
-  % sampled at N = 100
-  6   848.550
-  7   5297.308
-  % sampled at N = 10
-  8   38045.228
-  9   323947.490
-  % sampled at N = 1
-  10  3168612.887
+% Rec-GLM
+\addplot+[
+  error bars/.cd,
+  y dir = both,
+  y explicit,
+] table [y error = us_error] {
+  n  us         us_error
+  1      1.158     0.678
+  2      4.596     1.372
+  3     15.200     8.459
+  4     51.656    25.336
+  5    208.875   148.245
+  6   1085.126  4135.734
+  7   5814.210  1020.824
+  8  42025.650  4621.103
 };
 
-% WGLM
-\addplot table {
-  n   us
-  % sampled at N = 1000
-  1   0.618
-  2   6.223
-  3   12.855
-  4   27.786
-  5   59.746
-  % sampled at N = 100
-  6   126.934
-  7   317.936
-  8   1223.680
-  9   7463.531
-  10  66226.605
+% GLM
+\addplot+[
+  error bars/.cd,
+  y dir = both,
+  y explicit,
+] table [y error = us_error] {
+  n  us         us_error
+  1      1.207     0.574
+  2      7.475     8.341
+  3     17.503     8.631
+  4     43.166    28.144
+  5     95.882    30.063
+  6    214.342    65.797
+  7    538.550  1064.181
+  8   1652.884   210.847
 };
 
 % WSA
-\addplot table {
-  n   us
-  % sampled at N = 1000
-  1   0.624
-  2   5.200
-  3   10.572
-  4   23.295
-  5   51.307
-  % sampled at N = 100
-  6   104.217
-  7   226.905
-  8   491.327
-  9   1056.845
-  10  2287.351
+\addplot+[
+  error bars/.cd,
+  y dir = both,
+  y explicit,
+] table [y error = us_error] {
+  n  us         us_error
+  1      0.667    0.451
+  2      6.548    8.214
+  3     12.810    2.805
+  4     28.359   12.223
+  5     60.901    8.288
+  6    135.130   30.505
+  7    296.816  149.366
+  8    618.084  289.517
 };
 
 \end{axis}

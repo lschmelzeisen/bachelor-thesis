@@ -4,11 +4,8 @@
 \todo[inline]{Update math notation once it has been fixed in
 \cref{ch:weightedsum}.}
 
-\begin{draft}
 As motivated in the introduction, we want to solve prefix queries based
-on statistical language models (NWP with NKSS).
-\end{draft}
-
+on statistical language models.
 Our objective is to reduce the execution time of a high number of next word
 prediction queries for arbitrary histories and prefixes.
 \Cref{eq:prefixquery} shows that next word prediction queries $\NWP[p][k](h)$
@@ -109,23 +106,30 @@ The data structure we use for this will be explained in
 
 Among other things, top-$k$ joining techniques can be classified by the type
 of join operation they support \parencite{Ilyas2008}.
-The join operation for our problem is whether for two values $\SumArg^h_i(w_i)$
-and $\SumArg^h_j(w_j)$ the $w_i$ and $w_j$ are equal.
+The join operation for our problem is whether for two values $\SumArg^h_i(w_x)$
+and $\SumArg^h_j(w_y)$ the $w_x$ and $w_y$ are equal.
 This is actually the simplest and most common type of join operation and is
 called an \emph{equi-join}.
 Those have the nice property that for each $\SumArg^h_i(w)$ there is exactly one
 corresponding $\SumArg^h_j(w)$ for all $j$ that are different from $i$, which
-allows easy indexing in a hash table by key $w$.
+allows easy indexing in a hash table by the key $w$.
 Top-$k$ joining techniques that operate on equi-joins are also called
 \emph{top-$k$ selections} \parencite{Ilyas2008}.
 
-In this thesis we will implement and compare two top-$k$ selection techniques
-described by \textcite{Fagin2001}: the \emph{threshold algorithm}, which
-requires sorted and random access, and the \emph{no random access algorithm},
-which only requires sorted access.
+Among others, two fundamental algorithms were established by
+\textcite{Fagin2001}: the \emph{threshold algorithm}, which requires sorted and
+random access, and the \emph{no random access algorithm}, which only requires
+sorted access.
+We will apply these two algorithms to the problem of next word prediction and
+compare them against each other and the simple argmax approach.
+\textcite{Fagin2001} prove that both these algorithms are \emph{instance
+optimal} solutions to top-$k$ join queries: there is no possible algorithm
+that provides a better solution over all possible database contents.
 
-There exists a plethora of more sophisticated top-$k$ joining techniques, of
-which \textcite{Ilyas2008} surveys a wide number.
+However algorithms which outsource some computation into a precompution step, and thus
+achieve a faster query response are still possible:
+there exists a plethora of such more sophisticated top-$k$ joining techniques,
+of which \textcite{Ilyas2008} surveys a wide number.
 For example \emph{onion indices} \parencite{Chang2000} and
 \emph{rank join indices} \parencite{Tsaparas2003} feature an extended learning
 phase, in which optimized data representation are created over all arguments to
@@ -152,18 +156,24 @@ $\left(w, \SumArg^h_i(w)\right)$ for each $i$ for a given history $h$.
 Additionally as we are solving prefix queries, it has to be possible to specify
 a prefix $p$ with which all $w$ have to start.
 
-\begin{draft}
-Random access is important for better top-k-joins and for computing
-$\SumWeight^h_i$ directly from the same data structure.
-\end{draft}
+On top of that the threshold algorithm requires random access to the data
+structure, that is for a given $w$ we want to find $\SumArg^h_i(w)$.
+Random access might yield additional information to an algorithm and thus allow
+it to terminate earlier.
+Also our definitions to calculate the sum weights $\SumWeight^h_i$ given in
+\cref{ch:weightedsum} require this form of random access, so it is desirable for
+our data structure to support it.
+The alternative would be to maintain a separate data store that is optimized for
+random access --- for example a hash map --- which would necessitate a huge
+memory usage.
 
-\begin{draft}
-Since bigger corpora usually allow for better language model quality \noref,
-data compression is desirable.
-Obviously on top of this low time complexity is key.
-\end{draft}
+Another desirable characteristic of data storage is data compression.
+Since the analyzation of larger corpora yields to more accurate language models
+\noref, a higher degree of data compression allows to perform more accurate
+word prediction on the same hardware.
+Obviously a balance between data compression and access time has to be found,
+since fast prefix queries are the goal of this thesis.
 
-\Lukas[noline]{How in depth do I explain the completion trie?}
 The data structure which satisfies all these requirements is the
 \emph{completion trie} described by \textcite{HsuOttaviano2013}.
 A completion trie is a compact prefix tree that allows storage of arbitrary
@@ -669,6 +679,12 @@ NRA sorting may be bad for small corpora.
 Random access may be far more expensive on distributed systems.
 
 Corpus needs to be preanalyzed.
+\end{draft}
+
+\begin{draft}
+Access strategy:
+Mention \textcite{Guentzer2000} and \textcite{Guentzer2001} improvements to TA
+and NRA.
 \end{draft}
 
 % ------------------------------------------------------------------------------

@@ -133,6 +133,12 @@ Random access from completion trie or from hash map?
 Mention decreasingness (?) of data sets.
 \end{draft}
 
+\clearpage
+\textbf{Note for Rene: The following figures are not yet final. For these
+I didn't do any removal of outliers so you can see how problematic these huge
+standard deviations are. Graphs for Top-k algorithms are outdated but I expect
+them to not change to much.}
+
 % ------------------------------------------------------------------------------
 \clearpage
 \thispagestyle{empty}
@@ -142,15 +148,74 @@ Mention decreasingness (?) of data sets.
   \vspace*{\fill}
 
   \begin{minipage}{.45\textwidth}
-    \includestandalone[width=\textwidth]{figures/timemkn}
-    \caption{Time to calculate one probability using different
-      $n$-gram models.}
+    \raggedleft
+    \includestandalone{figures/timemkn}
+    \caption{Time to calculate one MKN probability using different
+      $n$-gram lengths.}
   \end{minipage}
   \hspace{.02\textwidth}
   \begin{minipage}{.45\textwidth}
-    \includestandalone[width=\textwidth]{figures/timeglm}
-    \caption{Time to calculate one probability using different
-      $n$-gram models.}
+    \raggedright
+    \includestandalone{figures/timeglm}
+    \caption{Time to calculate one GLM probability using different
+      $n$-gram lengths.}
+  \end{minipage}
+
+  \vspace*{.02\textwidth}
+
+  \begin{minipage}{.45\textwidth}
+    \raggedleft
+    \includestandalone{figures/timemkn_split}
+    \caption{Time split for weighted sum MKN weight calculation and remaining
+      probability calculation.}
+  \end{minipage}
+  \hspace{.02\textwidth}
+  \begin{minipage}{.45\textwidth}
+    \raggedright
+    \includestandalone{figures/timeglm_split}
+    \caption{Time split for weighted sum GLM weight calculation and remaining
+      probability calculation.}
+  \end{minipage}
+
+  \vspace*{.02\textwidth}
+
+  \begin{minipage}{.45\textwidth}
+    \raggedleft
+    \includestandalone{figures/timemkn_weights}
+    \caption{Number of Weights MKN}
+  \end{minipage}
+  \hspace{.02\textwidth}
+  \begin{minipage}{.45\textwidth}
+    \raggedright
+    \includestandalone{figures/timeglm_weights}
+    \caption{Number of Weights GLM}
+  \end{minipage}
+
+  \vspace*{\fill}
+\end{figure}
+\restoregeometry
+\clearpage
+
+% ------------------------------------------------------------------------------
+\clearpage
+\thispagestyle{empty}
+\newgeometry{left = 1cm, right = 1cm, top = 1cm, bottom = 1cm}
+\begin{figure}[p]
+  \centering
+  \vspace*{\fill}
+
+  \begin{minipage}{.45\textwidth}
+    \raggedleft
+    \includestandalone{figures/timemkn_boxplot}
+    \caption{Time to calculate one MKN probability using different
+      $n$-gram models (box plot).}
+  \end{minipage}
+  \hspace{.02\textwidth}
+  \begin{minipage}{.45\textwidth}
+    \raggedright
+    \includestandalone{figures/timeglm_boxplot}
+    \caption{Time to calculate one GLM probability using different
+      $n$-gram models (box plot).}
   \end{minipage}
 
   \vspace*{.02\textwidth}
@@ -163,14 +228,14 @@ Mention decreasingness (?) of data sets.
   \hspace{.02\textwidth}
   \begin{minipage}{0.45\textwidth}
     \includestandalone[width=\textwidth]{figures/timeargmaxk}
-    \caption{Calculation time for top-$k$ prediction using $5$-gram models.}
+    \caption{Calculation time for top-$k$ prediction using $5$-gram model.}
   \end{minipage}
 
   \vspace*{.02\textwidth}
 
   \begin{minipage}{0.45\textwidth}
     \includestandalone[width=\textwidth]{figures/timeargmaxnkss}
-    \caption{Time to calculate NKSS using different $n$-gram models.}
+    \caption{Time to calculate NKSS using different $n$-gram lengths.}
   \end{minipage}
   \hspace{.02\textwidth}
   \begin{minipage}{0.45\textwidth}
@@ -193,36 +258,36 @@ Mention decreasingness (?) of data sets.
 
   \begin{minipage}{.45\textwidth}
     \includestandalone[width=\textwidth]{figures/argmax_time_n_ta}
-    \caption{TODO}
+    \caption{Prediction time for TA for different $n$-grams lengths and 1 prediction.}
   \end{minipage}
   \hspace{.02\textwidth}
   \begin{minipage}{.45\textwidth}
     \includestandalone[width=\textwidth]{figures/argmax_time_k_ta}
-    \caption{TODO}
+    \caption{Prediction time for TA for $k$ many predictions in a 5 gram model.}
   \end{minipage}
 
   \vspace*{.02\textwidth}
 
   \begin{minipage}{0.45\textwidth}
     \includestandalone[width=\textwidth]{figures/argmax_time_n_nra}
-    \caption{TODO}
+    \caption{Prediction time for NRA for different $n$-grams lengths and 1 prediction.}
   \end{minipage}
   \hspace{.02\textwidth}
   \begin{minipage}{0.45\textwidth}
     \includestandalone[width=\textwidth]{figures/argmax_time_k_nra}
-    \caption{TODO}
+    \caption{Prediction time for NRA for $k$ many predictions in a 5 gram model.}
   \end{minipage}
 
   \vspace*{.02\textwidth}
 
   \begin{minipage}{0.45\textwidth}
     \includestandalone[width=\textwidth]{figures/argmax_time_n_smpl}
-    \caption{TODO}
+    \caption{Prediction time for SMPL for different $n$-grams lengths and 1 prediction.}
   \end{minipage}
   \hspace{.02\textwidth}
   \begin{minipage}{0.45\textwidth}
     \includestandalone[width=\textwidth]{figures/argmax_time_k_smpl}
-    \caption{TODO}
+    \caption{Prediction time for SMPL for $k$ many predictions in a 5 gram model.}
   \end{minipage}
 
   \vspace*{\fill}
@@ -240,36 +305,12 @@ Mention decreasingness (?) of data sets.
 
   \begin{minipage}{.45\textwidth}
     \includestandalone[width=\textwidth]{figures/argmax_numaccesses_mkn}
-    \caption{TODO}
+    \caption{Number of Accesses per Algorithm for 1 prediction in a 5 gram model for MKN.}
   \end{minipage}
   \hspace{.02\textwidth}
   \begin{minipage}{.45\textwidth}
     \includestandalone[width=\textwidth]{figures/argmax_numaccesses_glm}
-    \caption{TODO}
-  \end{minipage}
-
-  \vspace*{.02\textwidth}
-
-  \begin{minipage}{0.45\textwidth}
-    \includestandalone[width=\textwidth]{figures/timeglm}
-    \caption{TODO}
-  \end{minipage}
-  \hspace{.02\textwidth}
-  \begin{minipage}{0.45\textwidth}
-    \includestandalone[width=\textwidth]{figures/timeglm}
-    \caption{TODO}
-  \end{minipage}
-
-  \vspace*{.02\textwidth}
-
-  \begin{minipage}{0.45\textwidth}
-    \includestandalone[width=\textwidth]{figures/timeglm}
-    \caption{TODO}
-  \end{minipage}
-  \hspace{.02\textwidth}
-  \begin{minipage}{0.45\textwidth}
-    \includestandalone[width=\textwidth]{figures/timeglm}
-    \caption{TODO}
+    \caption{Number of Accesses per Algorithm for 1 prediction in a 5 gram model for GLM.}
   \end{minipage}
 
   \vspace*{\fill}

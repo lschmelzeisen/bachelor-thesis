@@ -314,7 +314,7 @@ In order theory, graphs that generalize this idea are also known as
   \centering
   \input{figures/historiesglm}
   \caption{
-    Backoff graph of order 3 for history $h = w_1 w_2 w_3$.
+    $\ProbGLM$ backoff graph of order 3 for history $h = w_1 w_2 w_3$.
   }
   \label{fig:history-glm}
 \end{figure}
@@ -790,16 +790,6 @@ recursion depth
 \subsection{Implementation}
 \label{subsec:weightedsum-glm-implementation}
 
-This subsection will explain our way to implement the backoff graph that both
-consumes as little space as possible while being fast to traverse.
-Our representation fits into a small contiguous amount of memory on the stack,
-which will prevent cache misses, and thus resulst in access time improvements.
-
-We reasoned in \cref{subsec:backoff-graph} A backoff graph for a history $h$
-with length $\NGramLength{h}$ has $2^\NGramLength{h}$ nodes.
-Our core idea is to now store the graph into an array of $2^\NGramLength{h}$
-\texttt{struct}s.
-
 \begin{lstlisting}[
   label = {lst:backoff-graph-c},
   float,
@@ -817,50 +807,6 @@ Our core idea is to now store the graph into an array of $2^\NGramLength{h}$
     struct node nodes[n * n]
   };
 \end{lstlisting}
-
-We will interpret each node's history as a binary number, where each set word
-in the history becomes a zero and each skip becomes a one.
-That is the node of history $w_1 \Skp w_3 w_4 \Skp$ for a graph of order $5$
-is stored at the index $\texttt{01001}_2 = 9$.
-That number is used as the index for each node in the array.
-This representation makes it very fast to compute the layer, all parents, or
-all children of a node.
-These tasks can be specified entirely as bit operations, which should be
-available as direct machine instructions for most architectures.
-No materialized lists of all parents or all children are necessary.
-
-The C code of \Cref{lst:backoff-graph-c} exhaustively lists necessary data
-structures to implement \cref{alg:weightedsum-glm,alg:weightedsum-glm-helper}.
-\texttt{n} has to be predefined constant that specifies the (maximal) length of
-histories.
-The \texttt{struct} \texttt{node} consists of exactly those data members that are
-used for data lookup storage in the algorithm.
-\texttt{history} stores the $n$-gram $h$, and \texttt{nodes} bundles all nodes
-of a graph in one instance.
-
-We will now explain how all necessary data can be retrieved from that
-representation:
-\begin{itemize}
-  \item The history $\DerivedHistory[i]$ of a node at index $i$ is simple
-    the original \texttt{history}, where a skip $\Skp$ is placed at each
-    position, where the node's index has a set bit.
-  \item A node is the top root node if its index has no set bits, and in turn a
-    node is the bottom leap node if all bits in the index is set.
-  \item The layer of a node is the number of set bits in its index.
-  \item As explained in \cref{subsec:backoff-graph} a node at layer $l$ has
-    exactly $l$ parents and $\NGramLength{h} - l$ children.
-  \item The index of the $i$th parent (child) of a node is found by unsetting
-    (setting) the $i$th set (unset) bit.
-  \item A node \texttt{A} is an ancestor of another node \texttt{B}
-    if it the bitwise and operation on their indices returns \texttt{A}'s index
-    respectively it is an descendant if the same holds for the bitwise or
-    operation:
-    \begin{align*}
-      \text{\texttt{A} ancestor of \texttt{B}} \: &\Leftrightarrow \: \texttt{A.index \& B.index == A.index} \\
-      \text{\texttt{A} descendant of \texttt{B}} \: &\Leftrightarrow \: \texttt{A.index | B.index == B.index}
-    \end{align*}
-    with \texttt{\&} the bitwise-and, and \texttt{|} the bitwise-or.
-\end{itemize}
 
 \begin{lstlisting}[
   label = {lst:next-in-order-index},
@@ -889,6 +835,61 @@ representation:
       index = 0;
 \end{lstlisting}
 
+This subsection will explain our approach of implementing the backoff graph that
+both consumes as little space as possible while being fast to traverse.
+Our representation fits into a small contiguous amount of memory on the stack,
+which will prevent cache misses, and thus result in access time improvements.
+
+We reasoned in \cref{subsec:backoff-graph} that a backoff graph, for a history
+$h$ with length $\NGramLength{h}$, has $2^\NGramLength{h}$ nodes.
+Our core idea is to now store the graph into an array of $2^\NGramLength{h}$
+\texttt{struct}s.
+
+We will interpret each node's history as a binary number, where each set word
+in the history becomes a zero and each skip becomes a one.
+That is the node of history $w_1 \Skp w_3 w_4 \Skp$ for a graph of order $5$
+is stored at the index $\texttt{01001}_2 = 9$.
+That number is used as the index for each node in the array.
+This representation makes it very fast to compute the layer, all parents, or
+all children of a node.
+These tasks can be specified entirely as bit operations, which should be
+available as direct machine instructions for most architectures.
+No materialized lists of all parents or all children are necessary.
+
+The C code of \Cref{lst:backoff-graph-c} exhaustively lists necessary data
+structures to implement \cref{alg:weightedsum-glm,alg:weightedsum-glm-helper}.
+\texttt{n} has to be a predefined constant that specifies the (maximal) length
+of histories.
+The \texttt{struct} \texttt{node} consists of exactly those data members that are
+used for data lookup storage in the algorithm.
+\texttt{history} stores the $n$-gram $h$, and \texttt{nodes} bundles all nodes
+of a graph in one instance.
+
+We will now explain how all necessary data can be retrieved from that
+representation:
+\begin{itemize}
+  \item The history $\DerivedHistory[i]$ of a node at index $i$ is simple
+    the original \texttt{history}, where a skip $\Skp$ is placed at each
+    position, where the node's index has a set bit.
+  \item A node is the top root node if its index has no set bits, and in turn a
+    node is the bottom leap node if all bits in the index is set.
+  \item The layer of a node is the number of set bits in its index.
+  \item As explained in \cref{subsec:backoff-graph} a node at layer $l$ has
+    exactly $l$ parents and $\NGramLength{h} - l$ children.
+  \item The index of the $i$th parent (child) of a node is found by unsetting
+    (setting) the $i$th set (unset) bit.
+  \clearpage
+  \item A node \texttt{A} is an ancestor of another node \texttt{B}
+    if it the bitwise and operation on their indices returns \texttt{A}'s index
+    respectively it is an descendant if the same holds for the bitwise or
+    operation:
+    \begin{align*}
+      \text{\texttt{A} ancestor of \texttt{B}} \: &\Leftrightarrow \: \texttt{A.index \& B.index == A.index} \\
+      \text{\texttt{A} descendant of \texttt{B}} \: &\Leftrightarrow \: \texttt{A.index | B.index == B.index}
+    \end{align*}
+    with \texttt{\&} the bitwise-and, and \texttt{|} the bitwise-or.
+\end{itemize}
+
 The only non-trivial problem that follows from that representation is finding
 the proper ordering of indices in which they should be accessed during an
 in-order loop over the graph.
@@ -899,7 +900,7 @@ of layer $l$ is only accessed once all nodes of layer $l-1$ have been processed.
 next in-order index\footnote{The code to compute the lexicographically next bit
 permutation is courtesy of
 \mbox{\url{http://graphics.stanford.edu/~seander/bithacks.html\#NextBitPermutation}}
-(visited on July 14th 2015).
+(visited on July 14, 2015).
 It requires an architecture that stores negative integers in two's complement
 format.}.
 As input it requires the previous \texttt{index} and the backoff graph's order

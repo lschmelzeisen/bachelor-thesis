@@ -30,7 +30,11 @@
 %\usepackage{booktabs}
 \usepackage{tabu}
 
+% To exlclude pages in the appendix fom navigation bar on top
 \usepackage{appendixnumberbeamer}
+
+% For nice fractions
+\usepackage{nicefrac}
 
 \addbibresource{bibliography.bib}
 
@@ -55,7 +59,12 @@
   \frametitle{What is Next Word Prediction?}
 
   \begin{center}
-    \LARGE Demo
+    \LARGE
+    \only<1>{Demo}
+    \only<2->{
+      Guess the \emph{next intended} word
+      \\[0.2cm]
+      from words already entered}
   \end{center}
 \end{frame}
 
@@ -66,9 +75,22 @@
   \large
   \begin{itemize}
     \item Faster typing
-    \item Spelling
+    \vspace{0.5cm}
+    \item Spelling / Grammar
+    \vspace{0.5cm}
     \item \ldots
+    \vspace{0.5cm}
+    \item Metric for Language Models?
   \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Goal}
+
+  \begin{center}
+    \LARGE
+    Be fast!
+  \end{center}
 \end{frame}
 
 \begin{frame}
@@ -106,16 +128,6 @@
   \end{tikzpicture}
 \end{frame}
 
-\begin{frame}
-  \frametitle{Goal}
-
-  \begin{center}
-    \LARGE
-    Be fast!
-  \end{center}
-\end{frame}
-
-
 
 % ==============================================================================
 \section{Language Models}
@@ -128,20 +140,24 @@
     \LARGE $\Prob{w}{h}$ ?
   \end{center}
 
-  \vspace{1cm}
+  \vspace{0.5cm}
 
   \onslide<2->{
     \large
-    Solution: use Language Models!
+    Solution: Statistical Language Models
+    \begin{itemize}
+      \item analyze text corpora
+      \item to estimate sequence probabilities
+    \end{itemize}
   }
 
-  \vspace{1cm}
+  \vspace{0.5cm}
 
   \onslide<3->{
     \large
-    We will use two state-of-the-art Language Models:
+    We will employ two state-of-the-art Language Models:
     \begin{itemize}
-      \item Modified Kneser Ney Smoothing\\[-0.4ex]{\small\parencite{ChenGoodman1309}}
+      \item Modified Kneser Ney Smoothing\\[-0.4ex]{\small\parencite{ChenGoodman1999}}
       \item Generalized Language Model\\[-0.4ex]{\small\parencite{Pickhardt2014}}
     \end{itemize}
   }
@@ -428,8 +444,263 @@
   \end{tikzpicture}
 \end{frame}
 
+
+% ==============================================================================
+\section{Top-k Joining Techniques}
+\subsection{}
+
 \begin{frame}
-  \frametitle{Evaluation of weighted sum}
+  \frametitle{What are Top-k Join Queries?}
+
+  \begin{center}
+    \onslide<2->{
+      \fbox{\includegraphics[width=0.8\textwidth]{figures/google-results}}}
+  \end{center}
+
+  \large
+  \begin{tikzpicture}[
+    remember picture,
+    overlay,
+    expl/.style = {draw = Maroon, rounded corners, thick, fill=white},
+    arrow/.style = {Maroon, thick, ->, >=latex},
+  ]
+    \node<3->[expl, align=left, anchor=north] at (9cm, 7.5cm) {
+      \begin{varwidth}{4.1cm}
+        \vspace{0.1cm}
+        \begin{itemize}
+          \item like traditional\\join operations\\(e.g.\ \emph{search query})
+          \only<4->{\item sorted by metric\\(e.g.\ \emph{relevance})}
+          \only<5->{\item limited to $k=3$\\best results}
+        \end{itemize}
+        \vspace{0.1cm}
+      \end{varwidth}
+    };
+  \end{tikzpicture}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Calculating probabilities for all words is slow!}
+
+  \tabulinesep=1.5mm
+  \begin{tabu}[t]{ l l }
+    \action<2->{\textbf{Observation}:} &
+    \action<2->{\parbox{\linewidth}{Words with high probabilities\newline
+                                    have high occurrence counts\newline
+                                    \small(probabilities are monotone)}} \\
+
+    \action<3->{\textbf{Idea}:} &
+    \action<3->{\parbox{\linewidth}{Keep sorted lists of occurrence counts}} \\
+  \end{tabu}
+
+  \vspace{-0.2cm}
+  \onslide<3->{
+    \begin{center}
+      \small
+      \tabulinesep=1.5mm
+      \begin{tabu}{ l r | l r | l r }
+        \tabucline[1pt]-
+        \multicolumn{2}{ c }{$\EmptyNGram$} &
+        \multicolumn{2}{ c }{love} &
+        \multicolumn{2}{ c }{I love} \\
+        \tabucline[1pt]-
+
+         ~the & 50~~&
+        ~~you & 30~~&
+        ~~you & 25~ \\
+
+         ~a   & 40~~&
+        ~~the & 20~~&
+        ~~a   &  5~ \\
+
+         ~you & 35~~&
+        ~~a   & 10~~&
+        ~~the &  3~ \\
+      \end{tabu}
+    \end{center}}
+
+  \vspace{-0.1cm}
+  \onslide<4->{
+    We apply two Top-$k$ Joining Techniques to NWP:
+    \begin{itemize}
+      \item Threshold Algorithm {\small\parencite{Fagin2001}}
+      \item No Random Access Algorithm {\small\parencite{Fagin2001}}
+    \end{itemize}}
+\end{frame}
+
+
+
+\newcommand*\Pro[1]{
+  \item[\color{Pro color}\texttt{+}] \textcolor{Pro color}{#1}}
+\newcommand*\Contra[1]{
+  \item[\color{Contra color}\texttt{-}] \textcolor{Contra color}{#1}}
+\newcommand*\Neutral[1]{
+  \item[\color{black}\textbullet] \textcolor{black}{#1}}
+
+\begin{frame}
+  \frametitle{Comparison}
+
+  \vspace{-1cm}
+  \begin{columns}[t]
+    \begin{column}{0.02\textwidth}\end{column}
+    \begin{column}[t]{0.45\textwidth}
+      \begin{center}
+        \Large
+        Threshold\\Algorithm
+        \vspace{0.1cm} \hrule
+      \end{center}
+
+      \large
+      \begin{itemize}
+        \onslide<2->{\Contra{Requires Sorted and Random Access}}
+        \vspace{0.3cm}
+        \onslide<3->{\Pro{Faster termination}}
+        \vspace{0.3cm}
+        \onslide<4->{\Neutral{Needs to keep track of all seen words}}
+        \vspace{0.3cm}
+        \onslide<5->{\Pro{Stores at most $k$ probabilities}}
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.06\textwidth}\end{column}
+    \begin{column}[t]{0.45\textwidth}
+      \begin{center}
+        \Large
+        No Random Access\\Algorithm
+        \vspace{0,1cm} \hrule
+      \end{center}
+
+      \large
+      \begin{itemize}
+        \onslide<2->{\Pro{Only Sorted Access necessary}}
+        \vspace{0.3cm}
+        \onslide<3->{\Contra{Longer runtime}}
+        \vspace{0.3cm}
+        \onslide<4->{\Neutral{Needs to keep track of all seen words}}
+        \vspace{0.3cm}
+        \onslide<5->{\Contra{Stores all seen counts plus lower and upper bounds}}
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.02\textwidth}\end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Data structure}
+
+  \begin{itemize}
+    \item<2-> Sorted lists are unique for each history $h$
+      \vspace{0.2cm}
+      \begin{center}
+        \small
+        \tabulinesep=1.5mm
+        \begin{tabu}{ l r | l r | l r }
+          \tabucline[1pt]-
+          \multicolumn{2}{ c }{$\EmptyNGram$} &
+          \multicolumn{2}{ c }{\alert{love}} &
+          \multicolumn{2}{ c }{\alert{I love}} \\
+          \tabucline[1pt]-
+
+           ~the & 50~~&
+          ~~you & 30~~&
+          ~~you & 25~ \\
+
+           ~a   & 40~~&
+          ~~the & 20~~&
+          ~~a   &  5~ \\
+
+           ~you & 35~~&
+          ~~a   & 10~~&
+          ~~the &  3~ \\
+        \end{tabu}
+      \end{center}
+    \vspace{0.2cm}
+    \item<3-> Optimized data structure: \emph{Completion Trie}\\{\small\parencite{HsuOttaviano2013}}
+      \begin{itemize}
+        \item Compact radix trie which stores sequence-score-pairs
+        \item Optimized for prefix-retrieval
+        \item Stores a minimum of edges, to achieve\\data compression and locality
+        \item Variable Byte Encoding
+      \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+% ==============================================================================
+\section{Evaluation}
+\subsection{}
+
+\begin{frame}
+  \frametitle{Evaluation Corpus}
+
+  \large
+  Open American National Corpus {\small\parencite{OANC}}
+  \begin{itemize}
+    \item open collection of American English
+    \item historical and contemporary
+    \item spoken and written text of all genres
+    \item around 600.000 sentences / 14.000.000 words
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Experimental Setup}
+
+  \begin{center}
+    \begin{tikzpicture}
+      \tikzset{
+        every node/.style = {scale = 0.6},
+        state/.style  = {draw, circle, align = center, text centered, text width = 3.8em},
+        order/.style  = {align = center, text centered, text width = 3.8em, text = Maroon},
+      }
+
+      \begin{scope}[node distance = 7em]
+        \onslide<1->{
+          \node [state] (oanc)                      {OANC};
+          \node         (below)    [right of=oanc]  {};
+          \node [state] (training) [above of=below]  {Training};
+          \node [state] (heldout)  [below of=below] {Heldout};
+        }
+      \end{scope}
+
+      \begin{scope}[node distance = 8.5em]
+        \onslide<2->{
+          \node [state] (training2) [right of=training]  {Training-\nicefrac{1}{2}};
+          \node [state] (training3) [right of=training2] {Training-\nicefrac{1}{4}};
+          \node [state] (training4) [right of=training3] {Training-\nicefrac{1}{8}};
+          \node [state] (training5) [right of=training4] {Training-\nicefrac{1}{16}};
+        }
+      \end{scope}
+
+      \begin{scope}[node distance = 11em]
+        \onslide<3->{
+          \node [align=center, draw, rounded corners, minimum width = 10.5em, minimum height = 4.5em]
+            (testing) [right of=heldout] {Testing\\(40.000 sequences)};
+        }
+      \end{scope}
+
+      \onslide<1->{
+        \path[->, >=latex]
+          (oanc) edge node [above, order, xshift=-1em] {80\%} (training)
+          (oanc) edge node [below, order, xshift=-1em] {20\%} (heldout);
+      }
+
+      \onslide<2->{
+        \path[->, >=latex]
+          (training)  edge node [above, order] {50\%} (training2)
+          (training2) edge node [above, order] {50\%} (training3)
+          (training3) edge node [above, order] {50\%} (training4)
+          (training4) edge node [above, order] {50\%} (training5);
+      }
+
+      \onslide<3->{
+        \path[->, >=latex]
+          (heldout) edge (testing);
+      }
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Experiments}
 
   TODO
 \end{frame}
@@ -437,15 +708,71 @@
 
 
 % ==============================================================================
-\section{Top-k Joining Techniques}
+\appendix
+\begin{frame}[plain]
+  \frametitle{So long, and thanks for all the fish}
+
+  \begin{center}
+    \textbf{Final Slide}
+  \end{center}
+\end{frame}
+
+
+% ==============================================================================
+\section{Top-k Join Examples}
 \subsection{}
 
 \begin{frame}
-  \frametitle{Completion Trie}
+  \frametitle{Top-k joins combined with Weighted Sums}
 
-  \parencite{HsuOttaviano2013}
+  \vspace{-0.2cm}
+  \onslide<2->{
+    \normalsize
+    \begin{equation*}
+      \textstyle{\Prob{w}{h} = \sum_{i = 1}^{N} \SumWeight_i^h \; \SumArg_i^h(w)}
+    \end{equation*}}
+
+  \vspace{-0.5cm}
+  \large
+  \begin{itemize}
+    \item<3-> Weights $\SumWeight^h_i$ can be precomputed
+    \vspace{0.2cm}
+    \item<4-> Sorted lists can store terms $\SumArg_i^h(w)$
+  \end{itemize}
+
+  \onslide<4->{
+    \begin{center}
+      \small
+      \tabulinesep=1.5mm
+      \begin{tabu}{ l r | l r | l r }
+        \tabucline[1pt]-
+        \multicolumn{2}{ c }{$\EmptyNGram$} &
+        \multicolumn{2}{ c }{love} &
+        \multicolumn{2}{ c }{I love} \\
+        \tabucline[1pt]-
+
+        ~the & 50~~&
+        ~~\alert<6>{you} & \alert<6>{30}~~&
+        ~~\alert<6>{you} & \alert<6>{25}~ \\
+
+        ~a   & 40~~&
+        ~~the & 20~~&
+        ~~a   &  5~ \\
+
+        ~\alert<6>{you} & \alert<6>{35}~~&
+        ~~a   & 10~~&
+        ~~the &  3~ \\
+      \end{tabu}
+    \end{center}}
+
+  \large
+  \begin{itemize}
+    \item<5-> In examples we will assume $\SumWeight^h_1, \: \ldots, \: \SumWeight^h_N = 1$\\
+      {\small(not possible in practice!)}
+    \vspace{0.2cm}
+    \item<6-> \alert<6>{$\Prob{\text{you}}{\text{I love}} = 35 + 30 + 25 = 95$}
+  \end{itemize}
 \end{frame}
-
 
 \begin{frame}
   \frametitle{Threshold Algorithm}
@@ -453,17 +780,16 @@
   \begin{columns}[T]
     \begin{column}{.4\textwidth}
       \begin{enumerate}
-        \item<3-> \alert< 9,13,17,19,23>{\emph{Sorted Access} to lists in any order (e.g.~round~robin)}
+        \item<3-> \alert< 8,12,16,18,22>{\emph{Sorted Access} to lists in any order (e.g.~round~robin)}
         \vspace{0.1cm}
-        \item<4-> \alert<10,14,20>{For new words, \emph{Random Access} to to all other lists}
+        \item<4-> \alert< 9,13,19>{For new words, \emph{Random Access} to to all other lists}
         \vspace{0.1cm}
-        \item<5-> \alert<12,16,18,22,24>{Compute \emph{threshold} of highest possible unseen probability}
+        \item<5-> \alert<11,15,17,21,23>{Compute \emph{threshold} of highest possible unseen probability}
         \vspace{0.1cm}
-        \item<6-> \alert<25>{Terminate when $k$ probabilities greater threshold have been found}
+        \item<6-> \alert<24>{Terminate when $k$ probabilities greater threshold have been found}
       \end{enumerate}
     \end{column}
     \begin{column}{.6\textwidth}
-      %\vspace{-0.15cm}
       \onslide<1->{
         \begin{equation*}
           \textstyle{\Argmax{w \in \Vocab}\ProbMKN{w}{\text{I love}}}
@@ -478,32 +804,33 @@
           \multicolumn{2}{ c }{I love} \\
           \tabucline[1pt]-
 
-          \tikzmark{tar1c1s} ~\action< 9->{the} & \action< 9->{50}~~\tikzmark{tar1c1e}&
-          \tikzmark{tar1c2s}~~\action<13->{you} & \action<13->{30}~~\tikzmark{tar1c2e}&
-          \tikzmark{tar1c3s}~~\action<14->{you} & \action<14->{25}~ \tikzmark{tar1c3e}\\
+          \tikzmark{tar1c1s} ~\action< 8->{the} & \action< 8->{50}~~\tikzmark{tar1c1e}&
+          \tikzmark{tar1c2s}~~\action<12->{you} & \action<12->{30}~~\tikzmark{tar1c2e}&
+          \tikzmark{tar1c3s}~~\action<13->{you} & \action<13->{25}~ \tikzmark{tar1c3e}\\
 
-          \tikzmark{tar2c1s} ~\action<19->{a}   & \action<19->{40}~~\tikzmark{tar2c1e}&
-          \tikzmark{tar2c2s}~~\action<10->{the} & \action<10->{20}~~\tikzmark{tar2c2e}&
-          \tikzmark{tar2c3s}~~\action<20->{a}   & \action<20->{ 5}~ \tikzmark{tar2c3e}\\
+          \tikzmark{tar2c1s} ~\action<18->{a}   & \action<18->{40}~~\tikzmark{tar2c1e}&
+          \tikzmark{tar2c2s}~~\action< 9->{the} & \action< 9->{20}~~\tikzmark{tar2c2e}&
+          \tikzmark{tar2c3s}~~\action<19->{a}   & \action<19->{ 5}~ \tikzmark{tar2c3e}\\
 
-          \tikzmark{tar3c1s} ~\action<14->{you} & \action<14->{35}~~\tikzmark{tar3c1e}&
-          \tikzmark{tar3c2s}~~\action<20->{a}   & \action<20->{10}~~\tikzmark{tar3c2e}&
-          \tikzmark{tar3c3s}~~\action<10->{the} & \action<10->{ 3}~ \tikzmark{tar3c3e}\\
+          \tikzmark{tar3c1s} ~\action<13->{you} & \action<13->{35}~~\tikzmark{tar3c1e}&
+          \tikzmark{tar3c2s}~~\action<19->{a}   & \action<19->{10}~~\tikzmark{tar3c2e}&
+          \tikzmark{tar3c3s}~~\action< 9->{the} & \action< 9->{ 3}~ \tikzmark{tar3c3e}\\
         \end{tabu}}
 
         \vspace{-0.35cm}
         \begin{minipage}[t][3cm]{\textwidth}
           \begin{align*}
-            \only< 8-11>{         \Prob[\text{threshold}] &= \infty + \infty + \infty \hspace{-0.6em} &=& \; \infty \\}
-            \only<12-15>{         \Prob[\text{threshold}] &= \alert<12>{50} + \infty + \infty \hspace{-0.6em} &=& \; \infty \\}
-            \only<16-17>{         \Prob[\text{threshold}] &=     50 + \alert<16>{30} + \infty \hspace{-0.6em} &=& \; \infty \\}
-            \only<18-21>{         \Prob[\text{threshold}] &=     50 +     30 + \alert<18>{25} \hspace{-0.6em} &=& \;    105 \\}
-            \only<22-23>{         \Prob[\text{threshold}] &=\alert<22>{40} +     30 +     25 \hspace{-0.6em} &=& \;     95 \\}
-            \only<15->{\Prob{\text{you}}{\text{I love}} &= 35 + 30 + 25             \hspace{-0.6em} &=& \;  90 \\}
-            \only<24-  >{         \Prob[\text{threshold}] &=     40 + \alert<24>{20} +     25 \hspace{-0.6em} &=& \;     85 \\}
-            \only<11->{\Prob{\text{the}}{\text{I love}} &= 50 + 20 +  3             \hspace{-0.6em} &=& \;  73 \\}
-            \only<21->{\Prob{\text{a  }}{\text{I love}} &= 40 + 10 +  5             \hspace{-0.6em} &=& \;  55 \\}
-            \onslide<0>{\Prob{\text{you}}{\text{I love}} &= 50 + 30 + 25 \hspace{-0.6em} &=& \;  105}
+            \only< 7-10>{\alert< 7>{\Prob[\text{threshold}]}          &\alert< 7>{=        \infty  +        \infty  +        \infty} \hspace{-0.6em} &\alert< 7>{=}& \; \alert< 7>{\infty} \\}
+            \only<11-14>{           \Prob[\text{threshold}]           &           = \alert<11>{50} +        \infty  +        \infty  \hspace{-0.6em} &           = & \;            \infty  \\}
+            \only<15-16>{           \Prob[\text{threshold}]           &           =            50  + \alert<15>{30} +        \infty  \hspace{-0.6em} &           = & \;            \infty  \\}
+            \only<17-20>{           \Prob[\text{threshold}]           &           =            50  +            30  + \alert<17>{25} \hspace{-0.6em} &           = & \; \alert<17>{   105} \\}
+            \only<21-22>{           \Prob[\text{threshold}]           &           = \alert<21>{40} +            30  +            25  \hspace{-0.6em} &           = & \; \alert<21>{    95} \\}
+            \only<14-  >{\alert<14>{\Prob{\text{you}}{\text{I love}}} &\alert<14>{=            35  +            30  +            25} \hspace{-0.6em} &\alert<14>{=}& \; \alert<14>{    90} \\}
+            \only<23-  >{           \Prob[\text{threshold}]           &           =            40  + \alert<23>{20} +            25  \hspace{-0.6em} &           = & \; \alert<23>{    85} \\}
+            \only<10-  >{\alert<10>{\Prob{\text{the}}{\text{I love}}} &\alert<10>{=            50  +            20  +             3} \hspace{-0.6em} &\alert<10>{=}& \; \alert<10>{    73} \\}
+            \only<20-  >{\alert<20>{\Prob{\text{a  }}{\text{I love}}} &\alert<20>{=            40  +            10  +             5} \hspace{-0.6em} &\alert<20>{=}& \; \alert<20>{    55} \\}
+            % For fixed alignment
+            \onslide<0 >{           \Prob{\text{you}}{\text{I love}}  &           =            50  +            30  +            25  \hspace{-0.6em} &           = & \;               105}
           \end{align*}
         \end{minipage}
 
@@ -512,57 +839,37 @@
           overlay,
           iter/.style = {Maroon, thick},
         ]
-          \draw< 9-18>[iter] ([yshift=-1.1ex]{pic cs:tar1c1s}) rectangle ([yshift=2.2ex]{pic cs:tar1c1e});
-          \draw<13-22>[iter] ([yshift=-1.1ex]{pic cs:tar1c2s}) rectangle ([yshift=2.2ex]{pic cs:tar1c2e});
-          \draw<17-  >[iter] ([yshift=-1.1ex]{pic cs:tar1c3s}) rectangle ([yshift=2.2ex]{pic cs:tar1c3e});
-          \draw<19-  >[iter] ([yshift=-1.1ex]{pic cs:tar2c1s}) rectangle ([yshift=2.2ex]{pic cs:tar2c1e});
-          \draw<23-  >[iter] ([yshift=-1.1ex]{pic cs:tar2c2s}) rectangle ([yshift=2.2ex]{pic cs:tar2c2e});
+          \draw< 8-17>[iter] ([yshift=-1.1ex]{pic cs:tar1c1s}) rectangle ([yshift=2.2ex]{pic cs:tar1c1e});
+          \draw<12-21>[iter] ([yshift=-1.1ex]{pic cs:tar1c2s}) rectangle ([yshift=2.2ex]{pic cs:tar1c2e});
+          \draw<16-  >[iter] ([yshift=-1.1ex]{pic cs:tar1c3s}) rectangle ([yshift=2.2ex]{pic cs:tar1c3e});
+          \draw<18-  >[iter] ([yshift=-1.1ex]{pic cs:tar2c1s}) rectangle ([yshift=2.2ex]{pic cs:tar2c1e});
+          \draw<22-  >[iter] ([yshift=-1.1ex]{pic cs:tar2c2s}) rectangle ([yshift=2.2ex]{pic cs:tar2c2e});
         \end{tikzpicture}
     \end{column}
   \end{columns}
 \end{frame}
 
+
 \begin{frame}
   \frametitle{No Random Access Algorithm}
 
-  \begin{columns}[c]
-     \begin{column}{.4\textwidth}
-      \begin{enumerate}
-        \item<2-> \emph{Sorted Access} to tries in any order
-        \vspace{0.1cm}
-        \item<3-> Keep track of all seen counts
-        \vspace{0.1cm}
-        \item<4-> Compute \emph{upper} and \emph{lower bounds} for each probability
-        \vspace{0.1cm}
-        \item<5-> Terminate when $k$ lower bounds greater than all other upper bounds have been found
-      \end{enumerate}
-     \end{column}
-     \begin{column}{.6\textwidth}
-     \end{column}
-  \end{columns}
-\end{frame}
-
-\begin{frame}
-  \frametitle{Comparison}
-
-  TODO
-\end{frame}
-
-\begin{frame}
-  \frametitle{Evaluation}
-
-  TODO
+  \large
+  \begin{enumerate}
+    \item<2-> \emph{Sorted Access} to lists in any order
+    \vspace{0.3cm}
+    \item<3-> Keep track of all seen counts
+    \vspace{0.3cm}
+    \item<4-> Compute \emph{upper} and \emph{lower bounds} for each probability
+    \vspace{0.3cm}
+    \item<5-> Terminate when $k$ lower bounds greater than all other upper bounds have been found
+  \end{enumerate}
 \end{frame}
 
 
 % ==============================================================================
-\appendix
-\begin{frame}[plain]
-  \frametitle{So long, and thanks for all the fish}
-\end{frame}
-
 \section{References}
 \subsection{}
+
 \begin{frame}[allowframebreaks]
   \frametitle{References}
 

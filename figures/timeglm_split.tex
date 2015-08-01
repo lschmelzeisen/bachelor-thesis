@@ -11,45 +11,49 @@
   xlabel = {$n$-gram length},
   xtick = {1, ..., 8},
   ylabel = {Calcluation time [$\mu s$]},
+  yticklabel pos = right,
+  ymode = log,
+  log ticks with fixed point,
+  %yticklabel pos = right,
   minor y tick num = 4,
   grid = major,
-  legend entries = {{Rec-MKN}, {MKN}},
-  legend pos = north west,
+  legend entries = {{GLM-weights}, {GLM-remaining}},
+  legend pos = south east,
   width = \textwidth,
 ]
 
-% Rec-MKN
+% GLM-weights
 \addplot+[
   error bars/.cd,
   y dir = both,
   y explicit,
 ] table [y error = us_error] {
-  n  us      us_error
-  1   1.076   0.688
-  2   3.731   8.067
-  3   7.731   2.057
-  4  11.068   3.319
-  5  13.591  18.671
-  6  15.903  14.791
-  7  17.739   6.569
-  8  19.446   9.237
+  n  us        us_error
+  1     0.271    0.264
+  2     4.659    8.199
+  3    10.904    2.241
+  4    28.258   27.442
+  5    65.981   21.772
+  6   160.189   51.710
+  7   445.098  923.704
+  8  1513.286  192.037
 };
 
-% MKN
+% GLM-remaining
 \addplot+[
   error bars/.cd,
   y dir = both,
   y explicit,
 ] table [y error = us_error] {
-  n  us      us_error
-  1   1.011   0.689
-  2   4.306   1.417
-  3   8.081  16.265
-  4  11.374   3.580
-  5  12.666   4.362
-  6  14.117  12.424
-  7  15.302   6.468
-  8  16.963  11.086
+  n  us        us_error
+  1     0.936    0.494
+  2     2.815    1.151
+  3     6.599    8.195
+  4    14.907    4.238
+  5    29.901   18.446
+  6    54.152   35.138
+  7    93.452  291.793
+  8   139.598   99.582
 };
 
 \end{axis}

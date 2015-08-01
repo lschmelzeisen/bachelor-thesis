@@ -1,0 +1,476 @@
+\documentclass{standalone}
+\usepackage[dvipsnames,svgnames,x11names]{xcolor}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usetikzlibrary{pgfplots.statistics}
+\pgfplotsset{compat = 1.12}
+\usepackage{../thesismath}
+\begin{document}
+\begin{tikzpicture}[baseline]
+
+\pgfplotscreateplotcyclelist{recglm_glm_wsa}{%
+  blue,  mark size=1.25, mark=square,\\%
+  red,   mark size=1.25, mark=square,\\%
+  black, mark size=1.25, mark=square,\\%
+}
+
+\pgfplotsset{
+  legend style = {
+    draw = none,
+    legend image code/.code = {
+      \draw[only marks]
+        plot coordinates {
+          (0.3cm,0cm)
+        };
+      \node at (0.15cm, 0cm) {};
+    },
+  },
+  boxplot/draw/average/.code = {
+    %\draw[dashed, /pgfplots/boxplot/every average/.try]
+    %  (boxplot box cs:\pgfplotsboxplotvalue{average},0)
+    %  --
+    %  (boxplot box cs:\pgfplotsboxplotvalue{average},1)
+    %  ;
+  },
+}
+
+\begin{axis}[
+  xlabel = {$n$-gram length},
+  xtick = {1, ..., 8},
+  ylabel = {Calcluation time [$\mu s$]},
+  yticklabel pos = right,
+  ymode = log,
+  log ticks with fixed point,
+  boxplot/draw direction = y,
+  cycle list name = recglm_glm_wsa,
+  grid = major,
+  xmajorgrids = false,
+  legend entries = {{Rec-GLM}, {GLM}, {WSA}},
+  legend style = {
+    anchor=south,
+    at={(axis description cs: 0.5, 1.01)}
+  },
+  legend columns = 3,
+  width = \textwidth,
+]
+
+% ------------------------------------------------------------------------------
+
+% ngram-1-Fast-Generalized-Language-Model
+\addplot+[
+  boxplot prepared = {
+    draw position = 1,
+    box extend = 0.25,
+    lower whisker = 0.886,
+    lower quartile = 0.977,
+    median = 1.030,
+    upper quartile = 1.138,
+    upper whisker = 1.379,
+    average = 1.158,
+  },
+  xshift = -0.25cm,
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ngram-1-Weighted-Sum-Generalized-Language-Model
+\addplot+[
+  boxplot prepared = {
+    draw position = 1,
+    box extend = 0.25,
+    lower whisker = 0.967,
+    lower quartile = 1.098,
+    median = 1.146,
+    upper quartile = 1.226,
+    upper whisker = 1.418,
+    average = 1.207,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ngram-1-Weighted-Sum-Average
+\addplot+[
+  boxplot prepared = {
+    draw position = 1,
+    box extend = 0.25,
+    lower whisker = 0.499,
+    lower quartile = 0.563,
+    median = 0.604,
+    upper quartile = 0.689,
+    upper whisker = 0.878,
+    average = 0.667,
+  },
+  xshift = 0.25cm,
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ------------------------------------------------------------------------------
+
+% ngram-2-Fast-Generalized-Language-Model
+\addplot+[
+  boxplot prepared = {
+    draw position = 2,
+    box extend = 0.25,
+    lower whisker = 3.528,
+    lower quartile = 4.230,
+    median = 4.463,
+    upper quartile = 4.705,
+    upper whisker = 5.416,
+    average = 4.596,
+  },
+  xshift = -0.25cm,
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ngram-2-Weighted-Sum-Generalized-Language-Model
+\addplot+[
+  boxplot prepared = {
+    draw position = 2,
+    box extend = 0.25,
+    lower whisker = 5.432,
+    lower quartile = 6.742,
+    median = 7.159,
+    upper quartile = 7.629,
+    upper whisker = 8.954,
+    average = 7.475,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ngram-2-Weighted-Sum-Average
+\addplot+[
+  boxplot prepared = {
+    draw position = 2,
+    box extend = 0.25,
+    lower whisker = 4.669,
+    lower quartile = 5.818,
+    median = 6.182,
+    upper quartile = 6.606,
+    upper whisker = 7.788,
+    average = 6.548,
+  },
+  xshift = 0.25cm,
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ------------------------------------------------------------------------------
+
+% ngram-3-Fast-Generalized-Language-Model
+\addplot+[
+  boxplot prepared = {
+    draw position = 3,
+    box extend = 0.25,
+    lower whisker = 11.990,
+    lower quartile = 14.202,
+    median = 14.974,
+    upper quartile = 15.677,
+    upper whisker = 17.887,
+    average = 15.200,
+  },
+  xshift = -0.25cm,
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ngram-3-Weighted-Sum-Generalized-Language-Model
+\addplot+[
+  boxplot prepared = {
+    draw position = 3,
+    box extend = 0.25,
+    lower whisker = 13.591,
+    lower quartile = 16.268,
+    median = 17.176,
+    upper quartile = 18.053,
+    upper whisker = 20.728,
+    average = 17.503,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ngram-3-Weighted-Sum-Average
+\addplot+[
+  boxplot prepared = {
+    draw position = 3,
+    box extend = 0.25,
+    lower whisker = 10.234,
+    lower quartile = 11.898,
+    median = 12.427,
+    upper quartile = 13.008,
+    upper whisker = 14.673,
+    average = 12.810,
+  },
+  xshift = 0.25cm,
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ------------------------------------------------------------------------------
+
+% ngram-4-Fast-Generalized-Language-Model
+\addplot+[
+  boxplot prepared = {
+    draw position = 4,
+    box extend = 0.25,
+    lower whisker = 32.142,
+    lower quartile = 45.684,
+    median = 51.305,
+    upper quartile = 54.749,
+    upper whisker = 68.338,
+    average = 51.656,
+  },
+  xshift = -0.25cm,
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ngram-4-Weighted-Sum-Generalized-Language-Model
+\addplot+[
+  boxplot prepared = {
+    draw position = 4,
+    box extend = 0.25,
+    lower whisker = 26.132,
+    lower quartile = 37.833,
+    median = 42.526,
+    upper quartile = 45.800,
+    upper whisker = 57.742,
+    average = 43.166,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ngram-4-Weighted-Sum-Average
+\addplot+[
+  boxplot prepared = {
+    draw position = 4,
+    box extend = 0.25,
+    lower whisker = 22.879,
+    lower quartile = 26.376,
+    median = 27.410,
+    upper quartile = 28.738,
+    upper whisker = 32.279,
+    average = 28.359,
+  },
+  xshift = 0.25cm,
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ------------------------------------------------------------------------------
+
+% ngram-5-Fast-Generalized-Language-Model
+\addplot+[
+  boxplot prepared = {
+    draw position = 5,
+    box extend = 0.25,
+    lower whisker = 123.586,
+    lower quartile = 176.243,
+    median = 194.149,
+    upper quartile = 215.771,
+    upper whisker = 274.831,
+    average = 208.875,
+  },
+  xshift = -0.25cm,
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ngram-5-Weighted-Sum-Generalized-Language-Model
+\addplot+[
+  boxplot prepared = {
+    draw position = 5,
+    box extend = 0.25,
+    lower whisker = 57.479,
+    lower quartile = 85.049,
+    median = 93.283,
+    upper quartile = 104.396,
+    upper whisker = 133.392,
+    average = 95.882,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ngram-5-Weighted-Sum-Average
+\addplot+[
+  boxplot prepared = {
+    draw position = 5,
+    box extend = 0.25,
+    lower whisker = 49.486,
+    lower quartile = 56.846,
+    median = 59.013,
+    upper quartile = 62.234,
+    upper whisker = 70.316,
+    average = 60.901,
+  },
+  xshift = 0.25cm,
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ------------------------------------------------------------------------------
+
+% ngram-6-Fast-Generalized-Language-Model
+\addplot+[
+  boxplot prepared = {
+    draw position = 6,
+    box extend = 0.25,
+    lower whisker = 634.356,
+    lower quartile = 864.441,
+    median = 935.081,
+    upper quartile = 1022.439,
+    upper whisker = 1259.275,
+    average = 1085.126,
+  },
+  xshift = -0.25cm,
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ngram-6-Weighted-Sum-Generalized-Language-Model
+\addplot+[
+  boxplot prepared = {
+    draw position = 6,
+    box extend = 0.25,
+    lower whisker = 140.713,
+    lower quartile = 188.745,
+    median = 206.247,
+    upper quartile = 230.087,
+    upper whisker = 292.096,
+    average = 214.342,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ngram-6-Weighted-Sum-Average
+\addplot+[
+  boxplot prepared = {
+    draw position = 6,
+    box extend = 0.25,
+    lower whisker = 112.329,
+    lower quartile = 127.448,
+    median = 131.854,
+    upper quartile = 138.348,
+    upper whisker = 154.696,
+    average = 135.130,
+  },
+  xshift = 0.25cm,
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ------------------------------------------------------------------------------
+
+% ngram-7-Fast-Generalized-Language-Model
+\addplot+[
+  boxplot prepared = {
+    draw position = 7,
+    box extend = 0.25,
+    lower whisker = 4144.340,
+    lower quartile = 5337.246,
+    median = 5703.376,
+    upper quartile = 6141.529,
+    upper whisker = 7346.732,
+    average = 5814.210,
+  },
+  xshift = -0.25cm,
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ngram-7-Weighted-Sum-Generalized-Language-Model
+\addplot+[
+  boxplot prepared = {
+    draw position = 7,
+    box extend = 0.25,
+    lower whisker = 371.056,
+    lower quartile = 470.873,
+    median = 505.111,
+    upper quartile = 549.414,
+    upper whisker = 667.226,
+    average = 538.550,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ngram-7-Weighted-Sum-Average
+\addplot+[
+  boxplot prepared = {
+    draw position = 7,
+    box extend = 0.25,
+    lower whisker = 253.643,
+    lower quartile = 278.911,
+    median = 289.170,
+    upper quartile = 305.678,
+    upper whisker = 345.819,
+    average = 296.816,
+  },
+  xshift = 0.25cm,
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ------------------------------------------------------------------------------
+
+% ngram-8-Fast-Generalized-Language-Model
+\addplot+[
+  boxplot prepared = {
+    draw position = 8,
+    box extend = 0.25,
+    lower whisker = 31374.542,
+    lower quartile = 39013.754,
+    median = 41361.691,
+    upper quartile = 44166.572,
+    upper whisker = 51890.229,
+    average = 42025.650,
+  },
+  xshift = -0.25cm,
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ngram-8-Weighted-Sum-Generalized-Language-Model
+\addplot+[
+  boxplot prepared = {
+    draw position = 8,
+    box extend = 0.25,
+    lower whisker = 1334.356,
+    lower quartile = 1565.650,
+    median = 1637.919,
+    upper quartile = 1720.993,
+    upper whisker = 1953.776,
+    average = 1652.884,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ngram-8-Weighted-Sum-Average
+\addplot+[
+  boxplot prepared = {
+    draw position = 8,
+    box extend = 0.25,
+    lower whisker = 528.284,
+    lower quartile = 584.397,
+    median = 602.822,
+    upper quartile = 627.666,
+    upper whisker = 692.564,
+    average = 618.084,
+  },
+  xshift = 0.25cm,
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+\end{axis}
+
+\end{tikzpicture}
+\end{document}

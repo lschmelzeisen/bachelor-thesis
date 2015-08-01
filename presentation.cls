@@ -114,6 +114,9 @@
   citecolor = Maroon,
 }
 
+\definecolor{Pro color}{RGB}{5, 160, 5}
+\definecolor{Contra color}{RGB}{160, 5, 5}
+
 % Number sections in toc
 \setbeamertemplate{section in toc}[sections numbered]
 

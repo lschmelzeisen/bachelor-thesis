@@ -16,14 +16,18 @@ This is in contrast to simpler solutions, like selecting the best matching word
 from a list of previously entered ones in a word processing software.
 
 \todo{For more benefits and citations read \url{http://trace.wisc.edu/docs/wordprediction2001/}.}
-Word prediction has many benefits.
-Most obviously it may speed up text entry \parencite{Trnka2007}.
-Furthermore it may be of assistance to users with spelling disorders
-\parencite{Newell1992}.
+Word prediction has many benefits that become evident by its recent adoption
+in many smartphone keyboards\footnote{For example the SwiftKey
+(\url{http://swiftkey.com}) or Swype (\url{http://www.swype.com}) keyboard
+applications (both visited on Aug.~1,~2015).}.
+Its most obvious utilization is to speed up text entry, where it is most
+beneficial to slow typists, or typists on a slow medium \parencite{Trnka2007}.
+Furthermore word prediction has been shown to reduce spelling or grammar
+mistakes for users with spelling disorders \parencite{Newell1992}.
 But it may also be of used as a method to start computing answers to a user
 query that they have not even finished typing \noref.
 
-Today word prediction is a part of various software systems.
+Nowadays word prediction is a part of various software systems.
 Although word prediction has been primarily used to augment the communication of
 users with a difficulty to express themselves verbally
 \parencite{Swiffin1987,Trnka2011}, the benefits of a strong word prediction
@@ -56,8 +60,7 @@ We subsume next word prediction with or without a prefix under the title of
 \emph{prefix queries}, with a possibly empty prefix.
 We solve this task by finding the $k$ words $w$ in the vocabulary $\Vocab$, the
 set of all words, that maximize the probability $\Prob{w}{h}$.
-That probability models the likelihood that the word $w$ follows the history
-$h$.
+That probability models the likelihood of a word $w$ following the history $h$.
 $\Argmax*[k]$ is a helper used to model the $k$ words that maximize the
 probability and an extension to the conventional $\Argmax$ function:
 \begin{subequations}
@@ -69,7 +72,7 @@ probability and an extension to the conventional $\Argmax$ function:
 \end{subequations}
 
 The quality of predictions directly correlates with the aptitude of the chosen
-probabilities $\Prob{w}{h}$.
+probability measure for $\Prob{w}{h}$.
 Finding good ways to estimate these probabilities is the art of
 \emph{statistical language models} (\cref{sec:introduction-langmodels}).
 
@@ -88,7 +91,17 @@ They however are not applicable to the problem of predicting only the next
 word, and at least \textcite{Bickel2005} still employ the na\"{\i}ve method of
 querying all known words to find the next word in a multi-word prediction.
 
-This thesis concerns itself with improving the query time of prefix queries.
+This thesis concerns itself with reducing the necessary query time of prefix
+queries.
+Fast word prediction is desirable because to help a user reduce keystrokes,
+predictions must be available to the user as soon as each keystroke is
+performed.
+But the ability to calculate word prediction in a manner faster than the reaction
+time of a human user might also important:
+for example in a client-server setting, where a central server has to calculate
+word prediction queries for a number of clients, the efficiency of the employed
+algorithm directly determines the necessary hardware of that server.
+
 To this end two independent optimizations will be presented:
 \begin{enumerate}
   \item We will show a novel way to rewrite the recursive definitions for
@@ -189,174 +202,23 @@ then sorting data sources on each predicate of that function
 % ------------------------------------------------------------------------------
 \section{Thesis Overview}
 
+This thesis is structured as follows:
 
-% ==============================================================================
-% ==============================================================================
-% ==============================================================================
-\clearpage
+\Cref{ch:review} will introduce the used notation and review the considered
+language models in this thesis: \emph{Modified Kneser-Ney Smoothing} and the
+\emph{Generalized Language Model}.
 
-\textbf{Old stuff only kept here for reference. Continue with next chapter.}
+In \cref{ch:weightedsum} will describe a novel approach of how the traditional,
+recursive definitions of these language models can be rewritten as weighted
+sums. \begin{draft}Additionally we will show that these language models are actually
+monotone scoring functions over occurrence counts.\end{draft}
 
-\begin{draft}
-\textcite{Bickel2005} actually does trivial argmax and calculates probabilities
-for all words in vocabulary repeatedly.
-\end{draft}
+Using this representation, \cref{ch:topkjoin} will discuss how top-$k$ joining
+techniques can be applied to the problem of next word prediction.
+Two widely used techniques will be analyzed: the \emph{Threshold Algorithm} and
+the {No Random Access Algorithm}.
 
-The \emph{noisy channel model} is a commonly applied concept in natural language
-processing.
-As first described by \textcite{Shannon1948}, it consists of a transmitter that
-tries to pass a message over a channel to a receiver.
-The channel is called noisy, because it may distort the message in any way.
-The task is then to reconstruct the original message, from the recieved,
-distorted one.
+In \cref{ch:evaluation} we will evaluate the findings of this thesis and
+research how well they perform in practice.
 
-This metaphor has many applications, such as spelling correction
-\parencite{JurafskyMartin2009,Manning2008,Kernighan1990,Mays1991},
-%          \------------- non-word-errors ------------/    \- real-word-erros
-word prediction \parencite{Bickel2005}, part-of-speech tagging
-\parencite{Church1988}, machine translation \parencite{Brown1990}, speech
-recognition or text compression.
-\todo{Newer citations!}
-% JurafskyMartin2009: Chapter 5: Spelling Correction
-%                     Chapter 9: Speech Recognition!
-
-This thesis will present a novel approach to solve noisy channel type queries.
-The basic idea is to formulate the query as the argmax of a monotone scoring
-function, and then to find the solution using \emph{top-$k$ joining techniques}.
-This approach will exemplary be showcased by applying it to the problem of
-\emph{next word prediction}.
-
-% ------------------------------------------------------------------------------
-\section{Noisy Channel Model}
-
-\Rene[noline]{Probability space unclear. Most of the time not exactly stated
-when talking about Noisy Channel Theorem. Maybe not bring it up in bachelor
-thesis.}
-Formalized, the task of the noisy channel model is to find the dispatched
-message~$m$, which in our context is the sequence of words $s$ in a
-langauge~$\Language$ that is most likely to be the source of the received,
-distorted observation~$o$:
-\begin{align}
-  \label{eq:noisychannel}
-  m &= \Argmax{s \in \Language} \Prob{s}{o} \\
-  \intertext{Commonly this noisy channel equation is rewritten using Bayes'
-    theorem to:}
-  \label{eq:noisychannelbayes}
-  \begin{split}
-    m &= \Argmax{s \in \Language} \frac{\Prob{o}{s} \cdot \Prob{s}}{\Prob{o}}
-       = \Argmax{s \in \Language} \Prob{o}{s} \cdot \Prob{s}
-  \end{split}
-\end{align}
-With the observation likelihood~$\Prob{o}{s}$ and the prior
-probability~$\Prob{s}$.
-Omitting the denominator~$\Prob{o}$ is valid because it is a constant that does
-not depend on the argument~$s$.
-Most commonly the observation likelihood is some domain specific probability
-distribution $\Prob[\text{Domain}]{o}{s}$.
-For the prior probability, \emph{statistical language model} distributions
-$\Prob[\text{LM}]{s}$ are used.
-%They assign a probability $\Prob[\text{LM}]{s}$ to a sequence of words
-%$s$ by means of a probability distribution, created through statistical analysis
-%of text corpora.
-Thus the noisy channel model is a natural combintion of domain knowledge with
-language information.
-
-For example, to translate French into English, \textcite{Brown1990} defined a
-probability distribution $\Prob[\text{Translate}]{e}{f}$, that would give the
-probability for each English sentence $e$ to be the result of translating
-the French sentence $f$ into English.
-To obtain the most likely translation, the $e$ that maximizes that probability
-has to be found.
-With applying Bayes' theorem they combine their distribution with language
-models and arrive at
-$\Argmax{e} \Prob[\text{Translate}]{f}{e} \cdot \Prob[\text{LM}]{e}$, which is
-just \cref{eq:noisychannelbayes}.
-
-% ------------------------------------------------------------------------------
-\section{Next Word Prediction}
-
-In this thesis the problem of \emph{next word prediction} will be researched.
-For a sequence of words $w_1 \ldots w_n = w_1^{n}$, the task is to find the last word
-$w_n$, given only the first $n-1$ words $w_1^{n-1}$.
-This is done by finding the $w$ that maximizes the probability to
-occur after $w_1^{n-1}$ \parencite{Bickel2005}:
-\begin{equation}
-  \label{eq:nwp}
-  w_n = \Argmax{w \in \Vocab} \Prob{w}{w_1^{n-1}}
-\end{equation}
-With vocabulary $\Vocab$, the set of all words.
-
-We can see that next word prediction is an instance of the noisy channel model,
-as specified in \cref{eq:noisychannel}.
-
-As there is no domain knowledge to apply, one way to solve next word prediction
-is to directly calculate probabilities $\Prob{w}{w_1^{n-1}}$ by using
-\emph{statistical language models} \parencite{Bickel2005}.
-
-Next word prediction techniques are often evaluated by measuring \emph{next
-keystroke savings} \parencite{Bickel2005}\todo{More citations!}.
-\begin{draft}Next Keystroke savings are: What actually?\end{draft}
-As such, we would like our implementation to also support the computation of
-next keystroke savings.
-%A metric closely related to next word prediction is \emph{next keystroke
-%savings}.
-%\Lukas[inline]{How do we define NKSS? How do I justify it's use in this thesis?
-%I need NKSS to justify my choice of completion-tries as data structure :).}
-
-% ------------------------------------------------------------------------------
-\section{Top-\emph{k} Join Queries}
-
-
-
-% ------------------------------------------------------------------------------
-\section{Statistical Language Models}
-
-
-
-% ------------------------------------------------------------------------------
-\section{Thesis' contribution}
-
-\todo[noline]{Wouldn't this be better as an abstract? How do I introduce here
-instead?}
-The concern of this thesis is solving noisy channel type queries that are based
-on statistical language model probabilities.
-Our novel approach is to formulate language models as weighted sum functions on
-occurrence counts.
-As these weighted sum functions are monotone, we can then employ various
-top-$k$ joining techniques, to efficiently find those arguments that maximize
-the noisy channel's probability.
-This approach can be used for all noisy channel type queries, that can be
-expressed as monotone scoring functions.
-We will present our method by implementing next word prediction with it.
-
-In \cref{ch:relatedwork} an overview of related work will be given.
-\Cref{ch:review} will review the two types of language models, that are used in
-this thesis: \emph{Modified Kneser-Ney Smoothing} and the \emph{Generalized
-Language Model}.
-We will then express these language models as weighted sums in
-\cref{ch:weightedsum}.
-Using this representation as monotone scoring functions, top-$k$ joining
-techniques and their implementations will be discussed in \cref{ch:topkjoin}.
-In \cref{ch:evaluation} the given approach will be evaluated using empirical
-results.
-\Cref{ch:conclusion} concludes.
-
-\begin{draft}
-\begin{displayquote}[\textcite{JurafskyMartin2009}]
-Because in practice most implementations of Viterbi use beam
-search, some of the literature uses the term beam search or time-synchronous beam
-search instead of Viterbi.
-\end{displayquote}
-\end{draft}
-
-The established way to solve noisy channel type queries is to use
-\emph{Viterbi-} or \emph{beam-search-algorithms}
-\parencite{JurafskyMartin2009,Bickel2005}.
-These algorithms are based on following most promising looking paths and
-pruning the search space with some heuristic.
-Trough this pruning, remarkable runtime performance can be achieved, however it
-has other undesirable effects, for instance these algorithms are not guaranteed
-to always find (optimal) solutions \parencite{Bickel2005}.
-
-This thesis' approach using top-$k$ joining does not have these drawbacks, it
-will always find the best solution(s).
+Finally, \cref{ch:conclusion} will conclude the thesis and discuss future work.
