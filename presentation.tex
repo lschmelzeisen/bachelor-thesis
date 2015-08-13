@@ -21,7 +21,15 @@
 \usepackage{tikz}
 \usepackage{pgfplots}
 \pgfplotsset{compat = 1.12}
-\usetikzlibrary{tikzmark, positioning}
+\usetikzlibrary{patterns}
+\usetikzlibrary{tikzmark}
+\usetikzlibrary{positioning}
+\usetikzlibrary{pgfplots.statistics}
+\usepackage[
+  group-separator={,},
+  exponent-product=\cdot,
+  binary-units = true,
+]{siunitx}
 
 % Absolute text positioning
 \usepackage{textpos}
@@ -59,12 +67,14 @@
   \frametitle{What is Next Word Prediction?}
 
   \begin{center}
+    \fbox{\includegraphics[width=0.9\textwidth]{figures/smartphone}}
+
+    \vspace{0.6cm}
+
     \LARGE
-    \only<1>{Demo}
-    \only<2->{
-      Guess the \emph{next intended} word
-      \\[0.2cm]
-      from words already entered}
+    Guess the \emph{next intended} word
+    \\[0.2cm]
+    from words already entered
   \end{center}
 \end{frame}
 
@@ -84,12 +94,32 @@
   \end{itemize}
 \end{frame}
 
-\begin{frame}
-  \frametitle{Goal}
+\begin{frame}[t]
+  \frametitle{Thesis Goal}
 
   \begin{center}
-    \LARGE
-    Be fast!
+    \Large
+    Word prediction usually optimized for\\speed \textbf{or} quality
+
+    \vspace{3.3cm}
+
+    \onslide<2->{
+      This thesis optimizes for speed while\\maintaining best quality!
+    }
+
+    \vspace{-4.1cm}
+    \begin{tikzpicture}[
+      remember picture,
+      overlay,
+    ]
+      \draw [<->, thick]
+        (-4.5,0cm) node [below, align = center, yshift = -0.25cm] {Calculation\\Time}
+        --
+        ( 4.5,0cm) node [below, align = center, yshift = -0.25cm] {Prediction\\Quality};
+
+      \draw [thick]
+        (0,0.2cm) -- (0,-0.2cm) node [below, align = center, yshift = -0.15cm] {\LARGE\textbf{?}\\[-1ex]\large$\longleftrightarrow$};
+    \end{tikzpicture}
   \end{center}
 \end{frame}
 
@@ -99,7 +129,7 @@
   \LARGE
   \begin{equation*}
     \only<1-3>{\phantom{_{p}}\NWP{\tikzmark{hist1_fst}h} = \Argmax{\mathclap{\substack{w \in \Vocab\\\phantom{p \: \text{prefix of} \: w}}}}\tikzmark{vocab_fst} \Prob{\tikzmark{w_fst}w}{\tikzmark{hist2_fst}h}}
-    \only<4- >{\NWP[\tikzmark{prefix}p]{\tikzmark{hist1_snd}h} = \Argmax{\mathclap{\substack{w \in \Vocab,\\p \: \text{prefix of} \: w}}}\tikzmark{vocab_snd} \Prob{\tikzmark{w_snd}w}{\tikzmark{hist2_snd}h}}
+    %\only<4- >{\NWP[\tikzmark{prefix}p]{\tikzmark{hist1_snd}h} = \Argmax{\mathclap{\substack{w \in \Vocab,\\p \: \text{prefix of} \: w}}}\tikzmark{vocab_snd} \Prob{\tikzmark{w_snd}w}{\tikzmark{hist2_snd}h}}
   \end{equation*}
 
   \large
@@ -113,18 +143,19 @@
       (hist_expl) at (2,3.5cm) {history of entered words};
     \node<3->[expl]
       (vocab_expl) at (8.5,-1.5cm) {for each word in vocabulary};
-    \node<4->[expl, align=center]
-      (prefix_expl) at (2.5,-1cm) {entered prefix of\\intended word};
+%     \node<4->[expl, align=center]
+%       (prefix_expl) at (2.5,-1cm) {entered prefix of\\intended word};
     \LARGE % restore equation size so font relative units are correct
     \draw<2-3>[arrow] (hist_expl.south)   to [out=270, in=100] ([xshift= 0.2em, yshift= 2.0ex]{pic cs:hist1_fst});
     \draw<2-3>[arrow] (hist_expl.east)    to [out=  0, in=100] ([xshift= 0.2em, yshift= 2.0ex]{pic cs:hist2_fst});
-    \draw<4- >[arrow] (hist_expl.south)   to [out=270, in=100] ([xshift= 0.2em, yshift= 2.0ex]{pic cs:hist1_snd});
-    \draw<4- >[arrow] (hist_expl.east)    to [out=  0, in=100] ([xshift= 0.2em, yshift= 2.0ex]{pic cs:hist2_snd});
+%     \draw<4- >[arrow] (hist_expl.south)   to [out=270, in=100] ([xshift= 0.2em, yshift= 2.0ex]{pic cs:hist1_snd});
+%     \draw<4- >[arrow] (hist_expl.east)    to [out=  0, in=100] ([xshift= 0.2em, yshift= 2.0ex]{pic cs:hist2_snd});
     \draw<3  >[arrow] (vocab_expl.north)  to [out= 90, in=  0] ([xshift=-0.7em, yshift=-1.3ex]{pic cs:vocab_fst});
     \draw<3  >[arrow] (vocab_expl.north)  to [out= 90, in=270] ([xshift= 0.4em, yshift=-0.6ex]{pic cs:w_fst});
-    \draw<4- >[arrow] (vocab_expl.north)  to [out= 90, in=  0] ([xshift=-0.7em, yshift=-1.3ex]{pic cs:vocab_snd});
-    \draw<4- >[arrow] (vocab_expl.north)  to [out= 90, in=270] ([xshift= 0.4em, yshift=-0.6ex]{pic cs:w_snd});
-    \draw<4- >[arrow] (prefix_expl.north) to [out= 90, in=270] ([xshift= 0.2em, yshift=-0.9ex]{pic cs:prefix});
+%     \draw<4- >[arrow] (vocab_expl.north)  to [out= 90, in=  0] ([xshift=-0.7em, yshift=-1.3ex]{pic cs:vocab_snd});
+%     \draw<4- >[arrow] (vocab_expl.north)  to [out= 90, in=270] ([xshift= 0.4em, yshift=-0.6ex]{pic cs:w_snd});
+%     \draw<4- >[arrow] (prefix_expl.north) to [out= 90, in=270] ([xshift= 0.2em, yshift=-0.9ex]{pic cs:prefix});
+%     \draw<4- >[arrow] (prefix_expl.north) to [out= 90, in=180] ([xshift=-5.2em, yshift=-3.0ex]{pic cs:w_snd});
   \end{tikzpicture}
 \end{frame}
 
@@ -172,10 +203,10 @@
       \ProbMKN{w_n}{w_1^{n-1}} &=
         \frac{\DiscountedCount(w_1^n) + \gamma(w_1^{n-1}) \tikzmark{recmkn_high}\ProbMKN*{w_n}{w_2^{n-1}}}
              {\Count(w_1^{n-1} \Skp)} \\
-      \intertext{\vspace{0.4cm}}
-      \ProbMKN*{w_n}{w_1^{n-1}} &=
-        \frac{\DiscountedCount*(\WSkp w_1^n) + \gamma(w_1^{n-1}) \tikzmark{recmkn_low}\ProbMKN*{w_n}{w_2^{n-1}}}
-           {\ContCountIp(\WSkp w_1^{n-1} \WSkp)}
+      %\intertext{\vspace{0.4cm}}
+      %\ProbMKN*{w_n}{w_1^{n-1}} &=
+      %  \frac{\DiscountedCount*(\WSkp w_1^n) + \gamma(w_1^{n-1}) \tikzmark{recmkn_low}\ProbMKN*{w_n}{w_2^{n-1}}}
+      %     {\ContCountIp(\WSkp w_1^{n-1} \WSkp)}
     \end{align*}
 
     \begin{tikzpicture}[
@@ -184,42 +215,42 @@
     ]
       \draw<2>[Maroon, ultra thick] (pic cs:recmkn_high) ellipse
         [xshift=4em, yshift=0.6ex, x radius=4.5em, y radius=3ex];
-      \draw<2>[Maroon, ultra thick] (pic cs:recmkn_low)  ellipse
-        [xshift=4em, yshift=0.6ex, x radius=4.5em, y radius=3ex];
+      %\draw<2>[Maroon, ultra thick] (pic cs:recmkn_low)  ellipse
+      %  [xshift=4em, yshift=0.6ex, x radius=4.5em, y radius=3ex];
     \end{tikzpicture}
   }
 
-  \only<3>{
-    \begin{center}
-      \begin{tikzpicture}
-        \tikzset{
-          every node/.style = {scale = 0.7},
-          state/.style  = {draw, circle, align = center, text centered, text width = 4.2em},
-          invis/.style  = {text width = 4.2em},
-          order/.style  = {align = center, text centered, text width = 4em, text = Maroon},
-        }
-
-        \begin{scope}[node distance = 7em]
-          \node [state] (highest)                    {$w_1 \: w_2 \: w_3$};
-          \node [state] (lower1)  [below of=highest] {$w_2 \: w_3$};
-          \node [state] (lower2)  [below of=lower1]  {$w_3$};
-          \node [state] (lowest)  [below of=lower2]  {$\EmptyNGram$};
-        \end{scope}
-
-        \begin{scope}[node distance = 5.5em]
-          \node [order] [right of=highest] {$\ProbMKN {w_4}{w_1 w_2 w_3}$};
-          \node [order] [right of=lower1]  {$\ProbMKN*{w_4}{w_2 w_3}$};
-          \node [order] [right of=lower2]  {$\ProbMKN*{w_4}{w_3}$};
-          \node [order] [right of=lowest]  {$\ProbMKN*{w_4}$};
-        \end{scope}
-
-        \path[->, >=latex, thick]
-          (highest) edge (lower1)
-          (lower1)  edge (lower2)
-          (lower2)  edge (lowest);
-      \end{tikzpicture}
-    \end{center}
-  }
+  %\only<3>{
+  %  \begin{center}
+  %    \begin{tikzpicture}
+  %      \tikzset{
+  %        every node/.style = {scale = 0.7},
+  %        state/.style  = {draw, circle, align = center, text centered, text width = 4.2em},
+  %        invis/.style  = {text width = 4.2em},
+  %        order/.style  = {align = center, text centered, text width = 4em, text = Maroon},
+  %      }
+  %
+  %      \begin{scope}[node distance = 7em]
+  %        \node [state] (highest)                    {$w_1 \: w_2 \: w_3$};
+  %        \node [state] (lower1)  [below of=highest] {$w_2 \: w_3$};
+  %        \node [state] (lower2)  [below of=lower1]  {$w_3$};
+  %        \node [state] (lowest)  [below of=lower2]  {$\EmptyNGram$};
+  %      \end{scope}
+  %
+  %      \begin{scope}[node distance = 5.5em]
+  %        \node [order] [right of=highest] {$\ProbMKN {w_4}{w_1 w_2 w_3}$};
+  %        \node [order] [right of=lower1]  {$\ProbMKN*{w_4}{w_2 w_3}$};
+  %        \node [order] [right of=lower2]  {$\ProbMKN*{w_4}{w_3}$};
+  %        \node [order] [right of=lowest]  {$\ProbMKN*{w_4}$};
+  %      \end{scope}
+  %
+  %      \path[->, >=latex, thick]
+  %        (highest) edge (lower1)
+  %        (lower1)  edge (lower2)
+  %        (lower2)  edge (lowest);
+  %    \end{tikzpicture}
+  %  \end{center}
+  %}
 \end{frame}
 
 \begin{frame}
@@ -232,12 +263,12 @@
         \frac{\DiscountedCount(w_1^n) + \frac{\gamma(w_1^{n-1})}{\NumSkpOp{w_1^{n-1}}}
                                         \tikzmark{recglm_high}\sum_{j=1}^{\NumSkpOp{w_1^{n-1}}} \ProbGLM*{w_n}{\SkpOp[j]{w_1^{n-1}}}}
             {\Count(w_1^{n-1} \Skp)} \\
-      \intertext{\vspace{0.4cm}}
-      \hspace{-1.5em}
-      \ProbGLM*{w_n}{w_1^{n-1}} &=
-      \frac{\DiscountedCount*(\WSkp w_1^n) + \frac{\gamma(w_1^{n-1})}{\NumSkpOp{w_1^{n-1}}}
-                                              \tikzmark{recglm_low}\sum_{j=1}^{\NumSkpOp{w_1^{n-1}}} \ProbGLM*{w_n}{\SkpOp[j]{w_1^{n-1}}}}
-          {\ContCountIp(\WSkp w_1^{n-1} \WSkp)}
+      %\intertext{\vspace{0.4cm}}
+      %\hspace{-1.5em}
+      %\ProbGLM*{w_n}{w_1^{n-1}} &=
+      %\frac{\DiscountedCount*(\WSkp w_1^n) + \frac{\gamma(w_1^{n-1})}{\NumSkpOp{w_1^{n-1}}}
+      %                                        \tikzmark{recglm_low}\sum_{j=1}^{\NumSkpOp{w_1^{n-1}}} \ProbGLM*{w_n}{\SkpOp[j]{w_1^{n-1}}}}
+      %    {\ContCountIp(\WSkp w_1^{n-1} \WSkp)}
     \end{align*}
 
     \begin{tikzpicture}[
@@ -246,61 +277,61 @@
     ]
       \draw<2>[Maroon, ultra thick] (pic cs:recglm_high) ellipse
         [xshift=6.7em, yshift=0.6ex, x radius=7.2em, y radius=4ex];
-      \draw<2>[Maroon, ultra thick] (pic cs:recglm_low)  ellipse
-        [xshift=6.7em, yshift=0.6ex, x radius=7.2em, y radius=4ex];
+      %\draw<2>[Maroon, ultra thick] (pic cs:recglm_low)  ellipse
+      %  [xshift=6.7em, yshift=0.6ex, x radius=7.2em, y radius=4ex];
       \end{tikzpicture}
   }
 
-  \only<3>{
-    \begin{center}
-      \begin{tikzpicture}
-        \tikzset{
-          every node/.style = {scale = 0.8},
-          state/.style  = {draw, circle, align = center, text centered, text width = 4.2em},
-          invis/.style  = {text width = 4.2em},
-          order/.style  = {align = center, text centered, text width = 4em, text = Maroon},
-        }
-
-        \begin{scope}[node distance = 6.5em]
-          \node [state] (000)                  {$w_1 \: w_2 \: w_3$};
-          \node [invis] (000l) [left  of=000]  {};
-          \node [invis] (000r) [right of=000]  {};
-
-          \node [state] (001)  [below of=000l] {$w_1 \: w_2 \: \Skp$};
-          \node [state] (010)  [below of=000]  {$w_1 \: \Skp \: w_3$};
-          \node [state] (100)  [below of=000r] {$\Skp \: w_2 \: w_3$};
-
-          \node [state] (011)  [below of=001] {$w_1 \: \Skp \: \Skp$};
-          \node [state] (101)  [below of=010] {$\Skp \: w_2 \: \Skp$};
-          \node [state] (110)  [below of=100] {$\Skp \: \Skp \: w_3$};
-
-          \node [state] (111)  [below of=101] {$\Skp \: \Skp \: \Skp$};
-          \node [invis] (111l) [below of=011] {};
-          \node [invis] (111r) [below of=110] {};
-        \end{scope}
-
-        \begin{scope}[node distance = 5.5em]
-          \node [order] [right of=000] {$\ProbGLM {w_4}{w_1 w_2 w_3}$};
-        \end{scope}
-
-        \path[->, >=latex, thick]
-          (000) edge (001)
-          (000) edge (010)
-          (000) edge (100)
-
-          (001) edge (011)
-          (001) edge (101)
-          (010) edge (011)
-          (010) edge (110)
-          (100) edge (101)
-          (100) edge (110)
-
-          (011) edge (111)
-          (101) edge (111)
-          (110) edge (111);
-      \end{tikzpicture}
-    \end{center}
-  }
+  %\only<3>{
+  %  \begin{center}
+  %    \begin{tikzpicture}
+  %      \tikzset{
+  %        every node/.style = {scale = 0.8},
+  %        state/.style  = {draw, circle, align = center, text centered, text width = 4.2em},
+  %        invis/.style  = {text width = 4.2em},
+  %        order/.style  = {align = center, text centered, text width = 4em, text = Maroon},
+  %      }
+  %
+  %      \begin{scope}[node distance = 6.5em]
+  %        \node [state] (000)                  {$w_1 \: w_2 \: w_3$};
+  %        \node [invis] (000l) [left  of=000]  {};
+  %        \node [invis] (000r) [right of=000]  {};
+  %
+  %        \node [state] (001)  [below of=000l] {$w_1 \: w_2 \: \Skp$};
+  %        \node [state] (010)  [below of=000]  {$w_1 \: \Skp \: w_3$};
+  %        \node [state] (100)  [below of=000r] {$\Skp \: w_2 \: w_3$};
+  %
+  %        \node [state] (011)  [below of=001] {$w_1 \: \Skp \: \Skp$};
+  %        \node [state] (101)  [below of=010] {$\Skp \: w_2 \: \Skp$};
+  %        \node [state] (110)  [below of=100] {$\Skp \: \Skp \: w_3$};
+  %
+  %        \node [state] (111)  [below of=101] {$\Skp \: \Skp \: \Skp$};
+  %        \node [invis] (111l) [below of=011] {};
+  %        \node [invis] (111r) [below of=110] {};
+  %      \end{scope}
+  %
+  %      \begin{scope}[node distance = 5.5em]
+  %        \node [order] [right of=000] {$\ProbGLM {w_4}{w_1 w_2 w_3}$};
+  %      \end{scope}
+  %
+  %      \path[->, >=latex, thick]
+  %        (000) edge (001)
+  %        (000) edge (010)
+  %        (000) edge (100)
+  %
+  %        (001) edge (011)
+  %        (001) edge (101)
+  %        (010) edge (011)
+  %        (010) edge (110)
+  %        (100) edge (101)
+  %        (100) edge (110)
+  %
+  %        (011) edge (111)
+  %        (101) edge (111)
+  %        (110) edge (111);
+  %    \end{tikzpicture}
+  %  \end{center}
+  %}
 \end{frame}
 
 \iffalse
@@ -424,7 +455,7 @@
 
   \LARGE
   \begin{equation*}
-    \Prob{w}{h} = \sum_{i = 1}^{N} \tikzmark{sumweight}\SumWeight_i^h \; \tikzmark{sumarg}\SumArg_i^h(w)
+    \Prob{\tikzmark{argw}w}{\tikzmark{argh}h} = \sum_{i = 1}^{N} \tikzmark{sumweight}\SumWeight_i^h \; \tikzmark{sumarg}\SumArg_i^h(w)
   \end{equation*}
 
   \large
@@ -435,13 +466,37 @@
     arrow/.style = {Maroon, thick, ->, >=latex},
   ]
     \node<2->[expl]
-      (sumarg_expl) at (7.6,-1.2cm) {depends on argument $w$};
+      (sumarg_expl) at (7.6,4.0cm) {depends on argument $w$};
     \node<3->[expl]
-      (sumweight_expl) at (6.37,3.5cm) {independent of argument $w$};
+      (sumweight_expl) at (2.5,3.0cm) {independent of argument $w$};
+    \node<4->[expl]
+      (argw_expl) at (3.2,-1.7cm) {all words in vocabulary};
+    \node<5->[expl]
+      (argh_expl) at (7.2,-0.7cm) {user given, thus fixed};
     \LARGE % restore equation size so font relative units are correct
-    \draw<2->[arrow] (sumarg_expl.north)    to [out= 90, in=270] ([xshift= 1.1em, yshift=-0.9ex]{pic cs:sumarg});
-    \draw<3->[arrow] (sumweight_expl.south) to [out=270, in= 90] ([xshift=-0.9em, yshift= 2.2ex]{pic cs:sumarg});
+    \draw<2->[arrow] (sumarg_expl.south)   to [out=270, in= 90] ([xshift= 1.1em, yshift= 2.2ex]{pic cs:sumarg});
+    \draw<3->[arrow] (sumweight_expl.east) to [out=  0, in= 90] ([xshift= 0.4em, yshift= 2.2ex]{pic cs:sumweight});
+    \draw<4->[arrow] (argw_expl.north)     to [out= 90, in=270] ([xshift= 0.4em, yshift=-0.9ex]{pic cs:argw});
+    \draw<5->[arrow] (argh_expl.west)      to [out=180, in=270] ([xshift= 0.4em, yshift=-0.9ex]{pic cs:argh});
   \end{tikzpicture}
+\end{frame}
+
+\begin{frame}[plain]
+  \centering
+  \begin{minipage}{0.9\textwidth}
+    \centering
+    \only<1>{
+      \includestandalone{figures/presentation-time-mkn}}
+    \only<2>{
+      \includestandalone{figures/presentation-time-glm}}
+  \end{minipage}
+\end{frame}
+
+\begin{frame}[plain]
+  \centering
+  \begin{minipage}{0.9\textwidth}
+    \includestandalone{figures/presentation-weight-times}
+  \end{minipage}
 \end{frame}
 
 
@@ -527,14 +582,12 @@
     \end{itemize}}
 \end{frame}
 
-
-
 \newcommand*\Pro[1]{
   \item[\color{Pro color}\texttt{+}] \textcolor{Pro color}{#1}}
 \newcommand*\Contra[1]{
   \item[\color{Contra color}\texttt{-}] \textcolor{Contra color}{#1}}
 \newcommand*\Neutral[1]{
-  \item[\color{black}\textbullet] \textcolor{black}{#1}}
+  \item[\color{black}\texttt{0}] \textcolor{black}{#1}}
 
 \begin{frame}
   \frametitle{Comparison}
@@ -551,13 +604,18 @@
 
       \large
       \begin{itemize}
-        \onslide<2->{\Contra{Requires Sorted and Random Access}}
+        \Contra{Requires Sorted and Random Access}
         \vspace{0.3cm}
-        \onslide<3->{\Pro{Faster termination}}
+        \Pro{Faster}
         \vspace{0.3cm}
-        \onslide<4->{\Neutral{Needs to keep track of all seen words}}
-        \vspace{0.3cm}
-        \onslide<5->{\Pro{Stores at most $k$ probabilities}}
+        \Pro{Less Memory}
+%         \onslide<2->{\Contra{Requires Sorted and Random Access}}
+%         \vspace{0.3cm}
+%         \onslide<3->{\Pro{Faster termination}}
+%         \vspace{0.3cm}
+%         \onslide<4->{\Neutral{Needs to keep track of all seen words}}
+%         \vspace{0.3cm}
+%         \onslide<5->{\Pro{Stores at most $k$ probabilities}}
       \end{itemize}
     \end{column}
     \begin{column}{0.06\textwidth}\end{column}
@@ -570,13 +628,14 @@
 
       \large
       \begin{itemize}
-        \onslide<2->{\Pro{Only Sorted Access necessary}}
-        \vspace{0.3cm}
-        \onslide<3->{\Contra{Longer runtime}}
-        \vspace{0.3cm}
-        \onslide<4->{\Neutral{Needs to keep track of all seen words}}
-        \vspace{0.3cm}
-        \onslide<5->{\Contra{Stores all seen counts plus lower and upper bounds}}
+        \Pro{Only Sorted Access necessary}
+%         \onslide<2->{\Pro{Only Sorted Access necessary}}
+%         \vspace{0.3cm}
+%         \onslide<3->{\Contra{Longer runtime}}
+%         \vspace{0.3cm}
+%         \onslide<4->{\Neutral{Needs to keep track of all seen words}}
+%         \vspace{0.3cm}
+%         \onslide<5->{\Contra{Stores all seen counts plus lower and upper bounds}}
       \end{itemize}
     \end{column}
     \begin{column}{0.02\textwidth}\end{column}
@@ -615,17 +674,108 @@
     \vspace{0.2cm}
     \item<3-> Optimized data structure: \emph{Completion Trie}\\{\small\parencite{HsuOttaviano2013}}
       \begin{itemize}
-        \item Compact radix trie which stores sequence-score-pairs
+%         \item Compact radix trie which stores sequence-score-pairs
         \item Optimized for prefix-retrieval
-        \item Stores a minimum of edges, to achieve\\data compression and locality
-        \item Variable Byte Encoding
+        \vspace{0.1cm}
+        \item High data compression
+        %\item Stores a minimum of edges, to achieve\\data compression and locality
+        %\item Variable Byte Encoding
       \end{itemize}
   \end{itemize}
 \end{frame}
 
+\begin{frame}
+  \frametitle{Prediction Quality}
+
+  \centering
+  \begin{minipage}{0.8\textwidth}
+    \centering
+    \large
+    \tabulinesep=2mm
+    \begin{tabu}{ X[1.5,c] X[1,c] X[1,c] }
+      \tabucline[1pt]-
+      & \multicolumn{2}{c}{Keystroke Savings} \\
+      $n$-gram length & MKN & GLM \\
+      \tabucline[1pt]-
+
+      2 & \num{0.44} & \num{0.44} \\
+      3 & \num{0.50} & \num{0.50} \\
+      4 & \num{0.51} & \num{0.51} \\
+      5 & \num{0.51} & \num{0.52} \\
+    \end{tabu}
+  \end{minipage}
+\end{frame}
+
+\begin{frame}[plain]
+  \centering
+  \begin{minipage}{0.85\textwidth}
+    \centering
+    \includestandalone{figures/presentation-trie-size}
+  \end{minipage}
+\end{frame}
+
+\begin{frame}[plain]
+  \centering
+  \begin{minipage}{0.85\textwidth}
+    \centering
+    \only<1>{
+      \includestandalone{figures/presentation-comp-corpora-smpl}}
+    \only<2>{
+      \includestandalone{figures/presentation-comp-corpora-ta-nra}}
+  \end{minipage}
+\end{frame}
+
+\begin{frame}[plain]
+  \centering
+  \begin{minipage}{0.85\textwidth}
+    \centering
+    \includestandalone{figures/presentation-comp-nra-ta}
+  \end{minipage}
+\end{frame}
+
+
+% % ==============================================================================
+% \section{Evaluation}
+% \subsection{}
 
 % ==============================================================================
-\section{Evaluation}
+\section*{Conclusion}
+\subsection{}
+\begin{frame}
+  \frametitle{Conclusion}
+  \begin{itemize}
+    \large
+    \item Weighted Sum representation for probabilities
+      \begin{itemize}
+        \vspace{0.2cm}
+        \item Calculation equally fast for MKN, double as fast for GLM
+        \vspace{0.2cm}
+        \item Speeds up word prediction by 50\% (MKN) to 70\% (GLM)
+      \end{itemize}
+
+    \vspace{0.6cm}
+    \item Top-$k$ Joining
+      \begin{itemize}
+        \vspace{0.2cm}
+        \item Speeds up word prediction by multiple orders of magnitude
+        \vspace{-0.2cm}
+        \item Threshold~Algorithm preferable to No~Random~Access~Algorithm
+      \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[plain]
+  \frametitle{Thanks for your Attention!}
+
+  \begin{center}
+    {http://}{\Huge141.26.208.6}{/}
+  \end{center}
+\end{frame}
+
+
+% ==============================================================================
+\appendix
+\section{Experimental Setup}
 \subsection{}
 
 \begin{frame}
@@ -636,7 +786,7 @@
   \begin{itemize}
     \item open collection of American English
     \item historical and contemporary
-    \item spoken and written text of all genres
+    \item written text of all genres
     \item around 600.000 sentences / 14.000.000 words
   \end{itemize}
 \end{frame}
@@ -662,7 +812,26 @@
       \end{scope}
 
       \begin{scope}[node distance = 8.5em]
-        \onslide<2->{
+        \onslide<3->{python api, a browser and a whole lot more.
+
+    PermalinkSpeichernmeldenSchenke Goldantworten
+
+[–]Schrockwell 8 Punkte 6 Stunden zuvor
+
+But then you need 14 monitors, and 14 keyboards, and 14 more power plugs for the monitors, and 14 pairs of speakers of their mods have any sound. Laptops are all-in-one, and much easier to store after the fact.
+
+    PermalinkSpeichernÜbergeordnetmeldenSchenke Goldantworten
+
+[–]koffiezet 4 Punkte 4 Stunden zuvor
+
+A lot of monitors have speakers built-in, and you'd need more stuff:
+
+    raspberry pi's
+    sd cards
+    USB power supplies
+    keyboards
+    mice
+    monitors
           \node [state] (training2) [right of=training]  {Training-\nicefrac{1}{2}};
           \node [state] (training3) [right of=training2] {Training-\nicefrac{1}{4}};
           \node [state] (training4) [right of=training3] {Training-\nicefrac{1}{8}};
@@ -671,7 +840,7 @@
       \end{scope}
 
       \begin{scope}[node distance = 11em]
-        \onslide<3->{
+        \onslide<2->{
           \node [align=center, draw, rounded corners, minimum width = 10.5em, minimum height = 4.5em]
             (testing) [right of=heldout] {Testing\\(40.000 sequences)};
         }
@@ -683,7 +852,7 @@
           (oanc) edge node [below, order, xshift=-1em] {20\%} (heldout);
       }
 
-      \onslide<2->{
+      \onslide<3->{
         \path[->, >=latex]
           (training)  edge node [above, order] {50\%} (training2)
           (training2) edge node [above, order] {50\%} (training3)
@@ -691,29 +860,11 @@
           (training4) edge node [above, order] {50\%} (training5);
       }
 
-      \onslide<3->{
+      \onslide<2->{
         \path[->, >=latex]
           (heldout) edge (testing);
       }
     \end{tikzpicture}
-  \end{center}
-\end{frame}
-
-\begin{frame}
-  \frametitle{Experiments}
-
-  TODO
-\end{frame}
-
-
-
-% ==============================================================================
-\appendix
-\begin{frame}[plain]
-  \frametitle{So long, and thanks for all the fish}
-
-  \begin{center}
-    \textbf{Final Slide}
   \end{center}
 \end{frame}
 

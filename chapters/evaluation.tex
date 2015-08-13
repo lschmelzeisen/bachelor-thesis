@@ -1,70 +1,176 @@
 \chapter{Evaluation}
 \label{ch:evaluation}
 
-\begin{draft}
-GLMTK by me was used for evaluation.
-Commit before bachelor-thesis release.
+We will now evaluate the benefit of the two independent optimizations we
+proposed to next word prediction: representing language model probabilities as
+weighted sums (\cref{ch:weightedsum}) and calculating the word with the highest
+probability via top-$k$ joining (\cref{ch:topkjoin}).
+To this end we empirically compare their performance in a variety of usage
+scenarios.
 
-Experiment to showcase (dis-)advantages of GLM to MKN.
+This chapter is organized as follows:
+first the experimental setup used over all experiments is described in
+\cref{sec:experimental-setup}, then our form of data visualization is explained
+in \cref{sec:boxplot}, and finally weighted sums are evaluated in
+\cref{sec:evaluation-weightedsum} and top-$k$ joining in
+\cref{sec:evaluation-topkjoin}.
 
-Maybe Speedup-factor over time.
-
-Experiments that combine metrices.
-
-Experiments over time and space complexity.
-\end{draft}
-
-% ------------------------------------------------------------------------------
-\section{Normalized Keystroke Savings}
-
-\begin{draft}
-How are they defined?
-How do we calculate them?
-
-From \textcite{Trnka2011}:
-\begin{equation}
-  \frac{\text{keystrokes}_\text{normal} - \text{keystrokes}_\text{with prediction}}
-       {\text{keystrokes}_\text{normal}}
-\end{equation}
-We differ on how we count spaces, newlines, etc...
-No keystroke for accepting completion.
-
-NKSS for top-1 or top-5 completion.
-\end{draft}
 
 % ------------------------------------------------------------------------------
 \section{Experimental setup}
+\label{sec:experimental-setup}
 
-\begin{draft}
-Computer.
+As explained in \cref{ch:review}, the calculations of the considered language
+models' probabilities depend on occurrence counts obtained through statistical
+analysis of text corpora.
+For this evaluation the \emph{Open American National Corpus (OANC)} by
+\textcite{OANC} was used.
+It is a free collection of written text and transcripts of spoken data,
+featuring both historical and contemporary American English of all genres.
+It contains around 600 thousand sentences which amount to 14 million words in
+total.
 
-Corpora.
-\textcite{OANC}
-How to tokenize corpus?
-Hard to without semantic knowledge.
-Currently: all special characters are surrounded by spaces.
-But \texttt{you're} becomes \texttt{you ' re}.
-No stemming to normalize word forms.
-Case-sensitive training and test data.
-Kept names.
+In our experiments only the written part of that corpus was used, because next
+word prediction has no application to speaking.
+The corpus comes tagged with semantic sentence boundaries which were used to
+split the data into sentences.
+No begin or end of sentence tags were inserted, as to not falsify the actual
+occurrence counts.
+Tokenization was performed by assuming word boundaries to occur at each space.
+To avoid punctuation marks directly following words being counted as only one
+word, all special characters were surrounded by spaces.
+This means for our analysis, punctuation marks count as regular words.
+This has the downside of text like \texttt{you're} becoming \texttt{you ' re}.
+Other than that, the data was left as is.
+In particular no case normalization, stemming or removing of names was
+performed.
 
-How to scale completion trie depth for word prediction experiments?
-Remove sentences from corpus?
-Remove entries of from completion trie?
+That text was then randomly split into 80\% training and 20\% heldout data.
+To measure how the algorithms under examination behaved for different sizes
+of training data, we successively discarded 50\% of sentences from training.
+Through this we obtained five datasets equaling 100\%/50\%/25\%/12.5\%/6.25\%
+of the original training corpus size.
+Distinct language models were then learned on each of these training sets.
 
-Avoid unknown words / unknown ngrams in testing?
+From the heldout data \num{40000} non-overlapping sequences of ten words were
+selected.
+For our experiments all but the last words of that sequence were considered to
+form the history, and the last word then is the word for which either a
+probability is calculated, or which is expected to be predicted by next word prediction.
+For cases were shorter histories of words were needed, words were removed from
+the front of the sequences, so the words whose probability are calculated
+respectively which are predicted remain the same.
+To avoid the problem of how to handle unknown words in the evaluation, these
+sequences were chosen as to not contain any words, that do not occur in
+the smallest 6.25\% training corpus.
+Because of this no pruning of words had to be performed, and an \texttt{UNK}
+token was not assigned an artificially occurrence count.
 
-Because of JVM experiments need to be run multiple times.
-Graphs then show average + variance (or rather standard deviation)?
+The evaluation was performed using the \emph{Generalized Language Modeling
+Toolkit (GLMTK)}\footnote{The \emph{Generalized Language Modeling Toolkit
+(GLMTK)} is freely available under
+\mbox{\url{https://github.com/renepickhardt/generalized-language-modeling-toolkit/}}.},
+a freely available toolkit in Java to compare different language modeling
+techniques, that I wrote as part of my work as a student research assistant.
+Initially it was able to perform the traditional, recursive calculations for
+both Modified Kneser-Ney Smoothing and the Generalized Language Model.
+For this thesis I implemented next word prediction using all optimizations
+described in \cref{ch:weightedsum,ch:topkjoin} as well as all experiments from
+this chapter.
+\todo{Tag bachelor commit and mention in footnote.}
 
-How to calculate standard derivation?
-Use \emph{sample standard deviation}?
-Why divide by $N-1$ there?
-\end{draft}
+All experiments were run on a virtual machine that was assigned eight
+\SI{3.0}{\giga\hertz} processor cores, each with a cache size of
+\SI{4096}{\kibi\byte}.
+Although multiple cores were available, all experiments were run in a single
+thread, one after another, to avoid thread communication influencing the
+benchmark.
+We used Linux (3.2.0-75-virtual) as the operating system, and
+the OpenJDK with java version 1.7.0\_79 as the implementation of the
+Java Platform.
+The Java Virtual Machine (JVM) was assigned \SI{16}{\gibi\byte} of main memory,
+a limit that none of the experiments hit.
+
+Java Virtual Machines are know to exhibit \enquote{warm-up} behavior \noref.
+That is it takes some time while running a program to find hotspot sections
+in the code and JIT compile these.
+Traditionally experimenters want to avoid that benchmarks are distorted by
+this warm-up behavior \noref.
+To circumvent this, the code under benchmark is usually executed multiple times,
+to ensure JIT compilation of the relevant sections, and the actual benchmark
+is only performed afterwards.
+To this end, we decided to run each experiment twice:
+the first execution is for warming-up the Java Virtual Machine, while actual
+tracking of performance metrics only occurs in the second run.
+As each experiment consists of executing \num{40000} test sequences, we are
+confident that the warm-up is completed before the second execution.
+
+
+% ------------------------------------------------------------------------------
+\section{Data visualization: Box Plots}
+\label{sec:boxplot}
+
+Because of the large sample size of \num{40000} testing sequences, showing
+all measured data points in diagrams is unfeasible.
+Instead statistical characteristics of the measured distributions of data
+have to be displayed.
+In our experiments, it turned out that finding fitting statistical
+characteristics is non-trivial.
+Natural choices for this are the mean and the standard deviation of
+distributions.
+However these are only suited to accurately describe measurements that are
+normal distributed, and are not suitable for our needs because of reasons:
+\begin{itemize}
+  \item Some measured distributions exhibited a non-negligible amount of
+    \emph{right-skewness}.
+    In other words the mass of the distribution is concentrated on the left.
+    This case occurred when measuring the runtime of algorithms, and can be
+    explained by increased communication of the operation system during the
+    calculation of a tiny part of the test sequences.
+    Such outliers should not unduly affect the statistical characteristics,
+    which is not true for the mean and the standard deviation.
+    On top of this the standard deviation is only capable of showcasing
+    symmetric dispersion, so its use would be misleading for skewed
+    distributions.
+  \item Another observation is, that a few distributions are \emph{multimodal}.
+    That is multiple distinct peaks are visible in a density histogram of that
+    distribution.
+    Again this mostly occurred when measuring the runtime of algorithms,
+    and can be explained by the fact that the \num{40000} test sequences can
+    be partitioned into several classes of different computational costs.
+    For example calculating probabilities is vastly different depending on
+    how many words of the history were seen in the training corpus.
+    Both the mean and the standard deviation do not accurately describe
+    multimodal distributions.
+\end{itemize}
+
+Instead, more \emph{robust}, \emph{non-parametric} statistical characteristics
+have to be used, that do not impose assumptions about the underlying
+measured distributions.
+One common form of visualizing data that fits these requirements is the use of
+\emph{box plots}.
+Box plots visually describe the measured distribution through the combination of
+five characteristics.
+We follow the convention of \textcite{Tukey1977}:
+\begin{itemize}
+  \item As the name suggests the defining feature of box plots is their use of
+    boxes.
+    The lower/upper bar of the box gives the location of the first
+    respectively third \emph{quartile} of the data.
+    So 50\% of data measuring points fall into the plot's box.
+  \item The band inside the box gives the location of the \emph{median}.
+    By its position relative to the quartile it is possible to visually estimate
+    the skewness of the distribution.
+  \item The box is surrounded by whiskers, who reach to the smallest/largest
+    datum in the sample.
+    But their length is limited to at most $1.5$ \emph{inter quartile ranges}.
+    Every measuring points outside of that range is considered to be an outlier.
+    Outliers are not shown in the plot.
+\end{itemize}
 
 % ------------------------------------------------------------------------------
 \section{Probability calculation}
-\label{sec:evaluation-probability}
+\label{sec:evaluation-weightedsum}
 
 \begin{draft}
 Experiment: Calculate one probability $\Prob{w_n}{w_1^{n-1}}$ with MKN and GLM
@@ -106,6 +212,28 @@ Number of weights per model.
 
 % ------------------------------------------------------------------------------
 \section{Word prediction calculation}
+\label{sec:evaluation-topkjoin}
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Normalized Keystroke Savings}
+
+\begin{draft}
+How are they defined?
+How do we calculate them?
+
+From \textcite{Trnka2011}:
+\begin{equation}
+  \frac{\text{keystrokes}_\text{normal} - \text{keystrokes}_\text{with prediction}}
+       {\text{keystrokes}_\text{normal}}
+\end{equation}
+We differ on how we count spaces, newlines, etc...
+No keystroke for accepting completion.
+
+NKSS for top-1 or top-5 completion.
+\end{draft}
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Other}
 
 \begin{draft}
 Experiment: show completion trie memory for n-gram lengths and MKN vs GLM.
@@ -132,12 +260,6 @@ Random access from completion trie or from hash map?
 
 Mention decreasingness (?) of data sets.
 \end{draft}
-
-\clearpage
-\textbf{Note for Rene: The following figures are not yet final. For these
-I didn't do any removal of outliers so you can see how problematic these huge
-standard deviations are. Graphs for Top-k algorithms are outdated but I expect
-them to not change to much.}
 
 % ------------------------------------------------------------------------------
 \clearpage
@@ -304,6 +426,51 @@ them to not change to much.}
   \vspace*{\fill}
 
   \begin{minipage}{.45\textwidth}
+    \raggedleft
+    \includestandalone{figures/argmax_time_corpus_ta}
+    \caption{TODO}
+  \end{minipage}
+  \hspace{.02\textwidth}
+  \begin{minipage}{.45\textwidth}
+    ~
+  \end{minipage}
+
+  \vspace*{.02\textwidth}
+
+  \begin{minipage}{.45\textwidth}
+    \raggedleft
+    \includestandalone{figures/argmax_time_corpus_nra}
+    \caption{TODO}
+  \end{minipage}
+  \hspace{.02\textwidth}
+  \begin{minipage}{.45\textwidth}
+    ~
+  \end{minipage}
+
+  \vspace*{.02\textwidth}
+
+  \begin{minipage}{.45\textwidth}
+    \raggedleft
+    \includestandalone{figures/argmax_time_corpus_smpl}
+    \caption{TODO}
+  \end{minipage}
+  \hspace{.02\textwidth}
+  \begin{minipage}{.45\textwidth}
+    ~
+  \end{minipage}
+
+  \vspace*{\fill}
+\end{figure}
+
+% ------------------------------------------------------------------------------
+\clearpage
+\thispagestyle{empty}
+\newgeometry{left = 1cm, right = 1cm, top = 1cm, bottom = 1cm}
+\begin{figure}[p]
+  \centering
+  \vspace*{\fill}
+
+  \begin{minipage}{.45\textwidth}
     \includestandalone[width=\textwidth]{figures/argmax_numaccesses_mkn}
     \caption{Number of Accesses per Algorithm for 1 prediction in a 5 gram model for MKN.}
   \end{minipage}
@@ -327,4 +494,18 @@ Is this section relevant for this thesis?
 
 Experiment: NKSS quality of MKN vs GLM prediction for different $n$ and corpus
 sizes.
+\end{draft}
+
+
+% ------------------------------------------------------------------------------
+\section{Notes}
+
+\begin{draft}
+Experiment to showcase (dis-)advantages of GLM to MKN.
+
+Maybe Speedup-factor over time.
+
+Experiments that combine metrices.
+
+Experiments over time and space complexity.
 \end{draft}

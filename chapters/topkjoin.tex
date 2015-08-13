@@ -81,8 +81,9 @@ in \cref{eq:scoringfunc}.
 Almost all top-$k$ joining techniques that try to be more efficient than
 enumerating all join combinations, require \emph{monotone} scoring functions.
 Monotone in our context means that higher $\SumArg^h_i(w)$ values correspond
-to higher probabilities, which we have shown in \textbf{??}.
-\todo{Actually show monotony somewhere in \cref{ch:weightedsum}.}
+to higher probabilities.
+We have shown in \cref{sec:monotony} that our probability definitions are
+monotone on the $\SumArg^h_i(w)$.
 This fact can be utilized to find the top-$k$ predictions by always calculating
 the probability for the next promising $w$ with the highest $\SumArg^h_i(w)$.
 

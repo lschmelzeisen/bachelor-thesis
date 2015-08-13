@@ -4,7 +4,7 @@
 \emph{Word prediction} or autocompletion is the art of inferring the next
 word (or words) a user intents to type from the previous words they have
 entered.
-The user can then either select a completion, or in the case that it did not
+The user can either select a completion, or in the case that it did not
 match, type the next indented character, with which more accurate completions
 can be given.
 
@@ -32,17 +32,17 @@ Although word prediction has been primarily used to augment the communication of
 users with a difficulty to express themselves verbally
 \parencite{Swiffin1987,Trnka2011}, the benefits of a strong word prediction
 should be obvious to anyone typing large amounts of text on a computer:
-be it the list of possible queries offered by popular search engines such as
+be it the list of possible queries, offered by popular search engines such as
 Google, or the next word suggestions that many modern mobile phones provide, to
 speed up the slow two-thumbs typing.
 
 This thesis will address the problem of \emph{next} word prediction.
-Our viewpoint is that we predict only one following word, although the
+Our point of view is that we predict only one following word, although the
 techniques described in this thesis can also be applied to the prediction
 of whole sequences.
 Good interfaces usually suggest a list of next word predictions and allow the
 user to select from these.
-This is done to mitigate the error should the top prediction turn out to not
+This is done to mitigate the error should the top prediction turn out not to
 match the user's intend.
 
 We formalize the task of next word prediction as follows:
@@ -87,8 +87,8 @@ Multi-word prediction is typically implemented using \emph{Viterbi-} or
 \emph{beam search}-algorithms \parencite{Bickel2005,JurafskyMartin2009}.
 These algorithms are based on following most promising prediction paths and
 pruning the search space with some heuristic.
-They however are not applicable to the problem of predicting only the next
-word, and at least \textcite{Bickel2005} still employ the na\"{\i}ve method of
+They however are not applicable to the problem of predicting the next word only
+and at least \textcite{Bickel2005} still employ the na\"{\i}ve method of
 querying all known words to find the next word in a multi-word prediction.
 
 This thesis concerns itself with reducing the necessary query time of prefix
@@ -112,7 +112,7 @@ To this end two independent optimizations will be presented:
     independent of $w$ and can be calculated once in a precomputation step for
     each query.
     This will significantly reduce the computation time of $\Prob{w}{h}$ for
-    varying words~$w$ but a fixed history~$h$.
+    varying words~$w$ and a fixed history~$h$.
   \item We will apply well known \emph{top-$k$ joining techniques}
     (\cref{sec:introduction-topkjoin}) to the problem of next word prediction.
     By utilizing a sophisticated data structure that allows retrieval of
@@ -124,7 +124,7 @@ To this end two independent optimizations will be presented:
 These optimizations will allow us to give fast, \emph{non-approximative}
 predictions.
 That is the predictions will be as good as the underlying language model allows:
-the system will always predict exactly these words that maximize the
+the system will always predict exactly these words which maximize the
 probability.
 No pruning of the word distribution's long tail is necessary.
 
@@ -178,7 +178,7 @@ One example might be the query to a web search engine.
 Search results are ranked by relevance, as computed by several criteria
 (matching keywords, links from other sites, popularity, \ldots).
 Users generally require more than just the one highest ranking search result, as
-it may not be exactly what they are they were looking for.
+it may not be exactly what they were looking for.
 On the other hand it would be infeasible to relevance-rank all sites in the
 search engine's database.
 Many search engines solve this by only displaying the top 10 sites, deemed most
@@ -189,12 +189,12 @@ Top-$k$ joining techniques have widespread use and are of importance in
 many applications \noref.
 \end{draft}
 
-As can be seen by the example, the na\"{\i}ve way to solve top-$k$ join
+As it shows in the example, the na\"{\i}ve way to solve top-$k$ join
 queries, i.e.\ to aggregate all possible join results, sort all of them by
 score, and then to discard non top-$k$ results, is in most cases far to
 slow to be of any use.
 There are of plethora of different top-$k$ processing techniques, but most
-of them achieve efficiency by requiring \emph{monotone scoring functions} and
+of them achieve efficiency by requiring a \emph{monotone scoring function} and
 then sorting data sources on each predicate of that function
 \parencite{Ilyas2008}.
 
@@ -210,8 +210,9 @@ language models in this thesis: \emph{Modified Kneser-Ney Smoothing} and the
 
 In \cref{ch:weightedsum} will describe a novel approach of how the traditional,
 recursive definitions of these language models can be rewritten as weighted
-sums. \begin{draft}Additionally we will show that these language models are actually
-monotone scoring functions over occurrence counts.\end{draft}
+sums.
+Additionally we will show that these language models are actually monotone
+scoring functions over occurrence counts.
 
 Using this representation, \cref{ch:topkjoin} will discuss how top-$k$ joining
 techniques can be applied to the problem of next word prediction.

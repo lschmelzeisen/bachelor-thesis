@@ -34,9 +34,8 @@ Another handy benefit is that by this representation we have all terms that
 change with $w$ explicitly available, which is a prerequisite for top-$k$
 joining and will be explained in \cref{ch:topkjoin}.
 Lastly our algorithms for calculating sum weights turn out to be performing
-faster
-then the direct recursive implementations.
-We will measure that effect in \cref{sec:evaluation-probability}.
+faster then the direct recursive implementations, which we measure in
+\cref{sec:evaluation-weightedsum}.
 
 We will now present the basic idea of how to transform $\Prob{w_n}{w_1^{n-1}}$
 into weighted sums, that applies to both Modified Kneser-Ney Smoothing and
@@ -910,5 +909,52 @@ composition of bit-level operations.
 
 % ------------------------------------------------------------------------------
 \section{Monotony}
+\label{sec:monotony}
 
-\todo[inline]{Section Monotony}
+We now want to prove that the probability definitions for Modified Kneser-Ney
+Smoothing (\cref{sec:weightedsum-mkn}) and the Generalized Language Model
+(\cref{sec:weightedsum-glm}) are monotone functions on the $\SumArg^h_i(w)$.
+This means that higher $\SumArg^h_i(w)$ values correspond to higher
+probabilities.
+We can formalize that property as:
+\begin{equation}
+  \big(\forall i \in [1,N]_\NaturalNumbers: \: \SumArg^h_i(w) \geq \SumArg^h_i(w^\prime)\big)
+    \implies \Prob{w}{h} \geq \Prob{w^\prime}{h}
+\end{equation}
+This is an important property because it allows the application of top-$k$
+joining techniques in \cref{ch:topkjoin}.
+
+Because we have defines these probabilities as sums of weights $\SumWeight^h_i$
+multiplied with terms $\SumArg^h_i(w)$ (\cref{eq:weightedsum}), and since
+addition and multiplication are trivially monotone, it suffice to show that the
+$\SumWeight^h_i$ are always non-negative to prove that our probability
+definitions are monotone.
+
+To show that $\SumWeight^h_i$ are non-negative we take at look at their
+definitions (\cref{eq:mkn-sumweight},
+\cref{alg:weightedsum-glm,alg:weightedsum-glm-helper}),
+and observe that they are defined as a combination (multiplication and
+division) of occurrence counts $\Count(\DummyArg)$ and
+$\ContCount_{1+}(\DummyArg)$, numbers of paths, and interpolation weights
+$\gamma(\DummyArg)$.
+Since by their nature occurrence counts and numbers of paths are natural
+numbers, we only need to show that the interpolation weights
+$\gamma(\DummyArg)$ are also non-negative.
+These interpolation weights are defined as sums of discount values
+$D_\DummyIndex$ multiplied with continuation counts
+$\ContCount_\DummyIndex(\DummyArg)$ (\cref{eq:review-gamma}).
+Since continuation counts again are defined as natural numbers, it remains to
+prove that the discount values are non-negative.
+
+A non-formal argument is the fact that the name and usage of discounting terms
+would be nonsensical if negative values would be permitted.
+Additionally we can derive this fact from the definition of the discounting
+values $D_1, D_2, D_{3+}$ (\cref{eq:discounts}).
+It is easy to see that these discounting values increase as the number of
+n-grams $n_\DummyIndex$ in the corpus increases.
+The factors $Y \frac{n_2}{n_1}$, $Y \frac{n_3}{n_2}$, $Y \frac{n_4}{n_3}$ reach
+the limit of $\frac{1}{2}$ for an infinitely large corpus, and thus infinitely
+large number of n-grams $n_\DummyIndex$.
+As a result of the fact that these factors are limited, none of the discount
+values can be non-negative.
+Thereby we can see that our probability definitions are indeed monotone.

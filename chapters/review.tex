@@ -271,8 +271,8 @@ These discounted counts are defined as:
 \end{subequations}
 
 Discounting is done by subtracting a value $\Discount(c)$ from each count.
-The higher the count value $c$ the higher it is discounted:
-\todo{Citations missing?}
+The higher the count value $c$ the higher it is discounted
+\parencite{ChenGoodman1999}:
 \begin{equation}
   \Discount(c) =
     \begin{dcases*}
@@ -282,25 +282,30 @@ The higher the count value $c$ the higher it is discounted:
       D_{3+} & if $c \geq 3$
     \end{dcases*}
 \end{equation}
-With the the discounting values $D_\DummyIndex$ defined as:
+With the the discounting values $D_\DummyIndex$ defined as
+\parencite{ChenGoodman1999}:
 \begin{subequations}
+  \label{eq:discounts}
   \begin{align}
     D_1    &= 1 - 2 Y \frac{n_2}{n_1} \\
     D_2    &= 2 - 3 Y \frac{n_3}{n_2} \\
     D_{3+} &= 3 - 4 Y \frac{n_4}{n_3}
   \end{align}
 \end{subequations}
-Where $Y = \frac{n_1}{n_1 + n_2}$, and where $n_i$ denotes the total number of
-of \mbox{$n$-grams} which appear exactly $i$ times \parencite{Pickhardt2014}.
+Where $Y = \frac{n_1}{n_1 + n_2}$, and where $n_i$
+denotes the total number of of \mbox{$n$-grams} which appear exactly $i$ times
+in the training corpus \parencite{ChenGoodman1999}.
 \todo{This doesn't really fully explain how $n_i$ works does it?}
 
 Based on this we can define the interpolation weight $\gamma(\DummyArg)$ that
 determines how much lower order probabilities factor into those of higher
-orders \parencite{Pickhardt2014}:
+orders \parencite{ChenGoodman1999}:
 \begin{equation}
+  \label{eq:review-gamma}
   \gamma(w_1^{n-1}) =   D_1    \ContCountI    (w_1^{n-1} \WSkp)
                       + D_2    \ContCountII   (w_1^{n-1} \WSkp)
                       + D_{3+} \ContCountIIIp (w_1^{n-1} \WSkp)
 \end{equation}
 For the given discounted count functions $\DiscountedCount$ and
-$\DiscountedCount*$ it has to be chosen like this to ensure true probabilities.
+$\DiscountedCount*$ the interpolation weights $\gamma(\DummyArg)$ have to be
+chosen like this to ensure true probabilities.

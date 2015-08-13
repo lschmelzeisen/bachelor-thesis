@@ -20,9 +20,15 @@
 
 \usepackage{standalone}
 \usepackage{tikz}
+\usetikzlibrary{patterns}
 \usepackage{pgfplots}
 \pgfplotsset{compat = 1.12}
 \usetikzlibrary{pgfplots.statistics}
+\usepackage[
+  group-separator={,},
+  exponent-product=\cdot,
+  binary-units = true,
+]{siunitx}
 
 % TODO
 \usepackage{nicefrac}
@@ -55,6 +61,14 @@
 
 \newcommand{\noref}{\textcolor{RoyalBlue}{\footnotesize[Citation needed]}}
 \newcommand{\mbref}[1]{\textcolor{RoyalBlue}{\footnotesize[Citation: #1?]}}
+
+% \newcommand*\Lukas[2][]{
+% }
+% \newcommand*\Rene[2][]{
+% }
+%
+% \newcommand{\noref}{}
+% \newcommand{\mbref}[1]{}
 
 % ==============================================================================
 
