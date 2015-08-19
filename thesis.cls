@@ -93,6 +93,12 @@
 % Color
 \RequireOptionsPackage[dvipsnames, svgnames, x11names]{xcolor}
 
+% In paragraph enumerations
+\RequirePackage{paralist}
+
+% Table styling
+\RequirePackage{booktabs}
+
 % Change page layout
 \RequirePackage[
   pass
@@ -110,7 +116,9 @@
 }
 
 % Enable sub figures
-\RequirePackage{subcaption}
+\RequireOptionsPackage[
+  labelfont = bf, % make (a) bold for subcaption
+]{subcaption}
 
 % Pseudocode
 \RequireOptionsPackage[

@@ -1,0 +1,161 @@
+\documentclass[tikz]{standalone}
+\usepackage[dvipsnames,svgnames,x11names]{xcolor}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usetikzlibrary{pgfplots.statistics}
+\pgfplotsset{compat = 1.12}
+\usepackage[
+  group-separator={,},
+  exponent-product=\cdot,
+]{siunitx}
+\usepackage{../thesismath}
+\begin{document}
+\begin{tikzpicture}[baseline, trim axis left, trim axis right]
+
+\pgfplotscreateplotcyclelist{smpl}{%
+  green!60!black,  mark size=1.25, mark=square,\\%
+  %blue,  mark size=1.25, mark=square,\\%
+  %red,   mark size=1.25, mark=square,\\%
+}
+
+\pgfplotsset{
+  legend style = {
+    legend image code/.code = {
+      \draw[only marks]
+        plot coordinates {
+          (0.3cm,0cm)
+        };
+      \node at (0.15cm, 0cm) {};
+      \node at (0.45cm, 0cm) {};
+    },
+  },
+  boxplot/draw/average/.code = {
+    % uncomment to show dotted bars for average:
+    %\draw[dashed, /pgfplots/boxplot/every average/.try]
+    %  (boxplot box cs:\pgfplotsboxplotvalue{average},0)
+    %  --
+    %  (boxplot box cs:\pgfplotsboxplotvalue{average},1)
+    %  ;
+  },
+}
+
+\sisetup{exponent-base = 2}
+\begin{axis}[
+%   title = {Calculation Time per top-$1$ Prediction using $5$-grams},
+  xlabel = {Number of Unique Words},
+  %xtick       = {            1,             2,             3,             4,             5},
+  %xticklabels = {\num{1.85e14}, \num{1.85e15}, \num{1.85e16}, \num{1.85e17}, \num{1.85e18}},
+  xtick = {50372, 70988, 98209, 133038, 178671},
+  xticklabels = {\num{50000}, \num{71000}, \num{98000}, \num{133000}, \num{179000}},
+  xticklabel style = {
+    inner sep = 1pt,
+    anchor = north east,
+    rotate = 45,
+  },
+  ylabel = {Calcluation Time [\si{\milli\second}]},
+  ymin = 622.720529,
+  ymax = 21379.195192,
+  scaled x ticks = false,
+  scaled y ticks = false,
+  minor y tick num = 4,
+  ymajorgrids = true,
+  boxplot/draw direction = y,
+  boxplot = {
+    box extend = 8000,
+  },
+  cycle list name = smpl,
+  enlargelimits = 0.05,
+  legend entries = {{SMPL-GLM}},
+  legend pos = north west,
+  width = \textwidth,
+]
+
+% ------------------------------------------------------------------------------
+
+% training-5-argmaxcompare-1k-c/ngram-5-1k-SMPL-Weighted-Sum-Generalized-Language-Model-1
+\addplot+[
+  boxplot prepared = {
+    draw position = 50372,
+    lower whisker = 622.720529,
+    lower quartile = 1706.427235,
+    median = 2121.929949,
+    upper quartile = 2958.550537,
+    upper whisker = 4831.142348,
+    average = 2362.456282,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ------------------------------------------------------------------------------
+
+% training-4-argmaxcompare-1k-c/ngram-5-1k-SMPL-Weighted-Sum-Generalized-Language-Model-1
+\addplot+[
+  boxplot prepared = {
+    draw position = 70988,
+    lower whisker = 961.789997,
+    lower quartile = 2718.921302,
+    median = 3658.357928,
+    upper quartile = 4589.696867,
+    upper whisker = 7276.519473,
+    average = 3731.691975,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ------------------------------------------------------------------------------
+
+% training-3-argmaxcompare-1k-c/ngram-5-1k-SMPL-Weighted-Sum-Generalized-Language-Model-1
+\addplot+[
+  boxplot prepared = {
+    draw position = 98209,
+    lower whisker = 1364.652392,
+    lower quartile = 3988.427046,
+    median = 5634.106144,
+    upper quartile = 6779.049736,
+    upper whisker = 10592.623255,
+    average = 5539.993735,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ------------------------------------------------------------------------------
+
+% training-2-argmaxcompare-1k-c/ngram-5-1k-SMPL-Weighted-Sum-Generalized-Language-Model-1
+\addplot+[
+  boxplot prepared = {
+    draw position = 133038,
+    lower whisker = 1916.275703,
+    lower quartile = 5904.384880,
+    median = 8297.770319,
+    upper quartile = 9906.363211,
+    upper whisker = 15555.723291,
+    average = 8229.612393,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ------------------------------------------------------------------------------
+
+% training-1-argmaxcompare-1k-c/ngram-5-1k-SMPL-Weighted-Sum-Modified-Kneser-Ney-1
+\addplot+[
+  boxplot prepared = {
+    draw position = 178671,
+    lower whisker = 4741.025183,
+    lower quartile = 10381.878531,
+    median = 12565.672071,
+    upper quartile = 14875.880460,
+    upper whisker = 21379.195192,
+    average = 12622.954410,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+\end{axis}
+
+\end{tikzpicture}
+\end{document}

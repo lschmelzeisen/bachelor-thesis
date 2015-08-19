@@ -42,7 +42,7 @@ techniques described in this thesis can also be applied to the prediction
 of whole sequences.
 Good interfaces usually suggest a list of next word predictions and allow the
 user to select from these.
-This is done to mitigate the error should the top prediction turn out not to
+This is done to mitigate the error, should the top prediction turn out not to
 match the user's intend.
 
 We formalize the task of next word prediction as follows:
@@ -147,7 +147,7 @@ prediction application.
 A major problem in creating statistical language models from text corpora, is
 that even for very large corpora, most possible word sequences in a language
 will not be observed in training \noref.
-A common approximation is to make a $n$th-order \emph{markov assumption},
+A common approximation is to make a $n$th-order \emph{Markov assumption},
 i.e.\ to assume that the probability of the word to be predicted $w_l$ only
 depends on the $n\!-\!1$~previous words $w_{l-n+1}^{l-1}$ rather than the full
 sequence $w_1^{l-1}$.

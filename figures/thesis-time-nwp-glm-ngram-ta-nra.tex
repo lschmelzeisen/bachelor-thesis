@@ -1,0 +1,200 @@
+\documentclass[tikz]{standalone}
+\usepackage[dvipsnames,svgnames,x11names]{xcolor}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usetikzlibrary{pgfplots.statistics}
+\pgfplotsset{compat = 1.12}
+\usepackage[
+  group-separator={,},
+  exponent-product=\cdot,
+]{siunitx}
+\usepackage{../thesismath}
+\begin{document}
+\begin{tikzpicture}[baseline, trim axis left, trim axis right]
+
+\pgfplotscreateplotcyclelist{ta_nra}{%
+  blue,  mark size=1.25, mark=square,\\%
+  red,   mark size=1.25, mark=square,\\%
+}
+
+\pgfplotsset{
+  legend style = {
+    legend image code/.code = {
+      \draw[only marks]
+        plot coordinates {
+          (0.3cm,0cm)
+        };
+      \node at (0.15cm, 0cm) {};
+      \node at (0.45cm, 0cm) {};
+    },
+  },
+  boxplot/draw/average/.code = {
+    % uncomment to show dotted bars for average:
+    %\draw[dashed, /pgfplots/boxplot/every average/.try]
+    %  (boxplot box cs:\pgfplotsboxplotvalue{average},0)
+    %  --
+    %  (boxplot box cs:\pgfplotsboxplotvalue{average},1)
+    %  ;
+  },
+}
+
+\sisetup{exponent-base = 2}
+\begin{axis}[
+%   title = {Calculation Time per top-$1$ Prediction using $5$-grams},
+  xlabel = {$n$-gram length},
+  xtick = {2, ..., 5},
+  ylabel = {Calcluation Time [\si{\milli\second}]},
+  yticklabel pos = right,
+  ymin = 0.013862,
+  ymax = 3.963493,
+  scaled x ticks = false,
+  scaled y ticks = false,
+  minor y tick num = 4,
+  y tick label style = {
+    /pgf/number format/fixed,
+    /pgf/number format/fixed zerofill,
+  },
+  ymajorgrids = true,
+  boxplot/draw direction = y,
+  boxplot = {
+    box extend = 0.4,
+  },
+  cycle list name = ta_nra,
+  enlargelimits = 0.05,
+  legend entries = {{TA-GLM}, {NRA-GLM}},
+  legend pos = north west,
+  width = \textwidth,
+]
+
+% ------------------------------------------------------------------------------
+
+% ngram-2-TA-Weighted-Sum-Generalized-Language-Model-1
+\addplot+[
+  boxplot prepared = {
+    draw position = 1.75,
+    lower whisker = 0.014035,
+    lower quartile = 0.023562,
+    median = 0.028052,
+    upper quartile = 0.034336,
+    upper whisker = 0.050476,
+    average = 0.030661,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ngram-2-NRA-Weighted-Sum-Generalized-Language-Model-1
+\addplot+[
+  boxplot prepared = {
+    draw position = 2.25,
+    lower whisker = 0.013862,
+    lower quartile = 0.023258,
+    median = 0.027701,
+    upper quartile = 0.034230,
+    upper whisker = 0.050687,
+    average = 0.088812,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ------------------------------------------------------------------------------
+
+% ngram-3-TA-Weighted-Sum-Generalized-Language-Model-1
+\addplot+[
+  boxplot prepared = {
+    draw position = 2.75,
+    lower whisker = 0.039622,
+    lower quartile = 0.086920,
+    median = 0.106482,
+    upper quartile = 0.132922,
+    upper whisker = 0.201917,
+    average = 0.117539,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ngram-3-NRA-Weighted-Sum-Generalized-Language-Model-1
+\addplot+[
+  boxplot prepared = {
+    draw position = 3.25,
+    lower whisker = 0.039858,
+    lower quartile = 0.086142,
+    median = 0.106440,
+    upper quartile = 0.150374,
+    upper whisker = 0.246612,
+    average = 0.632548,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ------------------------------------------------------------------------------
+
+% ngram-4-TA-Weighted-Sum-Generalized-Language-Model-1
+\addplot+[
+  boxplot prepared = {
+    draw position = 3.75,
+    lower whisker = 0.093857,
+    lower quartile = 0.255216,
+    median = 0.315374,
+    upper quartile = 0.397035,
+    upper whisker = 0.609651,
+    average = 0.351523,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ngram-4-NRA-Weighted-Sum-Generalized-Language-Model-1
+\addplot+[
+  boxplot prepared = {
+    draw position = 4.25,
+    lower whisker = 0.107379,
+    lower quartile = 0.272412,
+    median = 0.363344,
+    upper quartile = 0.552492,
+    upper whisker = 0.971938,
+    average = 0.838218,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ------------------------------------------------------------------------------
+
+% ngram-5-TA-Weighted-Sum-Generalized-Language-Model-1
+\addplot+[
+  boxplot prepared = {
+    draw position = 4.75,
+    lower whisker = 0.202749,
+    lower quartile = 0.654436,
+    median = 0.832421,
+    upper quartile = 1.092418,
+    upper whisker = 1.749261,
+    average = 0.952469,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ngram-5-NRA-Weighted-Sum-Generalized-Language-Model-1
+\addplot+[
+  boxplot prepared = {
+    draw position = 5.25,
+    lower whisker = 0.233460,
+    lower quartile = 0.843436,
+    median = 1.245531,
+    upper quartile = 2.091483,
+    upper whisker = 3.963493,
+    average = 2.339178,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+\end{axis}
+
+\end{tikzpicture}
+\end{document}

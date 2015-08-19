@@ -1,0 +1,153 @@
+\documentclass[tikz]{standalone}
+\usepackage[dvipsnames,svgnames,x11names]{xcolor}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usetikzlibrary{pgfplots.statistics}
+\pgfplotsset{compat = 1.12}
+\usepackage[
+  group-separator={,},
+  exponent-product=\cdot,
+]{siunitx}
+\usepackage{../thesismath}
+\begin{document}
+\begin{tikzpicture}[baseline, trim axis left, trim axis right]
+
+\pgfplotscreateplotcyclelist{smpl}{%
+  green!60!black,  mark size=1.25, mark=square,\\%
+  %blue,  mark size=1.25, mark=square,\\%
+  %red,   mark size=1.25, mark=square,\\%
+}
+
+\pgfplotsset{
+  legend style = {
+    legend image code/.code = {
+      \draw[only marks]
+        plot coordinates {
+          (0.3cm,0cm)
+        };
+      \node at (0.15cm, 0cm) {};
+      \node at (0.45cm, 0cm) {};
+    },
+  },
+  boxplot/draw/average/.code = {
+    % uncomment to show dotted bars for average:
+    %\draw[dashed, /pgfplots/boxplot/every average/.try]
+    %  (boxplot box cs:\pgfplotsboxplotvalue{average},0)
+    %  --
+    %  (boxplot box cs:\pgfplotsboxplotvalue{average},1)
+    %  ;
+  },
+}
+
+\sisetup{exponent-base = 2}
+\begin{axis}[
+%   title = {Calculation Time per top-$1$ Prediction using $5$-grams},
+  xlabel = {Number of Predictions $k$},
+  xtick = {1, ..., 5},
+  ylabel = {Calcluation Time [\si{\milli\second}]},
+  ymin = 4678.473460,
+  ymax = 21664.337101,
+  scaled x ticks = false,
+  scaled y ticks = false,
+  minor y tick num = 4,
+  ymajorgrids = true,
+  boxplot/draw direction = y,
+  boxplot = {
+    box extend = 0.4,
+  },
+  cycle list name = smpl,
+  enlargelimits = 0.05,
+  legend entries = {{SMPL-GLM}},
+  legend pos = north west,
+  width = \textwidth,
+]
+
+% ------------------------------------------------------------------------------
+
+% ngram-5-1k-SMPL-Weighted-Sum-Generalized-Language-Model-1
+\addplot+[
+  boxplot prepared = {
+    draw position = 1,
+    lower whisker = 4741.025183,
+    lower quartile = 10381.878531,
+    median = 12565.672071,
+    upper quartile = 14875.880460,
+    upper whisker = 21379.195192,
+    average = 12622.954410,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ------------------------------------------------------------------------------
+
+% ngram-5-1k-SMPL-Weighted-Sum-Generalized-Language-Model-2
+\addplot+[
+  boxplot prepared = {
+    draw position = 2,
+    lower whisker = 4689.747178,
+    lower quartile = 10405.089299,
+    median = 12578.384721,
+    upper quartile = 14860.839294,
+    upper whisker = 21451.624103,
+    average = 12632.988582,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ------------------------------------------------------------------------------
+
+% ngram-5-1k-SMPL-Weighted-Sum-Generalized-Language-Model-3
+\addplot+[
+  boxplot prepared = {
+    draw position = 3,
+    lower whisker = 4735.084247,
+    lower quartile = 10386.782946,
+    median = 12611.298833,
+    upper quartile = 14856.788885,
+    upper whisker = 21374.455886,
+    average = 12640.057561,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ------------------------------------------------------------------------------
+
+% ngram-5-1k-SMPL-Weighted-Sum-Generalized-Language-Model-4
+\addplot+[
+  boxplot prepared = {
+    draw position = 4,
+    lower whisker = 4766.340484,
+    lower quartile = 10369.641306,
+    median = 12609.074234,
+    upper quartile = 14878.452674,
+    upper whisker = 21463.805977,
+    average = 12643.848685,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ------------------------------------------------------------------------------
+
+% ngram-5-1k-SMPL-Weighted-Sum-Generalized-Language-Model-5
+\addplot+[
+  boxplot prepared = {
+    draw position = 5,
+    lower whisker = 4678.473460,
+    lower quartile = 10384.389828,
+    median = 12583.385796,
+    upper quartile = 14923.476113,
+    upper whisker = 21664.337101,
+    average = 12639.836424,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+\end{axis}
+
+\end{tikzpicture}
+\end{document}

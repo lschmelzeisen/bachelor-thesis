@@ -1,0 +1,313 @@
+\documentclass[tikz]{standalone}
+\usepackage[dvipsnames,svgnames,x11names]{xcolor}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usetikzlibrary{pgfplots.statistics}
+\pgfplotsset{compat = 1.12}
+\usepackage[
+  group-separator={,},
+  exponent-product=\cdot,
+  binary-units = true,
+]{siunitx}
+\usepackage{../thesismath}
+\begin{document}
+\begin{tikzpicture}[baseline, trim axis left, trim axis right]
+
+\pgfplotscreateplotcyclelist{recmkn_mkn}{%
+  blue,  mark size=1.25, mark=square,\\%
+  red,   mark size=1.25, mark=square,\\%
+}
+
+\pgfplotsset{
+  legend style = {
+    legend image code/.code = {
+      \draw[only marks]
+        plot coordinates {
+          (0.3cm,0cm)
+        };
+      \node at (0.15cm, 0cm) {};
+      \node at (0.45cm, 0cm) {};
+    },
+  },
+  boxplot/draw/average/.code = {
+    %\draw[dashed, /pgfplots/boxplot/every average/.try]
+    %  (boxplot box cs:\pgfplotsboxplotvalue{average},0)
+    %  --
+    %  (boxplot box cs:\pgfplotsboxplotvalue{average},1)
+    %  ;
+  },
+}
+
+\begin{axis}[
+%   title = {Calculation Time per Probability $\ProbMKN{w}{h}$},
+  xlabel = {$n$-gram length},
+  xtick = {1, ..., 8},
+  ylabel = {Calcluation Time [\si{\micro\second}]},
+  minor y tick num = 4,
+  log ticks with fixed point,
+  ymajorgrids = true,
+  boxplot/draw direction = y,
+  boxplot = {
+    draw position = {3/4 + floor(\plotnumofactualtype/2) + 2/4*mod(\plotnumofactualtype,2)},
+    box extend = 0.4,
+  },
+  cycle list name = recmkn_mkn,
+  enlargelimits = 0.025,
+  legend entries = {{\small{Recursive-MKN}}, {\small{Weighted-Sum-MKN}}},
+  legend pos = north west,
+  legend style = {
+    row sep = 0ex,
+    xshift = -0.12cm,
+    yshift =  0.08cm,
+  },
+  width = \textwidth,
+%   height = \textwidth,
+]
+
+% ------------------------------------------------------------------------------
+
+% ngram-1-Fast-Modified-Kneser-Ney
+\addplot+[
+  boxplot prepared = {
+    lower whisker = 0.830,
+    lower quartile = 0.940,
+    median = 0.993,
+    upper quartile = 1.090,
+    upper whisker = 1.315,
+    average = 1.076,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ngram-1-Weighted-Sum-Modified-Kneser-Ney
+\addplot+[
+  boxplot prepared = {
+    lower whisker = 0.726,
+    lower quartile = 0.825,
+    median = 0.908,
+    upper quartile = 1.025,
+    upper whisker = 1.325,
+    average = 1.011,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ------------------------------------------------------------------------------
+
+% ngram-2-Fast-Modified-Kneser-Ney
+\addplot+[
+  boxplot prepared = {
+    lower whisker = 2.591,
+    lower quartile = 3.309,
+    median = 3.542,
+    upper quartile = 3.789,
+    upper whisker = 4.509,
+    average = 3.731,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ngram-2-Weighted-Sum-Modified-Kneser-Ney
+\addplot+[
+  boxplot prepared = {
+    lower whisker = 2.964,
+    lower quartile = 3.854,
+    median = 4.146,
+    upper quartile = 4.454,
+    upper whisker = 5.354,
+    average = 4.306,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ------------------------------------------------------------------------------
+
+% ngram-3-Fast-Modified-Kneser-Ney
+\addplot+[
+  boxplot prepared = {
+    lower whisker = 5.303,
+    lower quartile = 7.070,
+    median = 7.692,
+    upper quartile = 8.248,
+    upper whisker = 10.012,
+    average = 7.731,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ngram-3-Weighted-Sum-Modified-Kneser-Ney
+\addplot+[
+  boxplot prepared = {
+    lower whisker = 5.653,
+    lower quartile = 7.319,
+    median = 7.921,
+    upper quartile = 8.430,
+    upper whisker = 10.089,
+    average = 8.081,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ------------------------------------------------------------------------------
+
+% ngram-4-Fast-Modified-Kneser-Ney
+\addplot+[
+  boxplot prepared = {
+    lower whisker = 5.036,
+    lower quartile = 9.101,
+    median = 11.313,
+    upper quartile = 12.809,
+    upper whisker = 18.367,
+    average = 11.068,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ngram-4-Weighted-Sum-Modified-Kneser-Ney
+\addplot+[
+  boxplot prepared = {
+    lower whisker = 4.297,
+    lower quartile = 9.160,
+    median = 11.517,
+    upper quartile = 13.053,
+    upper whisker = 18.88,
+    average = 11.374,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ------------------------------------------------------------------------------
+
+% ngram-5-Fast-Modified-Kneser-Ney
+\addplot+[
+  boxplot prepared = {
+    lower whisker = 6.252,
+    lower quartile = 10.484,
+    median = 13.016,
+    upper quartile = 16.311,
+    upper whisker = 25.042,
+    average = 13.591,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ngram-5-Weighted-Sum-Modified-Kneser-Ney
+\addplot+[
+  boxplot prepared = {
+    lower whisker = 4.852,
+    lower quartile = 9.669,
+    median = 12.238,
+    upper quartile = 15.555,
+    upper whisker = 24.382,
+    average = 12.666,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+
+% ------------------------------------------------------------------------------
+
+% ngram-6-Fast-Modified-Kneser-Ney
+\addplot+[
+  boxplot prepared = {
+    lower whisker = 7.367,
+    lower quartile = 11.917,
+    median = 14.650,
+    upper quartile = 18.526,
+    upper whisker = 28.432,
+    average = 15.903,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ngram-6-Weighted-Sum-Modified-Kneser-Ney
+\addplot+[
+  boxplot prepared = {
+    lower whisker = 5.609,
+    lower quartile = 10.380,
+    median = 13.040,
+    upper quartile = 16.812,
+    upper whisker = 26.460,
+    average = 14.117,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+
+% ------------------------------------------------------------------------------
+
+% ngram-7-Fast-Modified-Kneser-Ney
+\addplot+[
+  boxplot prepared = {
+    lower whisker = 8.519,
+    lower quartile = 13.383,
+    median = 16.117,
+    upper quartile = 19.934,
+    upper whisker = 29.760,
+    average = 17.739,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ngram-7-Weighted-Sum-Modified-Kneser-Ney
+\addplot+[
+  boxplot prepared = {
+    lower whisker = 6.352,
+    lower quartile = 11.159,
+    median = 13.782,
+    upper quartile = 17.521,
+    upper whisker = 27.062,
+    average = 15.302,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+
+% ------------------------------------------------------------------------------
+
+% ngram-8-Fast-Modified-Kneser-Ney
+\addplot+[
+  boxplot prepared = {
+    lower whisker = 9.868,
+    lower quartile = 14.658,
+    median = 17.365,
+    upper quartile = 21.310,
+    upper whisker = 31.276,
+    average = 19.446,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ngram-8-Weighted-Sum-Modified-Kneser-Ney
+\addplot+[
+  boxplot prepared = {
+    lower whisker = 7.413,
+    lower quartile = 12.307,
+    median = 15.013,
+    upper quartile = 18.940,
+    upper whisker = 28.889,
+    average = 16.963,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+\end{axis}
+
+\end{tikzpicture}
+\end{document}

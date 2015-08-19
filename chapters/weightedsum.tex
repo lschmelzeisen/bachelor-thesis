@@ -118,7 +118,7 @@ If this is not the case, backoff steps have to be performed, and a different
 resulting formula is obtained.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsection{Sum terms}
+\subsection{Sum Terms}
 
 All counts except those of the lowest order are discounted using
 $\DiscountedCount$ and $\DiscountedCount*$ to interpolate that order with the
@@ -157,6 +157,7 @@ backing off given history $h$ exaclty $s$ many times.
 The number $N$ of sum weights is then the number of words of that history plus
 one for the empty history.
 \begin{equation}
+  \label{eq:weightedsum-mkn-num}
   N = \NGramLength{\DerivedHistory[s]} + 1
 \end{equation}
 Where $\NGramLength{w_1^n} = n$ is the length of the $n$-gram $w_1^n$.
@@ -293,7 +294,7 @@ $\SumWeight^h_i$ right.
 \end{align}
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsection{Backoff graph}
+\subsection{Backoff Graph}
 \label{subsec:backoff-graph}
 
 \Cref{fig:history-glm} shows the \emph{backoff graph} introduced by
@@ -370,7 +371,7 @@ a number between $1$ and $8$.
 Let $\DerivedHistory[i]$ than be the $i$th history of an arbitrary ordering.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsection{Number of sum weights}
+\subsection{Number of Sum Weights}
 
 In the previous subsection, it was reasoned that, in the Generalized Language
 Model, for a history of length $n$ there are exactly $2^n$ possible derivative
@@ -428,11 +429,12 @@ unnecessary sum weights to zero.
 An upper bound for the number of sum weights is the number of derived histories
 times two, as histories can occur both in highest and lower order probabilities:
 \begin{equation}
+  \label{eq:weightedsum-glm-num}
   N = 2 \cdot 2^\NGramLength{h}
 \end{equation}
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsection{Sum terms}
+\subsection{Sum Terms}
 
 Based on this we can define the sum terms for $1 \leq i \leq N$.
 \begin{subequations}

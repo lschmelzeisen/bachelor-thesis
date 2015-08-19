@@ -1,0 +1,153 @@
+\documentclass[tikz]{standalone}
+\usepackage[dvipsnames,svgnames,x11names]{xcolor}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usetikzlibrary{pgfplots.statistics}
+\pgfplotsset{compat = 1.12}
+\usepackage[
+  group-separator={,},
+  exponent-product=\cdot,
+]{siunitx}
+\usepackage{../thesismath}
+\begin{document}
+\begin{tikzpicture}[baseline, trim axis left, trim axis right]
+
+\pgfplotscreateplotcyclelist{smpl}{%
+  green!60!black,  mark size=1.25, mark=square,\\%
+  %blue,  mark size=1.25, mark=square,\\%
+  %red,   mark size=1.25, mark=square,\\%
+}
+
+\pgfplotsset{
+  legend style = {
+    legend image code/.code = {
+      \draw[only marks]
+        plot coordinates {
+          (0.3cm,0cm)
+        };
+      \node at (0.15cm, 0cm) {};
+      \node at (0.45cm, 0cm) {};
+    },
+  },
+  boxplot/draw/average/.code = {
+    % uncomment to show dotted bars for average:
+    %\draw[dashed, /pgfplots/boxplot/every average/.try]
+    %  (boxplot box cs:\pgfplotsboxplotvalue{average},0)
+    %  --
+    %  (boxplot box cs:\pgfplotsboxplotvalue{average},1)
+    %  ;
+  },
+}
+
+\sisetup{exponent-base = 2}
+\begin{axis}[
+%   title = {Calculation Time per top-$1$ Prediction using $5$-grams},
+  xlabel = {Number of Predictions $k$},
+  xtick = {1, ..., 5},
+  ylabel = {Calcluation Time [\si{\milli\second}]},
+  ymin = 972.638274,
+  ymax = 4825.863350,
+  scaled x ticks = false,
+  scaled y ticks = false,
+  minor y tick num = 4,
+  ymajorgrids = true,
+  boxplot/draw direction = y,
+  boxplot = {
+    box extend = 0.4,
+  },
+  cycle list name = smpl,
+  enlargelimits = 0.05,
+  legend entries = {{SMPL-MKN}},
+  legend pos = north west,
+  width = \textwidth,
+]
+
+% ------------------------------------------------------------------------------
+
+% ngram-5-1k-SMPL-Weighted-Sum-Modified-Kneser-Ney-1
+\addplot+[
+  boxplot prepared = {
+    draw position = 1,
+    lower whisker = 1002.784867,
+    lower quartile = 1886.653179,
+    median = 2408.640801,
+    upper quartile = 3109.965427,
+    upper whisker = 4779.094746,
+    average = 2527.778769,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ------------------------------------------------------------------------------
+
+% ngram-5-1k-SMPL-Weighted-Sum-Modified-Kneser-Ney-2
+\addplot+[
+  boxplot prepared = {
+    draw position = 2,
+    lower whisker = 1004.600336,
+    lower quartile = 1888.090747,
+    median = 2411.737365,
+    upper quartile = 3109.464697,
+    upper whisker = 4825.863350,
+    average = 2527.347277,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ------------------------------------------------------------------------------
+
+% ngram-5-1k-SMPL-Weighted-Sum-Modified-Kneser-Ney-3
+\addplot+[
+  boxplot prepared = {
+    draw position = 3,
+    lower whisker = 972.638274,
+    lower quartile = 1890.276163,
+    median = 2400.725615,
+    upper quartile = 3106.366882,
+    upper whisker = 4740.173843,
+    average = 2530.697348,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ------------------------------------------------------------------------------
+
+% ngram-5-1k-SMPL-Weighted-Sum-Modified-Kneser-Ney-4
+\addplot+[
+  boxplot prepared = {
+    draw position = 4,
+    lower whisker = 1008.249732,
+    lower quartile = 1891.941958,
+    median = 2408.381193,
+    upper quartile = 3122.117807,
+    upper whisker = 4808.688449,
+    average = 2533.374697,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ------------------------------------------------------------------------------
+
+% ngram-5-1k-SMPL-Weighted-Sum-Modified-Kneser-Ney-5
+\addplot+[
+  boxplot prepared = {
+    draw position = 5,
+    lower whisker = 1007.382287,
+    lower quartile = 1895.512416,
+    median = 2421.225549,
+    upper quartile = 3101.403215,
+    upper whisker = 4756.829385,
+    average = 2533.107267,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+\end{axis}
+
+\end{tikzpicture}
+\end{document}

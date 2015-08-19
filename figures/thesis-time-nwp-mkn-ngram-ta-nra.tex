@@ -1,0 +1,200 @@
+\documentclass[tikz]{standalone}
+\usepackage[dvipsnames,svgnames,x11names]{xcolor}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usetikzlibrary{pgfplots.statistics}
+\pgfplotsset{compat = 1.12}
+\usepackage[
+  group-separator={,},
+  exponent-product=\cdot,
+]{siunitx}
+\usepackage{../thesismath}
+\begin{document}
+\begin{tikzpicture}[baseline, trim axis left, trim axis right]
+
+\pgfplotscreateplotcyclelist{ta_nra}{%
+  blue,  mark size=1.25, mark=square,\\%
+  red,   mark size=1.25, mark=square,\\%
+}
+
+\pgfplotsset{
+  legend style = {
+    legend image code/.code = {
+      \draw[only marks]
+        plot coordinates {
+          (0.3cm,0cm)
+        };
+      \node at (0.15cm, 0cm) {};
+      \node at (0.45cm, 0cm) {};
+    },
+  },
+  boxplot/draw/average/.code = {
+    % uncomment to show dotted bars for average:
+    %\draw[dashed, /pgfplots/boxplot/every average/.try]
+    %  (boxplot box cs:\pgfplotsboxplotvalue{average},0)
+    %  --
+    %  (boxplot box cs:\pgfplotsboxplotvalue{average},1)
+    %  ;
+  },
+}
+
+\sisetup{exponent-base = 2}
+\begin{axis}[
+%   title = {Calculation Time per top-$1$ Prediction using $5$-grams},
+  xlabel = {$n$-gram length},
+  xtick = {2, ..., 5},
+  ylabel = {Calcluation Time [\si{\milli\second}]},
+  yticklabel pos = right,
+  ymin = 0.008240,
+  ymax = 0.327149,
+  scaled x ticks = false,
+  scaled y ticks = false,
+  minor y tick num = 4,
+  y tick label style = {
+    /pgf/number format/fixed,
+    /pgf/number format/fixed zerofill,
+  },
+  ymajorgrids = true,
+  boxplot/draw direction = y,
+  boxplot = {
+    box extend = 0.4,
+  },
+  cycle list name = ta_nra,
+  enlargelimits = 0.05,
+  legend entries = {{TA-MKN}, {NRA-MKN}},
+  legend pos = north west,
+  width = \textwidth,
+]
+
+% ------------------------------------------------------------------------------
+
+% ngram-2-TA-Weighted-Sum-Modified-Kneser-Ney-1
+\addplot+[
+  boxplot prepared = {
+    draw position = 1.75,
+    lower whisker = 0.008240,
+    lower quartile = 0.019236,
+    median = 0.023249,
+    upper quartile = 0.028564,
+    upper whisker = 0.042556,
+    average = 0.026380,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ngram-2-NRA-Weighted-Sum-Modified-Kneser-Ney-1
+\addplot+[
+  boxplot prepared = {
+    draw position = 2.25,
+    lower whisker = 0.008994,
+    lower quartile = 0.016838,
+    median = 0.020272,
+    upper quartile = 0.024743,
+    upper whisker = 0.036600,
+    average = 0.081141,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ------------------------------------------------------------------------------
+
+% ngram-3-TA-Weighted-Sum-Modified-Kneser-Ney-1
+\addplot+[
+  boxplot prepared = {
+    draw position = 2.75,
+    lower whisker = 0.014419,
+    lower quartile = 0.044061,
+    median = 0.055573,
+    upper quartile = 0.068383,
+    upper whisker = 0.104854,
+    average = 0.059373,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ngram-3-NRA-Weighted-Sum-Modified-Kneser-Ney-1
+\addplot+[
+  boxplot prepared = {
+    draw position = 3.25,
+    lower whisker = 0.014226,
+    lower quartile = 0.043054,
+    median = 0.054306,
+    upper quartile = 0.071823,
+    upper whisker = 0.114975,
+    average = 0.358936,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ------------------------------------------------------------------------------
+
+% ngram-4-TA-Weighted-Sum-Modified-Kneser-Ney-1
+\addplot+[
+  boxplot prepared = {
+    draw position = 3.75,
+    lower whisker = 0.018174,
+    lower quartile = 0.059696,
+    median = 0.083289,
+    upper quartile = 0.112339,
+    upper whisker = 0.191289,
+    average = 0.092666,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ngram-4-NRA-Weighted-Sum-Modified-Kneser-Ney-1
+\addplot+[
+  boxplot prepared = {
+    draw position = 4.25,
+    lower whisker = 0.017010,
+    lower quartile = 0.062055,
+    median = 0.090013,
+    upper quartile = 0.128487,
+    upper whisker = 0.228120,
+    average = 0.569383,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ------------------------------------------------------------------------------
+
+% ngram-5-TA-Weighted-Sum-Modified-Kneser-Ney-1
+\addplot+[
+  boxplot prepared = {
+    draw position = 4.75,
+    lower whisker = 0.022592,
+    lower quartile = 0.066967,
+    median = 0.094754,
+    upper quartile = 0.136932,
+    upper whisker = 0.241880,
+    average = 0.111001,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+% ngram-5-NRA-Weighted-Sum-Modified-Kneser-Ney-1
+\addplot+[
+  boxplot prepared = {
+    draw position = 5.25,
+    lower whisker = 0.023497,
+    lower quartile = 0.073006,
+    median = 0.110507,
+    upper quartile = 0.174697,
+    upper whisker = 0.327149,
+    average = 0.608050,
+  },
+] table [row sep = \\, y index = 0] {
+  data\\
+};
+
+\end{axis}
+
+\end{tikzpicture}
+\end{document}
