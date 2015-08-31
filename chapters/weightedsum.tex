@@ -1,9 +1,9 @@
 \chapter{Formulating Language Models as Weighted Sums}
 \label{ch:weightedsum}
 
-In this chapter we will present our way to represent the probabilities
+In this chapter we will present a novel way to represent the probabilities
 $\ProbMKN{w_n}{w_1^{n-1}}$ and $\ProbGLM{w_n}{w_1^{n-1}}$ as weighted sums of
-terms depending on $w_n$ for a fixed history $h = w_1^{n-1}$ and an  arbitrary
+terms depending on $w_n$, for a fixed history $h = w_1^{n-1}$ and an  arbitrary
 probability event $w = w_n$.
 In other words we will express the formulas given in \cref{ch:review} as
 equations of the following form:
@@ -12,8 +12,8 @@ equations of the following form:
   \Prob{w}{h} = \sum_{i = 1}^{N} \SumWeight_i^h \cdot \SumArg_i^h(w)
 \end{equation}
 
-To the authors knowledge, there is no other work on expressing language models
-as weighted sums.
+To the authors knowledge, there is no other work on expressing existing language
+models as weighted sums.
 However, \textcite{JelinekMercer1980} already experimented with trying to learn
 weighted sum parameters automatically for language modeling.
 
@@ -22,10 +22,10 @@ beneficial for word prediction.
 As we can see in \cref{eq:prefixquery} the computation for next word prediction
 is based on calculating multiple probabilities $\Prob{w}{h}$ with a fixed
 history $h$ but varying arguments $w$.
-As has been specified in \cref{ch:review} probability calculation is based on
+As has been specified in \cref{ch:review}, probability calculation is based on
 complex recursive formulas.
 Using our weighted sum representation this computation can be speed up by
-a huge factor since computation of the sum weights $\SumWeight^h_i$ can
+a huge factor, since the computation of the sum weights $\SumWeight^h_i$ can
 be performed once beforehand.
 For each final probability we then only have to perform the $N$ remaining
 lookups $\SumArg^h_i(w)$ that actually depend on $w$.
@@ -37,9 +37,9 @@ Lastly our algorithms for calculating sum weights turn out to be performing
 faster then the direct recursive implementations, which we measure in
 \cref{sec:evaluation-weightedsum}.
 
-We will now present the basic idea of how to transform $\Prob{w_n}{w_1^{n-1}}$
-into weighted sums, that applies to both Modified Kneser-Ney Smoothing and
-the Generalized Language Model:
+We will now present the basic idea of how to transform a probability
+$\Prob{w_n}{w_1^{n-1}}$ into a weighted sum, that applies to both Modified
+Kneser-Ney Smoothing and the Generalized Language Model:
 
 Note that in all \cref{eq:mkn-high,eq:mkn-low,eq:glm-high,eq:glm-low} the
 probability event $w_n$ only appears in the nominator of fractions, specifically
@@ -50,8 +50,8 @@ Our general idea is thus, to first expand recursive calls to
 $\Prob(\DummyArg)$ or $\Prob*(\DummyArg)$, and second to factor
 out those terms that do not depend on $w_n$ by the distributive property.
 
-\Cref{sec:weightedsum-mkn} discusses our aprroach for Modified Kneser-Ney
-smoothing, while \cref{sec:weightedsum-glm} deals with the Generalized
+\Cref{sec:weightedsum-mkn} explains our aprroach for Modified Kneser-Ney
+Smoothing, while \cref{sec:weightedsum-glm} concerns itself with the Generalized
 Language Model.
 
 
@@ -61,16 +61,16 @@ Language Model.
 \label{sec:weightedsum-mkn}
 
 Modified Kneser-Ney Smoothed probabilities $\ProbMKN{w}{h}$ are calculated as
-follows:
+follows (\cref{sec:review-lm-mkn}):
 \begin{enumerate}
   \item Backing-off: Leave out words at the beginning of the history $h$, until
     $h \Skp$ is seen for the first time (\cref{eq:mkn-backoff}).
-  \item Highest order: Take frequency counts $\DiscountedCount(h \: w)$ and
+  \item Highest order: Look-up frequency counts $\DiscountedCount(h \: w)$ and
     $\Count(h \Skp)$ (\cref{eq:mkn-high}) and shorten the history by one word.
-  \item Lower orders: Take continuation counts $\DiscountedCount*(\WSkp h \: w)$
+  \item Lower orders: Look-up continuation counts $\DiscountedCount*(\WSkp h \: w)$
     and $\ContCountIp(\WSkp h \WSkp)$ (\cref{eq:mkn-low}) and shorten the
     history further until it is empty.
-  \item Lowest order: Take continuation counts $\ContCountIp(\WSkp w)$ and
+  \item Lowest order: Look-up continuation counts $\ContCountIp(\WSkp w)$ and
     $\ContCountIp(\WSkp \WSkp)$ (\cref{eq:mkn-lowest}).
 \end{enumerate}
 
@@ -108,12 +108,14 @@ By using the distributive property we obtain:
 \end{align}
 
 In the final equation \cref{eq:probmknexpansion-final} we can clearly see
-those terms that do depend on $w$ and those that do not.
-Per line the left part of the multiplication dot are the terms $\SumArg^h_i(w)$,
-while the terms on the right form the sum weights $\SumWeight^h_i$.
+those terms that do depend on $w_3$ and those that do not.
+Note that $w_3$ never occurs on the right side of the multiplication dot.
+Per line the left side of the multiplication dot will form the terms
+$\SumArg^h_i(w_3)$, while the ride side will form the sum weights
+$\SumWeight^h_i$.
 
 But note that this is only valid if the sequence $w_1 w_2 w_3$ was seen in
-the training corpus, that is $\Count(w_1 w_2 w_3) \geq 1$.
+the training corpus, that is if $\Count(w_1 w_2 w_3) \geq 1$.
 If this is not the case, backoff steps have to be performed, and a different
 resulting formula is obtained.
 
@@ -141,8 +143,8 @@ Building similiar backoff graphs for other history lengths is straightforward.
   \label{fig:history-mkn}
 \end{figure}
 
-Each order with a history $h$ is interpolated with the following order where
-the first word of $h$ is removed.
+Each order with a history $h^\prime$ is interpolated with the following order where
+the first word of $h^\prime$ is removed.
 Thus a total ordering on the histories of the orders can be specified.
 In \cref{fig:history-mkn} we have thus assigned each history a number from
 $1$~to~$4$.
@@ -457,7 +459,7 @@ The terms with an odd index (\cref{eq:glmarg-high}) correspond to
 $\DerivedHistory[i]$ occuring as the highest order of probability, the terms
 with even index (\cref{eq:glmarg-low}) to lower orders.
 The case of $\NumSkpOp{\DerivedHistory[i]} = 0$ occurs when $\DerivedHistory[i]$
-consists only of skips, it thus no longer be backoffed, and therefore
+consists only of skips, it thus can no longer be backoffed, and therefore
 presents the unigram case.
 
 Finding the sum weights $\SumWeight^h_i$ is more complex.
@@ -708,7 +710,7 @@ to all other nodes.
 To assign sum weights $\SumWeight^h_{2 i - 1}$ and $\SumWeight^h_{2 i}$ to
 every history $\DerivedHistory[i]$ of the backoff graph we iterate over all
 nodes in the graph in \cref{ln:glm-fornodesingraph}.
-First some required date is looked-up
+First some required data is prefetched
 (\cref{ln:glm-lookup-count,ln:glm-lookup-contcount,ln:glm-lookup-gamma,ln:glm-lookup-coeff}),
 then the highest order weight is computed
 (\cref{ln:glm-if-highweight-zero,ln:glm-highweight-zero,ln:glm-if-highweight-root,ln:glm-highweight-frac,ln:glm-if-highweight-else,ln:glm-highweight-rec}),
@@ -723,8 +725,8 @@ Accessing a count value like $\Count(\DerivedHistory[\text{node.index}] \Skp)$
 in \cref{ln:glm-lookup-count} is a potentially expensive operation, as a
 separate data structure has to be queried.
 \emph{node.count}, \emph{node.contCount}, and \emph{node.gamma} shall simply be
-floating point variables that are stored local to each node and easy thus to
-access.
+floating point variables that are stored local to each node and thus fastly
+accessible.
 A possible implementation that supports this is showcased in
 \cref{subsec:weightedsum-glm-implementation}.
 \Cref{ln:glm-lookup-coeff} is listed under data lookup because the computation
@@ -790,6 +792,10 @@ recursion depth
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Implementation}
 \label{subsec:weightedsum-glm-implementation}
+
+% \newlength{\oldtextfloatsep}
+% \setlength{\oldtextfloatsep}{\textfloatsep}
+% \setlength{\textfloatsep}{0em}
 
 \begin{lstlisting}[
   label = {lst:backoff-graph-c},
@@ -869,17 +875,17 @@ of a graph in one instance.
 We will now explain how all necessary data can be retrieved from that
 representation:
 \begin{itemize}
+  \setlength{\itemsep}{0.4ex}
   \item The history $\DerivedHistory[i]$ of a node at index $i$ is simple
     the original \texttt{history}, where a skip $\Skp$ is placed at each
     position, where the node's index has a set bit.
   \item A node is the top root node if its index has no set bits, and in turn a
-    node is the bottom leap node if all bits in the index is set.
+    node is the bottom leaf node if all bits in the index are set.
   \item The layer of a node is the number of set bits in its index.
   \item As explained in \cref{subsec:backoff-graph} a node at layer $l$ has
     exactly $l$ parents and $\NGramLength{h} - l$ children.
   \item The index of the $i$th parent (child) of a node is found by unsetting
     (setting) the $i$th set (unset) bit.
-  \clearpage
   \item A node \texttt{A} is an ancestor of another node \texttt{B}
     if it the bitwise and operation on their indices returns \texttt{A}'s index
     respectively it is an descendant if the same holds for the bitwise or
@@ -909,6 +915,8 @@ $\texttt{n} = \NGramLength{h}$.
 To ensure the fastest possible execution time the algorithm aims to be a minimal
 composition of bit-level operations.
 
+% \setlength{\textfloatsep}{\oldtextfloatsep}
+
 % ------------------------------------------------------------------------------
 \section{Monotony}
 \label{sec:monotony}
@@ -920,13 +928,13 @@ This means that higher $\SumArg^h_i(w)$ values correspond to higher
 probabilities.
 We can formalize that property as:
 \begin{equation}
-  \big(\forall i \in [1,N]_\NaturalNumbers: \: \SumArg^h_i(w) \geq \SumArg^h_i(w^\prime)\big)
+  \big(\forall i \in \Set{1, \ldots, N}: \: \SumArg^h_i(w) \geq \SumArg^h_i(w^\prime)\big)
     \implies \Prob{w}{h} \geq \Prob{w^\prime}{h}
 \end{equation}
 This is an important property because it allows the application of top-$k$
 joining techniques in \cref{ch:topkjoin}.
 
-Because we have defines these probabilities as sums of weights $\SumWeight^h_i$
+Because we have defined these probabilities as sums of weights $\SumWeight^h_i$
 multiplied with terms $\SumArg^h_i(w)$ (\cref{eq:weightedsum}), and since
 addition and multiplication are trivially monotone, it suffice to show that the
 $\SumWeight^h_i$ are always non-negative to prove that our probability

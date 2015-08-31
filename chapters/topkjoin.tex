@@ -1,9 +1,6 @@
 \chapter{Fast Prefix Queries using Top-\emph{k} Joins}
 \label{ch:topkjoin}
 
-\todo[inline]{Update math notation once it has been fixed in
-\cref{ch:weightedsum}.}
-
 As motivated in the introduction, we want to solve prefix queries based
 on statistical language models.
 Our objective is to reduce the execution time of a high number of next word
@@ -30,7 +27,7 @@ in \cref{sec:completiontrie}.
 Subsequently we may persist that data, so that for each requested corpus the
 necessary analyzation only has to be performed once.
 
-To find the answer for a query $\NWP[p][k]{h}$ probabilities $\Prob{w}{h}$ have
+To find the answer for a query $\NWP[p][k]{h}$, probabilities $\Prob{w}{h}$ have
 to be calculated for a fixed history $h$ but many different $w$.
 We have shown in \cref{ch:weightedsum} that we can represent each probability
 as a weighted sum that resembles \cref{eq:weightedsum}.
@@ -89,7 +86,7 @@ the probability for the next promising $w$ with the highest $\SumArg^h_i(w)$.
 
 Finding the $w$ with the highest $\SumArg^h_i(w)$ requires sorting.
 Since join combinations
-$\left(\SumArg^h_1(w), \, ..., \, \SumArg^h_N(w)\right)$ are multi-dimensional
+$\left(\SumArg^h_1(w), \, ..., \, \SumArg^h_N(w)\right)$ are $N$-dimensional
 there is no meaningful order defined on them, besides sorting by the scoring
 function.
 However that requires calculating the probability for each join
@@ -111,14 +108,14 @@ The join operation for our problem is whether for two values $\SumArg^h_i(w_x)$
 and $\SumArg^h_j(w_y)$ the $w_x$ and $w_y$ are equal.
 This is actually the simplest and most common type of join operation and is
 called an \emph{equi-join}.
-Those have the nice property that for each $\SumArg^h_i(w)$ there is exactly one
+They have the nice property that for each $\SumArg^h_i(w)$ there is exactly one
 corresponding $\SumArg^h_j(w)$ for all $j$ that are different from $i$, which
 allows easy indexing in a hash table by the key $w$.
 Top-$k$ joining techniques that operate on equi-joins are also called
 \emph{top-$k$ selections} \parencite{Ilyas2008}.
 
-Among others, two fundamental algorithms were established by
-\textcite{Fagin2001}: the \emph{threshold algorithm}, which requires sorted and
+Two fundamental algorithms were discovered by \textcite{Fagin2001} and other
+authors independently: the \emph{threshold algorithm}, which requires sorted and
 random access, and the \emph{no random access algorithm}, which only requires
 sorted access.
 We will apply these two algorithms to the problem of next word prediction and
@@ -179,7 +176,7 @@ The data structure which satisfies all these requirements is the
 \emph{completion trie} described by \textcite{HsuOttaviano2013}.
 A completion trie is a compact prefix tree that allows storage of arbitrary
 pairs of strings and integer-scores.
-A prefix trie is an ordered tree data structure where each node stores a
+A prefix tree is an ordered tree data structure where each node stores a
 character sequence.
 Retrieving a full string from the trie is done by concatenating all character
 sequences along a path from the root to a leaf node.
@@ -362,7 +359,7 @@ The output \emph{predictions} will be a list composed of at most
 The calculation of probabilities depends on sum weights
 $\SumWeight_1, \: \ldots, \: \SumWeight_N$.
 They only depend on the fixed \emph{history} and can thus be computed once at
-the start (\cref{ln:ta-sumweights}).
+the start of each query (\cref{ln:ta-sumweights}).
 To calculate the \emph{threshold}, the upper bound for all of remaining
 probabilities, the factors
 $\overline{\SumArg}_1, \: \ldots, \: \overline{\SumArg}_N$ are required.
@@ -388,7 +385,7 @@ Thus efficient querying (\cref{ln:ta-done-if-2}) or removal
 (\cref{ln:ta-queue-remove}) of the entry with the lowest probability is
 possible.
 
-After initialization is done we query words until we have found the $limit$
+After initialization is done we query words until we have found the \emph{limit}
 best predictions.
 The \Call{nextTrie}{$ $} function in \cref{ln:ta-while} returns the number $i$
 of the trie to be queried next.
@@ -421,7 +418,7 @@ The sorting of the priority queue happens implicit with the
 Afterwards the last access sorted count of the current trie is update
 (\cref{ln:ta-bara-update}) and with it the \emph{threshold} calculated
 (\cref{ln:ta-threshold}).
-If we already found $limi$ predictions and the probability of all those
+If we already found \emph{limit} predictions and the probability of all those
 predictions is higher than our upper bound of all remaining ones, the algorithm
 terminates (\cref{ln:ta-done-if-1,ln:ta-done-if-2,ln:ta-done-break}).
 The resulting \emph{predictions} are formed by the conversion of the
@@ -637,6 +634,17 @@ The algorithm terminates once \emph{limit} predictions have been found
 This procedure ensures that predictions are added in order of decreasing
 probabilities.
 
+Attention must be paid to the upper bounds of all objects in the \emph{queue}.
+Technically whenever a $\overline{\SumArg}_i$ value is updated, the upper bound
+of each item in the queue, for with $\SumArg_i$ is unknown, will change.
+So in practice one would have to recalculate all upper bounds and resort the list
+every time a $\overline{\SumArg}$ value is updated.
+This is not shown in the code in the algorithm.
+However one can take advantage of the fact that our probabilities are monotone,
+and the sorting of items thus remains constant for changing $\SumArg_i$.
+This mean one only needs to recalculate the upper bound in places where the
+actual value is needed.
+
 A case than can occur for small corpora, is that all tries may be depleted
 before \emph{limit} predictions have been established.
 Because of this we fill the \emph{predictions} with words from the \emph{queue}
@@ -646,52 +654,94 @@ However if remaining words have an probability upper bound of zero
 (\cref{ln:nra-upperbound-zero-if}) we prefer to have less than \emph{limit}
 predictions, as the remaining ones are guaranteed not to match.
 
-\todo[inline]{NRA implementation buggy because upper bounds for words are not
-updated until they are found encountered during sorted access? Maybe read
-\textcite{Fagin2001}.}
-
 % ------------------------------------------------------------------------------
+\clearpage
 \section{Implementation}
 
-\begin{draft}
-Not actually $h * p$ but $\hat{h} * p$.
+Previously we have spoken about querying a completion trie with a history
+$h$ and retrieving a pair $(w, \SumArg^h_i(w))$.
+However this is only a simplified view on the underlying process.
+In practice it is infeasible to store $\SumArg^h_i(w)$ for every possible
+history $h$, or even only for seen histories.
+Instead we rely on the derived histories $\DerivedHistory[\DummyIndex]$
+(\cref{fig:history-mkn,fig:history-glm}), described in \cref{ch:weightedsum},
+which some are partly common to multiple query histories $h$.
+So to obtain a $\SumArg^h_i(w)$ the $i$th completion trie has to be queried with
+$\DerivedHistory[i]$.
+Deriving the $\DerivedHistory[\DummyIndex]$ from $h$ is possible via simple
+computation rules.
 
+An operation like $C_i$.\Call{next}{$\DummyArg$} obviously incurs a notion
+of state to enable access to the \emph{next} object.
+This state is unique to each instance of the algorithm and each completion trie.
+In our implementation we use iterators to abstract this away.
+This is not made explicit in the shown algorithms.
+
+In the algorithms we select the next trie to query by the method
+\Call{nextTrie}{$ $}.
+This call abstracts the problem of finding the optimal next trie.
+As we have said, all access strategies are possible, as long as empty tries ---
+tries whose iterator has passed the last entry --- are not selected anymore.
+A simple strategy is round robin access, that is accessing each trie after
+another and than starting over.
+\textcite{Guentzer2000,Guentzer2001} research optimal access strategies for
+both presented algorithms.
+They introduce a notion of the partial derivative of a data source to find the
+most efficient next trie.
+
+Another thing related to empty tries is that the last seen count
+$\bar{\SumArg}_i$ needs to be zeroed once the $i$th trie is depleted.
+Else a terminating state might never be reached.
+
+\begin{draft}
 Can't actually store $\SumArg(\DummyArg)$ but only counts $\Count(\DummyArg)$.
 Discounts fuck everything up and sometimes require random access even when only
 doing sorted.
-
-Faster threshold calucation.
-
-Can't just do $C_i$.\Call{next}{$\DummyArg$}, iterators needed instead.
-
-Optimized \Call{nextTrie} implementation possible with blah...
 \end{draft}
 
 % ------------------------------------------------------------------------------
 \section{Discussion}
 
-\begin{draft}
-Space requirements of algorithms.
+We will now discuss advantages and disadvantages of both algorithms.
+On average the Threshold Algorithm will be able to terminate much faster,
+because it has access to additional information obtained via random accesses.
+The No Random Access Algorithm only performs sorted access and has to perform
+additional book keeping in order to compute its results.
+This results in a longer runtime and higher memory requirements.
 
-NRA can give predictions.
+Both algorithms need to keep track of all word they have encountered through
+sorted access.
+On top of that the top-$k$ joining algorithm only needs to keep track of at most
+$k$ word-probabilities pairs.
+The number of predictions $k$ is usually small --- on current smartphones one
+to five --- so this can be neglected.
+The No Random Access Algorithm on the other hand needs to keep track of all
+encountered occurrence counts plus upper and lower probability bounds, so has
+considerably steeper memory requirements.
 
-NRA sorting may be bad for small corpora.
+The runtime of both algorithms is largely dependent on the costs of sorted and
+random access.
+For our application and data structure we perform an in depth empirical
+comparison in \cref{subsec:evaluation-topkjoin-time}.
+In our setup the Threshold Algorithms performs its calculations much more
+quickly for the vast share of queries.
+\textcite{Fagin2001} present the \emph{Combined Algorithm}, a generalized
+version of both, that performs an optimal ratio of sorted and random accesses,
+if the runtime costs of both form of access are known.
+Finding the correct access costs for top-$k$ joining next word prediction and
+fitting the Combined Algorithm to these would be interesting future work.
 
-Random access may be far more expensive on distributed systems.
-
-Corpus needs to be preanalyzed.
-\end{draft}
-
-\begin{draft}
-Access strategy:
-Mention \textcite{Guentzer2000} and \textcite{Guentzer2001} improvements to TA
-and NRA.
-\end{draft}
+For our application of word prediction the Threshold Algorithm is superior in
+all metrics and should be preferred in practice.
+The strength of the No Random Access Algorithm is that it can still be used in
+systems where random access is impossible to implement.
+These types of systems are imaginable in distributed systems were each node only
+stores part of a language model.
 
 % ------------------------------------------------------------------------------
+\begin{draft}
 \section{Alternatives}
 
-\begin{draft}
 Why beam search is impossible.
 
 Beam search is a path finding algorithm that always expands the most promising
@@ -713,26 +763,3 @@ How to interpret: expanding the most promising state?
 For random access the cost of an edge is only known, once the edge is walked.
 For sorted access we can peek.
 \end{draft}
-
-\begin{lstlisting}[
-  label = {lst:topksql},
-  float,
-  caption = {\todo[inline]{Example SQL-Request Caption}},
-  language = SQL,
-  %basicstyle = \ttfamily,
-  emph = {history1, historyN},
-  emphstyle = \textit,
-  deletekeywords = {count} % Used as column name, don't want to escape it though
-]
-  SELECT
-    word,
-    s(Trie1.alpha, ..., TrieN.alpha) AS probability
-  FROM Vocabulary
-  LEFT OUTER JOIN Trie1
-    ON history1 + word = Trie1.sequence
-  ...
-  LEFT OUTER JOIN TrieN
-    ON historyN + word = TrieN.sequence
-  ORDER BY probability DESC
-  LIMIT k;
-\end{lstlisting}

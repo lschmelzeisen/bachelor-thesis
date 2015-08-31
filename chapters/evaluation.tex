@@ -761,15 +761,21 @@ Note that this result is not surprising and directly follows from data theory.
 
 \begin{figure}[p!]
   \centering
-  \hspace{2.5cm}Comparison of NWP with TA and NRA over varying\\
-  \hspace{2.5cm}$n$-grams lengths, top-$k$ predictions and corpus sizes
+  Comparison of NWP with TA and NRA over varying\\
+  $n$-grams lengths, top-$k$ predictions and corpus sizes
   \\[1.5ex]
   \begin{minipage}{1.4\textwidth}
     \centering
     \hspace{-0.2\textwidth}
     \input{figures/thesis-comp-nra-ta}
   \end{minipage}
-  \caption{lol}
+  \caption{Histogram showing the ratio of runtime of the No Random Access
+    Algorithm over the Threshold Algorithms for all performed experiments.
+    These experiments were next word prediction queries for Modified Kneser-Ney
+    Smoothing with $n$-gram length from two to five, number of predictions $k$
+    from one to five and five increasing corpus sizes.
+    The area in red gives the cases were the No-Random-Access algorithm was
+    faster, while the blue area shows the ones were it was slower.}
   \label{fig:evaluation-comp-nra-ta}
 \end{figure}
 

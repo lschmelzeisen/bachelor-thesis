@@ -1,17 +1,79 @@
 \chapter{Conclusion}
 \label{ch:conclusion}
 
-\begin{draft}
-Key-contribution is weighted sum representation of GLM.
+Next word prediction queries are typically solved by calculating the likelihood
+of all words in a vocabulary to follow a history, and then by selecting the
+words with the highest probabilities.
 
-Possibility to improve Argmax using Quick-Combine \parencite{Guentzer2000} and
-Stream-Combine \parencite{Guentzer2001}.
+We have optimized these next word prediction queries first by identifying
+shared terms between each probability calculation by expressing language model
+probabilities as weighted sums (\cref{ch:weightedsum}) and moving the weight
+calculation to a precomputation step.
+Secondly we applied top-$k$ joining techniques to the problem of next word
+prediction (\cref{ch:topkjoin}) to avoid calculating probabilities for all words
+in the vocabulary while retaining the same prediction quality.
+To this end we indexed sorted word-occurrence-count-pairs in a compact data
+structure.
 
-Advanced top-k algorithms that optimized on a fixed history $h$ might be called
-for if one wants to learn sum weights $\SumWeight$.
+In an extensive evaluation we have empirically researched these improvements
+(\cref{ch:evaluation}).
+For the most common use case we observed runtime improvements by 50\% after the
+weighted-sum-pre\-com\-pu\-ta\-tion and by three to four orders of magnitude
+with top-$k$ joining for our experimental setup.
+We have found further that the choice of language model between Modified
+Kneser-Ney Smoothing and the Generalized Language Model is largely irrelevant
+from a prediction quality point of view.
+But Modified Kneser-Ney Smoothing hugely outclasses the Generalized Language
+Model in terms of both time and space complexity and is thus favorably in
+practice.
 
-Other Noisy Channel Tasks might not fit the equi-join and require more
-sophisticated Argmax algorithms (see \parencite{Ilyas2004}).
+While not showing the most dramatic speedup, the weighted sum representation
+forms the key contribution of this thesis, as it is truly novel.
+Top-$k$ joining techniques on the other hand are well known, this thesis work
+was just to fit them to existing language models and apply them to a new use
+case.
 
-Research how far pruning of counts is possible without affecting scores.
-\end{draft}
+\section{Future Work}
+
+At the moment next word prediction is mainly used for text entry in smartphones.
+These devices have comparatively low amounts of memory available, so researching
+how far the stored language model size can be reduced is interesting future
+work.
+This might include pruning words with low occurrence counts, and finding which
+completion tries have the most influence in weighted sums.
+
+On the other side of that spectrum lies the task of handling very large
+completion tries.
+These come from using larger training corpora which lead to improved
+predictions.
+It is unclear how to handle the data once the resulting completion tries no
+longer fit in main memory.
+Theoretically this should work without major complications because of the offset
+based structure of the completion tries and their focus to keep related parts
+close together in memory.
+However in order to not be faced with to harsh performance hits it has to be
+researched which parts of the data should be kept in main memory, as they
+are most often queries or needed to find the path to leaf nodes.
+
+If further speed up is desired, looking for ways to parallelize the presented
+algorithms is the natural next step.
+This however would only be beneficial for machines that answer next word
+prediction queries sequentially (for example smartphones).
+Machines that have to handle multiple queries at the same time (servers) would
+be better advised to just parallelize these queries, as they are naturally
+independent of each other.
+
+Lastly the presented way of combining top-$k$ joining techniques with language
+models should be applicable to a whole range of language model tasks.
+The \emph{noisy channel} \parencite{Shannon1948} is a framework used to model
+the task of extrapolating given, scrambled information.
+It is used to describe spelling correction spelling correction
+\parencite{JurafskyMartin2009,Manning2008,Kernighan1990,Mays1991},
+word prediction \parencite{Bickel2005}, part-of-speech tagging
+\parencite{Church1988} and machine translation \parencite{Brown1990}.
+Generally top-$k$ joining techniques can be applied to all of them.
+However for some of them the actual join condition might not fit an equi-join
+and thus require more sophisticated top-$k$ joining techniques than the ones
+described in this chapter \parencite{Ilyas2004}.
+
+\todo[inline]{Flaws in experimental setup.}

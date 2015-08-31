@@ -34,7 +34,7 @@
 \newcommand{\DummyArg}{\cdot}
 \newcommand{\DummyIndex}{\bullet}
 
-% Argmax
+% % Argmax
 \DeclareMathOperator*{\ArgmaxOp}{arg\,max}
 \NewDocumentCommand{\Argmax}{s o g}{
   \ArgmaxOp_{\IfNoValueTF{#3}{}{#3}}\IfNoValueTF{#2}{}{\!{}_{#2}^{\IfBooleanTF{#1}{\star}{}}\,}
@@ -108,7 +108,7 @@
 \newcommand*\SumArg{\alpha}
 
 % Can we avoid this?
-\newcommand{\SeenHistory}{h^\prime}
+% \newcommand{\SeenHistory}{h^\prime}
 
 %\DeclareMathOperator\History{\eta}
 %\newcommand*\History{\eta}
