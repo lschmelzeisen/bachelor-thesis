@@ -24,12 +24,12 @@ Its most obvious utilization is to speed up text entry, where it is most
 beneficial to slow typists, or typists on a slow medium \parencite{Trnka2007}.
 Furthermore word prediction has been shown to reduce spelling or grammar
 mistakes for users with spelling disorders \parencite{Newell1992}.
-But it may also be of used as a method to start computing answers to a user
+But it may also be of use as a method to start computing answers to a user
 query that they have not even finished typing \noref.
 
 Nowadays word prediction is a part of various software systems.
 Although word prediction has been primarily used to augment the communication of
-users with a difficulty to express themselves verbally
+users who have difficulties expressing themselves verbally
 \parencite{Swiffin1987,Trnka2011}, the benefits of a strong word prediction
 should be obvious to anyone typing large amounts of text on a computer:
 be it the list of possible queries, offered by popular search engines such as
@@ -54,14 +54,14 @@ We formalize the task of next word prediction as follows:
 \end{equation}
 Our task is such: given a history $h$ of entered words and an already entered
 prefix $p$ of the intended word, we predict $k$ completions.
-Of course $p$ may also be empty which corresponds to the case that the user has
-not yet typed any prefix.
+course $p$ may of course also be empty, which corresponds to the case that the
+user has not yet typed any prefix.
 We subsume next word prediction with or without a prefix under the title of
 \emph{prefix queries}, with a possibly empty prefix.
 We solve this task by finding the $k$ words $w$ in the vocabulary $\Vocab$, the
 set of all words, that maximize the probability $\Prob{w}{h}$.
 That probability models the likelihood of a word $w$ following the history $h$.
-$\Argmax*[k]$ is a helper used to model the $k$ words that maximize the
+$\Argmax*[k]$ is a auxiliary used to model the $k$ words that maximize the
 probability and an extension to the conventional $\Argmax$ function:
 \begin{subequations}
   \begin{align}
@@ -76,39 +76,40 @@ probability measure for $\Prob{w}{h}$.
 Finding good ways to estimate these probabilities is the art of
 \emph{statistical language models} (\cref{sec:introduction-langmodels}).
 
-Computing next word predictions following \cref{eq:prefixquery} is a very time
-expensive operation.
-Depending on the chosen probability estimate more or less complex calculations
-have to be performed, which usually require access to backing data structures.
-Furthermore that probability is calculated for all words in the vocabulary
+Computing next word predictions following \cref{eq:prefixquery} is a very
+time-expensive operation.
+The complexity of the calculations that have to be performed, which usually
+require access to backing data structures, depends on the chosen probability
+estimate.
+Furthermore, that probability is calculated for all words in the vocabulary
 $\Vocab$, or at least for the set of all words one wants to use for prediction.
 
 Multi-word prediction is typically implemented using \emph{Viterbi-} or
 \emph{beam search}-algorithms \parencite{Bickel2005,JurafskyMartin2009}.
 These algorithms are based on following most promising prediction paths and
 pruning the search space with some heuristic.
-They however are not applicable to the problem of predicting the next word only
-and at least \textcite{Bickel2005} still employ the na\"{\i}ve method of
+They are, however, not applicable to the problem of predicting the next word
+only and at least \textcite{Bickel2005} still employ the na\"{\i}ve method of
 querying all known words to find the next word in a multi-word prediction.
 
 This thesis concerns itself with reducing the necessary query time of prefix
 queries.
-Fast word prediction is desirable because to help a user reduce keystrokes,
-predictions must be available to the user as soon as each keystroke is
-performed.
-But the ability to calculate word prediction in a manner faster than the reaction
-time of a human user might also important:
+\emph{Fast} word prediction is desirable, because in order to help a user reduce
+keystrokes, predictions must be available to the user as soon as a keystroke
+is performed.
+But the ability to calculate word prediction in a manner faster than the
+reaction time of a human user might also be important:
 for example in a client-server setting, where a central server has to calculate
 word prediction queries for a number of clients, the efficiency of the employed
 algorithm directly determines the necessary hardware of that server.
 
-To this end two independent optimizations will be presented:
+To this end, two independent optimizations will be presented:
 \begin{enumerate}
   \item We will show a novel way to rewrite the recursive definitions for
     $\Prob{w}{h}$ of the two state-of-the-art language modeling techniques
     \emph{Modified Kneser-Ney Smoothing} and the \emph{Generalized Language
     Model} as weighted sums.
-    In this representation the com\-pu\-ta\-tion-costly weights will be
+    In this representation, the com\-pu\-ta\-tion-costly weights will be
     independent of $w$ and can be calculated once in a precomputation step for
     each query.
     This will significantly reduce the computation time of $\Prob{w}{h}$ for
@@ -118,20 +119,19 @@ To this end two independent optimizations will be presented:
     By utilizing a sophisticated data structure that allows retrieval of
     sequence-count-lists sorted by counts for arbitrary sequence prefixes,
     we will be able to considerably reduce execution time of next word
-    prediction by avoiding to enumerate all words in the vocabulary.
+    prediction by avoiding the enumeration of all words in the vocabulary.
 \end{enumerate}
 
 These optimizations will allow us to give fast, \emph{non-approximative}
 predictions.
-That is the predictions will be as good as the underlying language model allows:
-the system will always predict exactly these words which maximize the
+That means the predictions will be as good as the underlying language model
+allows: the system will always predict exactly those words that maximize the
 probability.
 No pruning of the word distribution's long tail is necessary.
 
 The remainder of this chapter will introduce the two main subjects of this
 thesis: statistical language models (\cref{sec:introduction-langmodels}) and
 top-$k$ join queries (\cref{sec:introduction-topkjoin}).
-
 
 
 % ------------------------------------------------------------------------------
@@ -156,7 +156,7 @@ The resulting language models are called \emph{$n$-gram models}.
 State-of-the-art language modeling uses $n$-grams with $n$ as large as $5$
 \parencite{JurafskyMartin2009,Goodman2001,Stolcke2000}.
 
-Most language model probability formulas are given in recursive form, that only
+Most language model probability formulas are given in recursive form, which only
 implicitly depend on the occurrence count of sequences in the corpus \noref.
 If these probabilities can be expressed as monotone scoring functions of
 occurrence counts, we can apply top-$k$ joining techniques in order to solve
@@ -171,16 +171,16 @@ Top-$k$ queries are queries whose results are limited to only the $k$ most
 important ones.
 These top-$k$ results are identified by scoring all answers with a
 \emph{scoring function}, and selecting the $k$ highest scoring.
-\emph{Top-$k$ join queries} are these top-$k$ queries that produce
-their results trough combination of multiple data sources \parencite{Ilyas2008}.
+\emph{Top-$k$ join queries} are those top-$k$ queries that produce
+their results trough combining multiple data sources \parencite{Ilyas2008}.
 
 One example might be the query to a web search engine.
 Search results are ranked by relevance, as computed by several criteria
 (matching keywords, links from other sites, popularity, \ldots).
 Users generally require more than just the one highest ranking search result, as
 it may not be exactly what they were looking for.
-On the other hand it would be infeasible to relevance-rank all sites in the
-search engine's database.
+On the other hand, it would be infeasible to rank \emph{all} sites in the
+search engine's database by relevance.
 Many search engines solve this by only displaying the top 10 sites, deemed most
 relevant to the user's query, and querying more if required.
 
@@ -189,9 +189,9 @@ Top-$k$ joining techniques have widespread use and are of importance in
 many applications \noref.
 \end{draft}
 
-As it shows in the example, the na\"{\i}ve way to solve top-$k$ join
-queries, i.e.\ to aggregate all possible join results, sort all of them by
-score, and then to discard non top-$k$ results, is in most cases far to
+As is apparent from the example, the na\"{\i}ve way to solve top-$k$ join
+queries, i.e.\ aggregating all possible join results, sorting all of them by
+score, and then discarding non top-$k$ results, is in most cases far too
 slow to be of any use.
 There are of plethora of different top-$k$ processing techniques, but most
 of them achieve efficiency by requiring a \emph{monotone scoring function} and
@@ -204,20 +204,20 @@ then sorting data sources on each predicate of that function
 
 This thesis is structured as follows:
 
-\Cref{ch:review} will introduce the used notation and review the considered
-language models in this thesis: \emph{Modified Kneser-Ney Smoothing} and the
+\Cref{ch:review} will introduce the notation used and review the language models
+considered in this thesis: \emph{Modified Kneser-Ney Smoothing} and the
 \emph{Generalized Language Model}.
 
-In \cref{ch:weightedsum} will describe a novel approach of how the traditional,
-recursive definitions of these language models can be rewritten as weighted
-sums.
+In \cref{ch:weightedsum} we will describe a novel approach on how the
+traditional, recursive definitions of these language models can be rewritten as
+weighted sums.
 Additionally we will show that these language models are actually monotone
 scoring functions over occurrence counts.
 
 Using this representation, \cref{ch:topkjoin} will discuss how top-$k$ joining
 techniques can be applied to the problem of next word prediction.
 Two widely used techniques will be analyzed: the \emph{Threshold Algorithm} and
-the {No Random Access Algorithm}.
+the \emph{No Random Access Algorithm}.
 
 In \cref{ch:evaluation} we will evaluate the findings of this thesis and
 research how well they perform in practice.

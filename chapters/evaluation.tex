@@ -1,11 +1,11 @@
 \chapter{Evaluation}
 \label{ch:evaluation}
 
-We will now evaluate the benefit of the two independent optimizations we
+We will now evaluate the benefits of the two independent optimizations we
 proposed to next word prediction: representing language model probabilities as
 weighted sums (\cref{ch:weightedsum}) and calculating the word with the highest
 probability via top-$k$ joining (\cref{ch:topkjoin}).
-To this end we empirically compare their performance in a variety of usage
+To this end, we empirically compare their performance in a variety of usage
 scenarios.
 
 This chapter is organized as follows:
@@ -30,22 +30,23 @@ featuring both historical and contemporary American English of all genres.
 It contains around 600 thousand sentences which amount to 14 million words in
 total.
 
-In our experiments only the written part of that corpus was used, because next
-word prediction has no application to speaking.
+Since next word prediction has no application to speaking, in our experiments,
+only the written part of that corpus was used.
 The corpus comes tagged with semantic sentence boundaries which were used to
 split the data into sentences.
 No begin or end of sentence tags were inserted, as to not falsify the actual
 occurrence counts.
-Tokenization was performed by assuming word boundaries to occur at each space.
+\mbox{Tokenization} was performed by assuming word boundaries to occur at each
+space.
 To avoid punctuation marks directly following words being counted as only one
 word, all special characters were surrounded by spaces.
-This means for our analysis, punctuation marks count as regular words.
+For our analysis, this means punctuation marks count as regular words.
 This has the downside of text like \texttt{you're} becoming \texttt{you ' re}.
 Other than that, the data was left as is.
 In particular no case normalization, stemming or removing of names was
 performed.
 
-That text was then randomly split into 80\% training and 20\% heldout data.
+The text was then randomly split into 80\% training and 20\% heldout data.
 To measure how the algorithms under examination behaved for different sizes
 of training data, we successively discarded 50\% of sentences from training.
 Through this we obtained five datasets equaling 100\%/50\%/25\%/12.5\%/6.25\%
@@ -73,17 +74,16 @@ Distinct language models were then learned on each of these training sets.
 
 From the heldout data \num{40000} non-overlapping sequences of ten words were
 selected.
-For our experiments all but the last words of that sequence were considered to
+For our experiments, all but the last word of a sequence were considered to
 form the history, and the last word then is the word for which either a
 probability is calculated, or which is expected to be predicted by next word prediction.
-For cases were shorter histories of words were needed, words were removed from
-the front of the sequences, so the words whose probability are calculated
-respectively which are predicted remain the same.
+For cases where shorter histories of words were needed, words were removed from
+the front of the sequences, so the words to be predicted remain the same.
 To avoid the problem of how to handle unknown words in the evaluation, these
-sequences were chosen as to not contain any words, that do not occur in
+sequences were chosen as not to contain any words, that do not occur in
 the smallest 6.25\% training corpus.
-Because of this no pruning of words had to be performed, and an \texttt{UNK}
-token was not assigned an artificially occurrence count.
+Because of this, no pruning of words had to be performed, and an \texttt{UNK}
+token was not assigned an artificial occurrence count.
 
 The evaluation was performed using the \emph{Generalized Language Modeling
 Toolkit (GLMTK)}\footnote{The \emph{Generalized Language Modeling Toolkit
@@ -91,7 +91,7 @@ Toolkit (GLMTK)}\footnote{The \emph{Generalized Language Modeling Toolkit
 \mbox{\url{https://github.com/renepickhardt/generalized-language-modeling-toolkit/}}.},
 a freely available toolkit in Java to compare different language modeling
 techniques, that I wrote as part of my work as a student research assistant.
-Initially it was able to perform the traditional, recursive calculations for
+Initially, it was able to perform the traditional, recursive calculations for
 both Modified Kneser-Ney Smoothing and the Generalized Language Model.
 For this thesis I implemented next word prediction using all optimizations
 described in \cref{ch:weightedsum,ch:topkjoin} as well as all experiments from
@@ -104,16 +104,16 @@ All experiments were run on a virtual machine that was assigned eight
 Although multiple cores were available, all experiments were run in a single
 thread, one after another, to avoid thread communication influencing the
 benchmark.
-We used Linux (3.2.0-75-virtual) as the operating system, and
+Linux (3.2.0-75-virtual) was used as the operating system, and
 the OpenJDK with java version 1.7.0\_79 as the implementation of the
 Java Platform.
 The Java Virtual Machine (JVM) was assigned \SI{16}{\gibi\byte} of main memory,
 a limit that none of the experiments hit.
 
-Java Virtual Machines are know to exhibit \enquote{warm-up} behavior \noref.
-That is it takes some time while running a program to find hotspot sections
+Java Virtual Machines are known to exhibit \enquote{warm-up} behavior \noref.
+That is, it takes some time while running a program to find hotspot sections
 in the code and JIT compile these.
-Traditionally experimenters want to avoid that benchmarks are distorted by
+Traditionally, experimenters want to avoid that benchmarks are distorted by
 this warm-up behavior \noref.
 To circumvent this, the code under benchmark is usually executed multiple times,
 to ensure JIT compilation of the relevant sections, and the actual benchmark
@@ -131,40 +131,40 @@ confident that the warm-up is completed before the second execution.
 
 Because of the large sample size of \num{40000} testing sequences, showing
 all measured data points in diagrams is unfeasible.
-Instead statistical characteristics of the measured distributions of data
+Instead, statistical characteristics of the measured distributions of data
 have to be displayed.
-In our experiments, it turned out that finding fitting statistical
+In our experiments it turned out that finding fitting statistical
 characteristics is non-trivial.
 Natural choices for this are the mean and the standard deviation of
 distributions.
-However these are only suited to accurately describe measurements that are
-normal distributed, and are not suitable for our needs because of reasons:
+However, these are only suited to accurately describe measurements that are
+normally distributed, and are not suitable for our needs for several reasons:
 \begin{itemize}
   \item Some measured distributions exhibited a non-negligible amount of
     \emph{right-skewness}.
-    In other words the mass of the distribution is concentrated on the left.
+    In other words, the mass of the distribution is concentrated on the left.
     This case occurred when measuring the runtime of algorithms, and can be
     explained by increased communication of the operation system during the
     calculation of a tiny part of the test sequences.
     Such outliers should not unduly affect the statistical characteristics,
     which is not true for the mean and the standard deviation.
-    On top of this the standard deviation is only capable of showcasing
+    On top of this, the standard deviation is only capable of showcasing
     symmetric dispersion, so its use would be misleading for skewed
     distributions.
   \item Another observation is, that a few distributions are \emph{multimodal}.
-    That is multiple distinct peaks are visible in a density histogram of that
+    That is, multiple distinct peaks are visible in a density histogram of that
     distribution.
-    Again this mostly occurred when measuring the runtime of algorithms,
+    Again, this mostly occurred when measuring the runtime of algorithms,
     and can be explained by the fact that the \num{40000} test sequences can
     be partitioned into several classes of different computational costs.
-    For example calculating probabilities is vastly different depending on
+    For example, calculating probabilities is vastly different depending on
     how many words of the history were seen in the training corpus.
     Both the mean and the standard deviation do not accurately describe
     multimodal distributions.
 \end{itemize}
 
 Instead, more \emph{robust}, \emph{non-parametric} statistical characteristics
-have to be used, that do not impose assumptions about the underlying
+have to be used, which do not impose assumptions about the underlying
 measured distributions.
 One common form of visualizing data that fits these requirements is the use of
 \emph{box plots}.
@@ -172,18 +172,18 @@ Box plots visually describe the measured distribution through the combination of
 five characteristics.
 We follow the convention of \textcite{Tukey1977}:
 \begin{itemize}
-  \item As the name suggests the defining feature of box plots is their use of
+  \item As the name suggests, the defining feature of box plots is their use of
     boxes.
     The lower/upper bar of the box gives the location of the first
     respectively third \emph{quartile} of the data.
     So 50\% of data measuring points fall into the plot's box.
   \item The band inside the box gives the location of the \emph{median}.
-    By its position relative to the quartile it is possible to visually estimate
+    By its position relative to the quartile, it is possible to visually estimate
     the skewness of the distribution.
-  \item The box is surrounded by whiskers, who reach to the smallest/largest
+  \item The box is surrounded by whiskers, which reach to the smallest/largest
     datum in the sample.
     But their length is limited to at most $1.5$ \emph{inter quartile ranges}.
-    Every measuring points outside of that range is considered to be an outlier.
+    Every measuring point outside of that range is considered to be an outlier.
     Outliers are not shown in the plot.
 \end{itemize}
 
@@ -212,18 +212,18 @@ Such a small requirement of memory can be neglected}.
 Our first experiment aims to compare the calculation time of one single
 probability for both approaches and both considered language models, independent
 of any application.
-To this end we tracks the calculation time that is necessary to calculate
+To this end, we track the calculation time that is necessary to compute
 the conditional probability $\Prob{w}{h}$ of test sequences.
 The last word of a test sequence gives the word~$w$ for which the probability is
 calculated, while the first to the second to last words of the sequence form
 the conditional history~$h$.
 Probability calculation time depends mostly on the order of the employed Markov
 assumption, as this directly determines the length of the considered history
-and thus the recursion depth of the calculation.
-In the experiment we therefore track the calculation time for different
+and thus, the recursion depth of the calculation.
+In the experiment, we therefore track the calculation time for different
 $n$-gram lengths of the the sequence under testing.
 Lower length sequences are derived from higher length ones by removing the
-word at the beginning, so that the words $s$ under prediction remains the same
+word at the beginning, so that the words $s$ under prediction remain the same
 over all $n$-gram lengths.
 The results are shown in \cref{fig:evaluation-probtime}.
 
@@ -273,7 +273,7 @@ moves the recursive calculations into the generation of weights.
 \Cref{fig:evaluation-probtime-glm} gives the same experiment for the Generalized
 Language Model.
 Because of the log-scale on the y-axis we conclude a clear exponential relation
-between $n$-grams-length and calculation time for both approaches,
+between $n$-grams-length and calculation time for both approaches.
 Again for short $n$-grams lengths ($1$- to $3$-grams) the traditional, recursive
 approach is slightly faster, while for longer $n$-grams ($4$-grams and onwards)
 the weighted-sum method gets increasingly better.
@@ -286,10 +286,10 @@ weighted-sum approach is about double as fast.
 
 But the main advantage of the weighted sum approach lies not in the fact
 that the calculation for a single, arbitrary probability is faster.
-Instead in the application of next word prediction, it allows to calculate the
+Instead, in the application of next word prediction, it allows to calculate the
 sum weights $\SumWeight^h_i$ only once in a pre-computation step of each query.
-This is possible because for a next word prediction query, all required
-probabilities depend on a constant history $h$, as explain in
+This is possible, because for a next word prediction query all required
+probabilities depend on a constant history $h$, as explained in
 \cref{ch:weightedsum}.
 
 \begin{figure}
@@ -326,7 +326,7 @@ We conclude that there is no downside to the weighted-sum approach.
 For Modified Kneser-Ney Smoothing it is able to calculate probabilities in
 approximately the same time, while it is about twice as fast for the
 Generalized Language Model.
-Additionally, in the application of next word prediction,  it to further reduce
+Additionally, in the application of next word prediction, it further reduces
 the calculation time by around 55\% respectively 70\% depending on choice
 of language model.
 
@@ -343,9 +343,9 @@ Number of weights per model.
 \subsection{Prediction Quality}
 \label{subsec:evaluation-topkjoin-quality}
 
-First we will compare the achieved prediction quality of the employed
+First, we will compare the achieved prediction quality of the employed
 language models.
-Note that for this experiment the choice of underlying algorithm does not
+Note, that for this experiment, the choice of the underlying algorithm does not
 matter.
 The Simple Argmax, the Threshold Algorithm, and the No-Random Access Algorithm
 always predict the same words, they just compute these results in different
@@ -356,31 +356,32 @@ degree of \emph{normalized keystroke savings}
 \parencite{Swiffin1987,Bickel2005,Trnka2011}.
 They measure the percentage of keystrokes that can be omitted by using next
 word prediction compared to letter-by-letter typing.
-Normalized keystroke savings (NKSS) are calculate as \parencite{Trnka2011}:
+Normalized keystroke savings (NKSS) are calculate as follows
+\parencite{Trnka2011}:
 \begin{equation}
   \text{NKSS} = \frac{\text{keystrokes}_\text{normal} - \text{keystrokes}_\text{with prediction}}
                      {\text{keystrokes}_\text{normal}}
 \end{equation}
 
-In the context of next word prediction we are only concerned with the keystroke
+In the context of next word prediction, we are only concerned with the keystroke
 savings of entering single, independent words.
 For our purpose $\text{keystrokes}_\text{normal}$ thus is the number of
 characters of a word, while $\text{keystrokes}_\text{with prediction}$ is
 the number of characters of a word one has to type until the system suggests
-the indented word as a completion.
-This however is not a clear definition: most next word prediction systems do not
-only offer a single prediction after each keystroke, but a list of $k$
+the intended word as a completion.
+This, however, is not a clear definition: most next word prediction systems do
+not only offer a single prediction after each keystroke, but a list of $k$
 predictions from which the user can choose.
-Measurements of normalized keystroke savings are thus inherently depend on the
-choice of $k$.
+Measurements of normalized keystroke savings are thus inherently dependent on
+the choice of $k$.
 
-There also is no clear consensus on how keystrokes are counted
+There is also no clear consensus on how keystrokes are counted
 \parencite{Trnka2011}.
 For this thesis, we count each character as a single keystroke, independent of
 case or accessibility from a normal keyboard.
 Word separating characters like spaces or newlines are not considered in our
 analysis, as they do not matter for next word prediction.
-On top of that we did not count the process of selecting the indented word from
+On top of that, we did not count the process of selecting the indented word from
 the list of predictions as a keystroke to enable keystroke savings to lie in the
 complete range from zero to one.
 
@@ -412,8 +413,8 @@ As is apparent, the choice between Modified Kneser-Ney Smoothing and the
 Generalized Language Model is largely irrelevant from a keystroke savings point
 of view, at least for our experimental setup: for two significant  digits, all
 values match, with the exception of the last row, which only differs slightly.
-The Generalized Language Model however comes with severely higher costs in both
-required space and runtime as we will see in
+The Generalized Language Model, however, comes with severely higher costs in
+both required space and runtime as we will see in
 \cref{subsec:evaluation-topkjoin-space,subsec:evaluation-topkjoin-time}.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -421,14 +422,14 @@ required space and runtime as we will see in
 \subsection{Space Requirements}
 \label{subsec:evaluation-topkjoin-space}
 
-Next we will measure the memory requirements of our next word prediction
+Next, we will measure the memory requirements of our next word prediction
 system.
-Again the choice of algorithm to calculate next word prediction is irrelevant.
+Again, the choice of algorithm to calculate next word prediction is irrelevant.
 For all algorithms we use the same data structure to store occurrence counts of
 text corpora: the completion trie described in \cref{sec:completiontrie}.
 This data structure is optimized for compact storage and supports all required
 access types.
-However the amount of necessary data varies with the employed language model.
+However, the amount of necessary data varies with the employed language model.
 As the Generalized Language Model also needs to keep track of the occurrence
 of skipped $n$-grams, we expect it to always require more memory.
 
@@ -449,14 +450,14 @@ of skipped $n$-grams, we expect it to always require more memory.
 
 \Cref{fig:evaluation-trie-size} shows the necessary memory for each different
 corpus size and each language model.
-In the plot all measurement points of one language model technique lie on one
+In the plot, all measurement points of one language model technique lie on one
 pretty clear, straight line.
 Note that both axis feature logarithmic scales.
-Thus the relation between the number of sentences in a corpus and the required
+Thus, the relation between the number of sentences in a corpus and the required
 memory space is monomial in practice.
-As the slope of the observed line is lesser than one, the power of the monomial
-also has to be lass than one.
-We thus conclude that the relation between increasing corpus size to the
+As the slope of the observed line is less than one, the power of the monomial
+also has to be less than one.
+We thus conclude, that the relation between increasing corpus size to the
 required memory is better than linear.
 
 For each measured corpus size, the Generalized Language Model takes roughly
@@ -471,10 +472,10 @@ This argument will be reinforced by comparing their runtimes.
 \subsection{Runtime Analysis}
 \label{subsec:evaluation-topkjoin-time}
 
-Finally we want to compare the presented next word prediction algorithms by
+Finally, we want to compare the presented next word prediction algorithms by
 their runtime, as fast next word prediction algorithms were the main objective
 of this thesis.
-In this thesis we described three different solutions:
+In this thesis, we described three different solutions:
 \begin{inparaenum}[(1)]
   \item the Simple Argmax algorithm, which calculates the probability of all
     words in a vocabulary and then selects the ones with the highest
@@ -691,25 +692,25 @@ the relation between the number of unique words in a corpus and the runtime of
 each algorithms is shown.
 A linear relation can be observed for measurements of the Simple Argmax
 algorithm.
-This can easily be explained by the fact, that it calculate one probability for
+This can easily be explained by the fact that one probability is calculated per
 each unique word.
 The top-$k$ joining algorithms seem to grow with the logarithm of the number of
 unique words.
-However no clear statement can be made from these measurements, the relation
-could also be linear in practice, and the seemingly logarithmic relation could
-only be the result of variance.
-On the other hand a logarithmic relation would be well explainable, because
+However, no clear statement can be made from these measurements.
+The relation could also be linear in practice, and the seemingly logarithmic
+relation could be the result of variance.
+On the other hand, a logarithmic relation would be well explainable, since
 top-$k$ algorithms precisely try to avoid enumerating all words.
 More importantly though, the top-$k$ joining algorithms are able to calculate
 the results multiple orders of magnitude faster for both language models.
-Calculations that ranged in the order of seconds were speed up to
+Calculations that ranged in the order of seconds were sped up to
 sub-millisecond performance.
 
 \Cref{fig:evaluation-time-nwp-mkn-ngram,fig:evaluation-time-nwp-glm-ngram}
 attest similar runtime-improvements.
 They show the connection between employed $n$-gram length and calculation time.
-For Modified Kneser-Ney Smoothing a linear relation is observed, while that for
-the Generalized Language Model is exponential.
+For Modified Kneser-Ney Smoothing, a linear relation is observed, while the
+relation for the Generalized Language Model is exponential.
 It is clear that the relevant factor is calculation time of probabilities, as
 \cref{fig:evaluation-probtime} has shown identical correlations between $n$-gram
 lengths and calculation time.
@@ -717,11 +718,11 @@ Together with \cref{tab:evaluation-nkss} this figure gives a good overview of
 possible runtime / prediction quality trade-offs.
 \todo{Does it make sense to take measurement of unique words vs trie depth?}
 
-Lastly \cref{fig:evaluation-time-nwp-mkn-predictions,%
+Lastly, \cref{fig:evaluation-time-nwp-mkn-predictions,%
 fig:evaluation-time-nwp-glm-predictions} show how these algorithms behave
 when more than one word is to predicted.
-Obviously for the Simple Argmax Algorithm the time remains constant, as it
-calculates probabilities for all words anyhow.
+Obviously, for the Simple Argmax Algorithm the time remains constant, as it
+calculates probabilities for all words anyway.
 Keeping track of the $k$ highest probabilities can be considered a no-op versus
 actually calculating the probabilities.
 On the other hand, the top-$k$ joining algorithms correlate linearly with
@@ -730,34 +731,34 @@ The No Random Access seems to be performing significantly worse; the linear
 relation is almost impossible to make out in the plot for the Threshold
 Algorithm.
 
-Over all experiments a clear improvement in runtime through top-$k$ join
+Throughout all experiments, a clear improvement in runtime through top-$k$ join
 algorithms is observable.
 At large the calculations using Modified Kneser-Ney Smoothing were around ten
 times faster than those of the Generalized Language Model.
-Additionally the Threshold Algorithm was able to outperform the No Random Access
+Additionally, the Threshold Algorithm was able to outperform the No Random Access
 Algorithm in all but the most niche measurement\footnote{The only measuring
 point for which the No Random Access Algorithm was faster were for $2$-grams.
 However $2$-grams are not used in any application in practice because they yield
 comparably bad prediction quality (\cref{tab:evaluation-nkss}).}.
 
-To quantify that last point we will perform a comparison of both top-$k$ join
+To quantify that last point, we will perform a comparison of both top-$k$ join
 algorithms.
-To this end we summarize the previous experiments by dividing the
+To this end, we summarize the previous experiments by dividing the
 No-Random-Access-Algorithm-runtimes through the Threshold-Algorithm-runtimes
 for each performed query.
 \Cref{fig:evaluation-comp-nra-ta} shows a histogram of these ratios.
 Note the logarithmic x-axis and the thus increasing bin sizes.
 By the mean we could say that the Threshold Algorithm is fifteen times faster
 for an average query.
-However the mean might not be a good measure because the data is not normal
+However, the mean might not be a good measure as the data is not normally
 distributed.
 But even for a robust measure like the median the Threshold Algorithm is about
 one and a half times faster.
-We thus conclude that for our experiment setup and data structure access costs
+We thus conclude, that for our experiment setup and data structure access costs,
 the Threshold Algorithm significantly outperforms.
 One should only use the No-Random-Access Algorithm because of structural
 inabilities to support random access.
-Note that this result is not surprising and directly follows from data theory.
+Note, that this result is not surprising and directly follows from data theory.
 
 \begin{figure}[p!]
   \centering

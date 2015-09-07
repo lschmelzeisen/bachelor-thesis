@@ -14,7 +14,6 @@
 \NewOption{f}{@genderfemale}
 \DeclareOption{fm}{\setboolean{@gendermale}{true}
                    \setboolean{@genderfemale}{true}}
-\NewOption{group}{@group}
 \NewOption{seminar}{@typeseminar}
 \NewOption{bachelor}{@typebachelor}
 \NewOption{master}{@typemaster}
@@ -388,6 +387,54 @@
     }\relax
     \end{titlepage}
   }
+}
+
+% Statement ====================================================================
+
+\newcommand*\makestatement{
+% \begin{titlepage}
+%   \begin{flushleft}
+%   \begin{addmargin}[-1cm]{-3cm}
+%     \begin{Large}
+%       \noindent
+%       Erkl{\"a}rung\\[5mm]
+%     \end{Large}
+    \chapter*{Erkl{\"a}rung}
+
+    \noindent
+    Hiermit best\"atige ich, dass die vorliegende Arbeit von mir selbstst\"andig
+    verfasst wurde und ich keine anderen als die angegebenen Hilfsmittel --
+    insbesondere keine im Quellenverzeichnis nicht benannten Internet-Quellen --
+    benutzt habe und die Arbeit von mir vorher nicht in einem anderen
+    Pr\"ufungsverfahren eingereicht wurde. Die eingereichte schriftliche Fassung
+    entspricht der auf dem elektronischen Speichermedium (CD-Rom).
+
+    \begin{center}
+      \begin{tabular}{l p{0.5cm} cc}
+                                                            & {} & Ja & Nein\\[.5cm]
+        Mit der Einstellung dieser Arbeit in die Bibliothek & {} & {} & {}\\
+        bin ich einverstanden.                              & {} & $\square$ & $\square$\\[.5cm]
+        Der Ver\"offentlichung dieser Arbeit im Internet    & {} & {} & {}\\
+        stimme ich zu.                                      & {} & $\square$ & $\square$\\[.5cm]
+        Der Text dieser Arbeit ist unter einer Creative     & {} & {} & {}\\
+        Commons Lizenz (CC BY-SA 3.0) verf\"ugbar.          & {} & $\square$ & $\square$\\[.5cm]
+        Der Quellcode ist unter einer Creative Commons      & {} & {} & {}\\
+        Lizenz (CC BY-SA 3.0) verf\"ugbar.                  & {} & $\square$ & $\square$\\[.5cm]
+        Die erhobenen Daten sind unter einer Creative       & {} & {} & {}\\
+        Commons Lizenz (CC BY-SA 3.0) verf\"ugbar.          & {} & $\square$ & $\square$\\
+      \end{tabular}
+    \end{center}
+
+    \vspace{1.5cm}
+
+    \begin{small}
+      \noindent
+      \dotfill\\
+      \hspace*{0.1cm}(Ort, Datum)\hfill(Unterschrift)%
+    \end{small}
+%     \end{addmargin}
+%   \end{flushleft}
+% \end{titlepage}
 }
 
 % Abstract =====================================================================

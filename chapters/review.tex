@@ -23,8 +23,8 @@ and recall the language modeling techniques considered in this work,
 namely \emph{Modified Kneser-Ney Smoothing} (\cref{sec:review-lm-mkn}) and the
 \emph{Generalized Language Model} (\cref{sec:review-lm-glm}).
 However we will only give and explain definitions for these language models.
-No motivation or justification of their genesis will be performed, as these are
-not necessary to understand the contribution of this thesis.
+No motivation or justification of their genesis will be performed, as they are
+only of peripheral importance to understand the contribution of this thesis.
 Instead the interested reader is hereby referred to the primary sources.
 
 
@@ -38,7 +38,7 @@ $w_1^n$ may be any contiguous sequence of length $n$ in a text.
 So $w_1$ does not have to be the first word of a sentence or the like,
 it just designates the first word of the sequence.
 
-By writing two words directly next each other, as in $w_1 w_2$, we mean to
+By writing two words directly next to each other, as in $w_1 w_2$, we mean to
 \emph{concatenate} them to a sequence of words $w_1^2$.
 Sometimes for clarity concatenation is made explicit by writing
 $w_1 \NGramConcat w_2$. We also extend this notation to concatenations of
@@ -153,7 +153,7 @@ With
 ${\DiscountedCount*(\WSkp w_1^n) = \max\Set{ \ContCountIp(\WSkp w_1^n) - \Discount(\Count(w_1^n)), 0 }}$.
 the \emph{discounted} continuation count.
 
-Backing-off to compute lower orders is never necessary, because
+Backing-off to compute lower orders is never necessary:
 if history $w_1^{n-1}$ was seen, $w_2^{n-1}$ was seen as well.
 \todo{This should actually not be true, because we increase n-gram length for
 first lower order. How do we handle this in current implementation?}
@@ -184,12 +184,12 @@ $\frac{1}{\Cardinality{\Vocab}}$.
 \label{sec:review-lm-glm}
 
 The equations of this section match the ones from \textcite{Pickhardt2014},
-but are given in a slightly modified own notation that enables easier proceeding
-in \cref{ch:weightedsum}.
+but are given in a slightly modified notation by my own that enables easier
+proceeding in \cref{ch:weightedsum}.
 
 The Generalized Language Model is a natural extension to Modified Kneser-Ney
 Smoothing.
-It is again based on interpolation, though it differs in the way lower order
+It is based on interpolation as well, though it differs in the way lower order
 models are interpolated.
 The highest order is computed as:
 \begin{equation}
@@ -282,7 +282,7 @@ The higher the count value $c$ the higher it is discounted
       D_{3+} & if $c \geq 3$
     \end{dcases*}
 \end{equation}
-With the the discounting values $D_\DummyIndex$ defined as
+With the discounting values $D_\DummyIndex$ defined as
 \parencite{ChenGoodman1999}:
 \begin{subequations}
   \label{eq:discounts}
@@ -293,7 +293,7 @@ With the the discounting values $D_\DummyIndex$ defined as
   \end{align}
 \end{subequations}
 Where $Y = \frac{n_1}{n_1 + n_2}$, and where $n_i$
-denotes the total number of of \mbox{$n$-grams} which appear exactly $i$ times
+denotes the total number of \mbox{$n$-grams} which appear exactly $i$ times
 in the training corpus \parencite{ChenGoodman1999}.
 \todo{This doesn't really fully explain how $n_i$ works does it?}
 

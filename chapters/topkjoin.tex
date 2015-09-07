@@ -150,9 +150,9 @@ algorithm.
 \label{sec:completiontrie}
 
 For our needs we require a data structure that can return sorted pairs
-$\left(w, \SumArg^h_i(w)\right)$ for each $i$ for a given history $h$.
+$\left(w, \SumArg^h_i(w)\right)$ for each $i$ and a given history $h$.
 Additionally as we are solving prefix queries, it has to be possible to specify
-a prefix $p$ with which all $w$ have to start.
+a prefix $p$ which all $w$ have to start with.
 
 On top of that the threshold algorithm requires random access to the data
 structure, that is for a given $w$ we want to find $\SumArg^h_i(w)$.
@@ -212,7 +212,7 @@ This enables all our desired accessing schemes:
     The remaining part of the string is the word $w$.
     Results are sorted on the score $\SumArg^h_i(w)$.
     \todo{Querying $i$-th trie is only said implicitly.}
-  \item A prefix $p$ with which $w$ has to start is easily included.
+  \item A prefix $p$ which $w$ has to start with is easily included.
     Querying for completions of $h \NGramConcat p$ returns the same pairs as above, but only
     those where $p$ is a prefix in $w$.
   \item Random access for a fixed history $h$ and fixed word $w$ is achieved by
@@ -233,7 +233,7 @@ works as follows \parencite{Fagin2001}:
     are queried with prefix $h \NGramConcat p$) in any order.
     One strategy might be a round robin approach, that is each source is
     accessed once in turn.
-  \item Every time a pair $(w, \SumArg^h_i(w))$ is a encountered with a new word
+  \item Every time a pair $(w, \SumArg^h_i(w))$ is encountered with a new word
     $w$, we look up all other $\SumArg^h_j(w)$ for $j \neq i$ with random
     access.
     With these the word probability
@@ -244,8 +244,8 @@ works as follows \parencite{Fagin2001}:
     was encountered during sorted access to the $i$th data source.
     Then the \emph{threshold}
     $t = s(\overline{\SumArg}_1, \ldots, \overline{\SumArg}_N)$
-    is an upper bound for the probability of all words that have not yet been
-    seen.
+    is an upper bound for the probability of all words that have not been
+    seen yet.
   \item Once we have encountered $k$ probabilities greater than the current
     threshold $t$ the algorithm terminates and the $k$ best pairs
     $(w, \: \Prob{w}{h})$ are returned.
@@ -390,7 +390,7 @@ best predictions.
 The \Call{nextTrie}{$ $} function in \cref{ln:ta-while} returns the number $i$
 of the trie to be queried next.
 It is thus stateful and needs to keep track of previous return values.
-In our implementation we perform a round-robin approach, e.g.\ tries are
+In our implementation we perform a round-robin approach: tries are
 returned in the order $1, 2, \ldots, N, 1, 2, \ldots$
 Once a trie is depleted it is omitted.
 
@@ -600,8 +600,8 @@ If the word has not been seen before (\cref{ln:nra-contains}) we initialize all
 counts $\SumArg_1, \: \ldots, \: \SumArg_N$ as \emph{unkown} values.
 Otherwise we load previously stored counts from the mapping
 (\cref{ln:nra-get-wordcounts}).
-Additionally as we know the word to receive updated bounds its entry from the
-\emph{queue} (\cref{ln:nra-queue-remove}).
+Additionally as we know the word to receive updated bounds its entry is removed
+from the \emph{queue} (\cref{ln:nra-queue-remove}).
 Afterwards we update the one $\SumArg_i$ we have retrieved the value for
 (\cref{ln:nra-a-set}) and write the resulting count-tuple back into the map
 (\cref{ln:nra-update-mapping}).
@@ -635,14 +635,14 @@ This procedure ensures that predictions are added in order of decreasing
 probabilities.
 
 Attention must be paid to the upper bounds of all objects in the \emph{queue}.
-Technically whenever a $\overline{\SumArg}_i$ value is updated, the upper bound
+Technically whenever an $\overline{\SumArg}_i$ value is updated, the upper bound
 of each item in the queue, for with $\SumArg_i$ is unknown, will change.
 So in practice one would have to recalculate all upper bounds and resort the list
-every time a $\overline{\SumArg}$ value is updated.
-This is not shown in the code in the algorithm.
+every time an $\overline{\SumArg}$ value is updated.
+This is not made explicit in the presented algorithm.
 However one can take advantage of the fact that our probabilities are monotone,
 and the sorting of items thus remains constant for changing $\SumArg_i$.
-This mean one only needs to recalculate the upper bound in places where the
+This means one only needs to recalculate the upper bound in places where the
 actual value is needed.
 
 A case than can occur for small corpora, is that all tries may be depleted
@@ -666,7 +666,7 @@ history $h$, or even only for seen histories.
 Instead we rely on the derived histories $\DerivedHistory[\DummyIndex]$
 (\cref{fig:history-mkn,fig:history-glm}), described in \cref{ch:weightedsum},
 which some are partly common to multiple query histories $h$.
-So to obtain a $\SumArg^h_i(w)$ the $i$th completion trie has to be queried with
+So to obtain an $\SumArg^h_i(w)$ the $i$th completion trie has to be queried with
 $\DerivedHistory[i]$.
 Deriving the $\DerivedHistory[\DummyIndex]$ from $h$ is possible via simple
 computation rules.
@@ -690,7 +690,7 @@ They introduce a notion of the partial derivative of a data source to find the
 most efficient next trie.
 
 Another thing related to empty tries is that the last seen count
-$\bar{\SumArg}_i$ needs to be zeroed once the $i$th trie is depleted.
+$\bar{\SumArg}_i$ needs to be set to zero once the $i$th trie is depleted.
 Else a terminating state might never be reached.
 
 \begin{draft}
@@ -739,6 +739,7 @@ These types of systems are imaginable in distributed systems were each node only
 stores part of a language model.
 
 % ------------------------------------------------------------------------------
+\iffalse
 \begin{draft}
 \section{Alternatives}
 
@@ -763,3 +764,4 @@ How to interpret: expanding the most promising state?
 For random access the cost of an edge is only known, once the edge is walked.
 For sorted access we can peek.
 \end{draft}
+\fi

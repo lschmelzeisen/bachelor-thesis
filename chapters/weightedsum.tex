@@ -14,7 +14,7 @@ equations of the following form:
 
 To the authors knowledge, there is no other work on expressing existing language
 models as weighted sums.
-However, \textcite{JelinekMercer1980} already experimented with trying to learn
+However, \textcite{JelinekMercer1980} already experimented with learning
 weighted sum parameters automatically for language modeling.
 
 Being able to accurately represent probabilities in a form like this is highly
@@ -24,7 +24,7 @@ is based on calculating multiple probabilities $\Prob{w}{h}$ with a fixed
 history $h$ but varying arguments $w$.
 As has been specified in \cref{ch:review}, probability calculation is based on
 complex recursive formulas.
-Using our weighted sum representation this computation can be speed up by
+Using our weighted sum representation this computation can be sped up by
 a huge factor, since the computation of the sum weights $\SumWeight^h_i$ can
 be performed once beforehand.
 For each final probability we then only have to perform the $N$ remaining
@@ -34,7 +34,7 @@ Another handy benefit is that by this representation we have all terms that
 change with $w$ explicitly available, which is a prerequisite for top-$k$
 joining and will be explained in \cref{ch:topkjoin}.
 Lastly our algorithms for calculating sum weights turn out to be performing
-faster then the direct recursive implementations, which we measure in
+faster than the direct recursive implementations, which we measure in
 \cref{sec:evaluation-weightedsum}.
 
 We will now present the basic idea of how to transform a probability
@@ -101,21 +101,21 @@ Inserting the lower orders results in:
 By using the distributive property we obtain:
 \begin{align}
   \label{eq:probmknexpansion-final}
-  \hspace{-2.5em}\ProbGLM {w_3}{w_1 w_2} = {}
+  \hspace{-2.5em}\ProbMKN {w_3}{w_1 w_2} = {}
     & & \DiscountedCount (w_1 w_2 w_3)   & \cdot\ \frac{1}{\Count(w_1 w_2 \Skp)} \\
-    &+& \DiscountedCount*(\WSkp w_3 w_3) & \cdot\ \frac{\gamma(w_1 w_2)}{\Count(w_1 w_2 \Skp) \ContCountIp(\WSkp w_2 \WSkp)} \nonumber \\
+    &+& \DiscountedCount*(\WSkp w_2 w_3) & \cdot\ \frac{\gamma(w_1 w_2)}{\Count(w_1 w_2 \Skp) \ContCountIp(\WSkp w_2 \WSkp)} \nonumber \\
     &+& \ContCountIp(\WSkp w_3)          & \cdot\ \frac{\gamma(w_1 w_2) \: \gamma(w_2)}{\Count(w_1 w_2 \Skp) \ContCountIp(\WSkp w_2 \WSkp) \ContCountIp(\WSkp \WSkp)} \nonumber
 \end{align}
 
-In the final equation \cref{eq:probmknexpansion-final} we can clearly see
-those terms that do depend on $w_3$ and those that do not.
+In the final equation \cref{eq:probmknexpansion-final} we can clearly identify
+the terms that do depend on $w_3$ and those that do not.
 Note that $w_3$ never occurs on the right side of the multiplication dot.
 Per line the left side of the multiplication dot will form the terms
-$\SumArg^h_i(w_3)$, while the ride side will form the sum weights
+$\SumArg^h_i(w_3)$, while the right side will form the sum weights
 $\SumWeight^h_i$.
 
-But note that this is only valid if the sequence $w_1 w_2 w_3$ was seen in
-the training corpus, that is if $\Count(w_1 w_2 w_3) \geq 1$.
+But note that this is only valid if the sequence $w_1 w_2 w_3$ has been seen in
+the training corpus, and thus $\Count(w_1 w_2 w_3) \geq 1$.
 If this is not the case, backoff steps have to be performed, and a different
 resulting formula is obtained.
 
@@ -138,7 +138,7 @@ Building similiar backoff graphs for other history lengths is straightforward.
     Centered are the histories for each probability.
     It is assumed that the history $w_1 w_2 w_3$ was seen during training, so
     that no backing-off is necessary.
-    Orders are combined with with interpolation weights $\gamma(\DummyArg)$.
+    Orders are combined with interpolation weights $\gamma(\DummyArg)$.
   }
   \label{fig:history-mkn}
 \end{figure}
@@ -155,7 +155,7 @@ number $N$ of sum weights.
 In the case of Modified Kneser-Ney Smoothing this is exactly the number of
 interpolation orders.
 Let $\DerivedHistory[s]$ be the first seen history that is the result of
-backing off given history $h$ exaclty $s$ many times.
+backing off given history $h$ exactly $s$ times.
 The number $N$ of sum weights is then the number of words of that history plus
 one for the empty history.
 \begin{equation}
@@ -305,8 +305,8 @@ It visualizes the lower order probabilities that factor into those of higher
 orders, using that definition of $\SkpOp[j]{h}$.
 The nodes represent the histories $h = w_1 w_2 w_3$ of a probability
 $\ProbGLM{w_4}{w_1 w_2 w_3}$.
-The directed edges represent an immediate dependency, for example the
-probabilities that occur in the definition of
+The directed edges represent an immediate dependency.
+For example the probabilities that occur in the definition of
 $\ProbGLM*{w_4}{w_1 w_2 \Skp}$ are $\ProbGLM*{w_4}{w_1 \Skp \Skp}$ and
 $\ProbGLM*{w_4}{\Skp w_2 \Skp}$.
 In order theory, graphs that generalize this idea are also known as
@@ -332,7 +332,8 @@ properties:
     there is no longer one clear way to define a total order of all the
     histories in the graph.
     Instead if we partitioned the graph into layers, where layer $l$ contains
-    the histories that have exactly $l$ skip words, the graph has $n + 1$ layers.
+    the histories that have exactly $l$ skip words,
+    the graph has $n + 1$ layers.
   \item \label{itm:num-childs} Layer $l$ contains exactly $\binom{n}{l}$ nodes.
   \item \label{itm:num-edges}  Nodes in layer $l$ have exactly $n - l$ outgoing
     and $l$ incoming edges.
@@ -354,10 +355,10 @@ $n = l + k$.
 in a history can be replaced by a skip, and that each skip is the result
 of those replacements.
 
-Lastly, we can explain \cref{itm:num-nodes} because every history is just the
-result of laying a mask that is a combination of skips or non-skips on top of
-the original history.
-All possible masks are then all permutations of two elements (skips or
+Lastly, we can explain \cref{itm:num-nodes} because every history is simply the
+result of laying a mask which consists of a combination of skips or non-skips on
+top of the original history.
+All possible masks are therefore all permutations of two elements (skips or
 non-skips) with repetition of length $n$, which there are $2^n$ arrangements of.
 We can also infer this from \cref{itm:num-childs} via the binomial theorem
 $(x+ y)^n = \sum_{l=0}^n \binom{n}{l} x^{n-l} y^l$, if we set ${x = y = 1}$,
@@ -392,7 +393,7 @@ shown in the next paragraph.
   hypothetical training data.
   That hypothetical training data shall be different from
   \cref{subsec:weightedsum-glm-example} and now $w_1 w_2$ shall be unseen,
-  that is $\Count(w_1 w_2) = 0$.
+  ergo $\Count(w_1 w_2) = 0$.
   Because of this the average of back-off probabilities following
   \cref{eq:glm-backoff} has to be formed:
   \begin{equation}
@@ -487,7 +488,7 @@ influence is.
 However in turn it also can be reached via more paths as seen in the backoff
 graph of \cref{fig:history-glm}.
 In total there exist two paths from the root node to any node in layer $2$.
-But there exists a total of six paths from the root node to the node in layer
+But there exists a total of six paths from the root node to a node in layer
 $3$.
 We define a coefficient $\mu = \frac{(\NGramLength{h} - l_i)!}{\NGramLength{h}!}$,
 where $l_i$ is the layer in the backoff graph in which the node of history
@@ -500,7 +501,7 @@ defined \cref{eq:glmarg-high} to only consist of the numerator of
 Because of this we also have to divide the sum weight by the denominator of
 that equation.
 
-Sum weights $\SumWeight^h_{2 i}$ for terms that occurs in lower orders are
+Sum weights $\SumWeight^h_{2 i}$ for terms that occur in lower orders are
 calculated in an analogous way.
 For the same argument as above they are also influenced by the coefficient
 $\mu$ and a denominator, but this time that of \cref{eq:glm-low}.
@@ -522,7 +523,7 @@ Because of this complexity of terms that compose the sum weights we will not try
 to find a mathematical expression that defines these sum weights.
 Instead we will define them by specifying the algorithm that computes them:
 Sum weights $\SumWeight^h_i$ are calculated by \cref{alg:weightedsum-glm} which
-uses the helper functions of \cref{alg:weightedsum-glm-helper}.
+uses the auxiliary functions of \cref{alg:weightedsum-glm-helper}.
 
 %\begin{algorithm}
 %  \begin{algorithmic}[1]
@@ -596,7 +597,7 @@ uses the helper functions of \cref{alg:weightedsum-glm-helper}.
 \end{algorithm}
 
 \begin{algorithm}[t]
-  \caption{Helper functions for GLM sum weight computation}
+  \caption{Auxiliary functions for GLM sum weight computation}
   \label{alg:weightedsum-glm-helper}
   \begin{algorithmic}[1]
     \algrestore{glmbreak}
@@ -736,7 +737,8 @@ backoff graph.
 
 The properties \emph{node.count}, \emph{node.contCount}, and
 \emph{node.gamma} are not only needed for calculations of the current node, but
-also those of all its descendants (for example \cref{ln:highhlp-count-nonzero}).
+also for those of all its descendants (for example
+\cref{ln:highhlp-count-nonzero}).
 Because of this an implementation has to ensure that the for-each loop in
 \cref{ln:glm-fornodesingraph} only iterates over a node in layer $l$ if all
 nodes of $l-1$ have been previously iterated.
@@ -751,7 +753,7 @@ If the current node is the root node, we can specify the weight directly
 Else we will have to apply the reasoning we outlined above and define the sum
 weight as the fraction of coefficient $\mu$, number of paths, and denominator
 (\cref{ln:glm-if-highweight-else,ln:glm-highweight-rec}).
-\Call{highestOrderWeight}{\emph{ancestor}, \emph{node}} is a helper function
+\Call{highestOrderWeight}{\emph{ancestor}, \emph{node}} is a auxiliary function
 that just counts the number of paths that only spans unseen nodes from
 an \emph{ancestor} node to the current \emph{node} in a recursive manner.
 
@@ -761,13 +763,13 @@ zero, that term is assigned a weight of zero.
 This also happens for the root note, as it can never occur in a lower order term
 (\cref{ln:glm-if-lowweight-zero,ln:glm-lowweight-zero}).
 Else a similar term to the highest order weight is computed, however with a
-different helper function
+different auxiliary function
 (\cref{ln:glm-if-lowweight-else,ln:glm-lowweight-rec}).
 
-That helper function \Call{lowerOrdersWeight}{\emph{ancestor}, \emph{node},
+That auxiliary function \Call{lowerOrdersWeight}{\emph{ancestor}, \emph{node},
 \emph{firstSeen}} forms the core of the algorithm.
 We have reasoned above that the weight for lower orders is proportional to
-a sum of multiplication, where each multiplication is built from one path
+a sum of multiplication, where each multiplication is built out of one path
 from the root to the current node and each node contributes a
 $\frac{\gamma}{\text{denominator}}$ factor.
 This however depends on the node: if a node is the first seen one on the path
@@ -784,7 +786,7 @@ they don't change the weight (\cref{ln:lowhlp-else,ln:lowhlp-one}) as of
 
 Also we don't just compute sums of multiplications but instead apply
 the distributive property were possible to reduce computational cost.
-Each recursive step of the helper function thus returns only a \emph{factor}
+Each recursive step of the auxiliary function thus returns only a \emph{factor}
 times \emph{sum} product, where the sum consists of incarnations of further
 recursion depth
 (\cref{ln:lowhlp-init-sum,ln:lowhlp-for,ln:lowhlp-isancestor,ln:lowhlp-add-1,ln:lowhlp-add-2,ln:lowhlp-return}).
@@ -887,8 +889,8 @@ representation:
   \item The index of the $i$th parent (child) of a node is found by unsetting
     (setting) the $i$th set (unset) bit.
   \item A node \texttt{A} is an ancestor of another node \texttt{B}
-    if it the bitwise and operation on their indices returns \texttt{A}'s index
-    respectively it is an descendant if the same holds for the bitwise or
+    if the bitwise and-operation on their indices returns \texttt{A}'s index
+    respectively it is an descendant if the same holds for the bitwise or-
     operation:
     \begin{align*}
       \text{\texttt{A} ancestor of \texttt{B}} \: &\Leftrightarrow \: \texttt{A.index \& B.index == A.index} \\
@@ -931,8 +933,8 @@ We can formalize that property as:
   \big(\forall i \in \Set{1, \ldots, N}: \: \SumArg^h_i(w) \geq \SumArg^h_i(w^\prime)\big)
     \implies \Prob{w}{h} \geq \Prob{w^\prime}{h}
 \end{equation}
-This is an important property because it allows the application of top-$k$
-joining techniques in \cref{ch:topkjoin}.
+This is an important property as it allows the application of top-$k$ joining
+techniques in \cref{ch:topkjoin}.
 
 Because we have defined these probabilities as sums of weights $\SumWeight^h_i$
 multiplied with terms $\SumArg^h_i(w)$ (\cref{eq:weightedsum}), and since
@@ -966,5 +968,5 @@ The factors $Y \frac{n_2}{n_1}$, $Y \frac{n_3}{n_2}$, $Y \frac{n_4}{n_3}$ reach
 the limit of $\frac{1}{2}$ for an infinitely large corpus, and thus infinitely
 large number of n-grams $n_\DummyIndex$.
 As a result of the fact that these factors are limited, none of the discount
-values can be non-negative.
+values can be negative.
 Thereby we can see that our probability definitions are indeed monotone.

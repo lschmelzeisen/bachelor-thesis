@@ -8,7 +8,6 @@
 *.kilepr
 *.log
 *.out
-*.pdf
 *.nav
 *.snm
 *.run.xml
@@ -17,3 +16,5 @@
 *.toc
 old/
 workhours
+thesis.pdf
+presentation.pdf

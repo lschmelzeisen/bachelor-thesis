@@ -6,41 +6,41 @@ of all words in a vocabulary to follow a history, and then by selecting the
 words with the highest probabilities.
 
 We have optimized these next word prediction queries first by identifying
-shared terms between each probability calculation by expressing language model
-probabilities as weighted sums (\cref{ch:weightedsum}) and moving the weight
-calculation to a precomputation step.
+shared terms between each probability calculation through expressing language
+model probabilities as weighted sums (\cref{ch:weightedsum}) and moving the
+weight calculation to a precomputation step.
 Secondly we applied top-$k$ joining techniques to the problem of next word
 prediction (\cref{ch:topkjoin}) to avoid calculating probabilities for all words
 in the vocabulary while retaining the same prediction quality.
-To this end we indexed sorted word-occurrence-count-pairs in a compact data
+To this end, we indexed sorted word-occurrence-count-pairs in a compact data
 structure.
 
-In an extensive evaluation we have empirically researched these improvements
+In an extensive evaluation, we have empirically researched these improvements
 (\cref{ch:evaluation}).
 For the most common use case we observed runtime improvements by 50\% after the
 weighted-sum-pre\-com\-pu\-ta\-tion and by three to four orders of magnitude
 with top-$k$ joining for our experimental setup.
-We have found further that the choice of language model between Modified
+Furthermore, we found further that the choice of language model between Modified
 Kneser-Ney Smoothing and the Generalized Language Model is largely irrelevant
 from a prediction quality point of view.
-But Modified Kneser-Ney Smoothing hugely outclasses the Generalized Language
-Model in terms of both time and space complexity and is thus favorably in
-practice.
+However, Modified Kneser-Ney Smoothing hugely outclasses the Generalized
+Language Model in terms of both time and space complexity and is thus favorably
+in practice.
 
 While not showing the most dramatic speedup, the weighted sum representation
 forms the key contribution of this thesis, as it is truly novel.
-Top-$k$ joining techniques on the other hand are well known, this thesis work
+Top-$k$ joining techniques on the other hand are well known, this thesis' work
 was just to fit them to existing language models and apply them to a new use
 case.
 
 \section{Future Work}
 
-At the moment next word prediction is mainly used for text entry in smartphones.
+Currently, next word prediction is mainly used for text entry in smartphones.
 These devices have comparatively low amounts of memory available, so researching
 how far the stored language model size can be reduced is interesting future
 work.
-This might include pruning words with low occurrence counts, and finding which
-completion tries have the most influence in weighted sums.
+This might include pruning words with low occurrence counts, as well as finding
+which completion tries have the most influence in weighted sums.
 
 On the other side of that spectrum lies the task of handling very large
 completion tries.
@@ -51,13 +51,13 @@ longer fit in main memory.
 Theoretically this should work without major complications because of the offset
 based structure of the completion tries and their focus to keep related parts
 close together in memory.
-However in order to not be faced with to harsh performance hits it has to be
-researched which parts of the data should be kept in main memory, as they
-are most often queries or needed to find the path to leaf nodes.
+However, in order to not face too harsh performance penalties, it has to
+be researched which parts of the data should be kept in the main memory, as they
+are most often queried or needed to find the path to leaf nodes.
 
 If further speed up is desired, looking for ways to parallelize the presented
 algorithms is the natural next step.
-This however would only be beneficial for machines that answer next word
+This, however, would only be beneficial for machines that answer next word
 prediction queries sequentially (for example smartphones).
 Machines that have to handle multiple queries at the same time (servers) would
 be better advised to just parallelize these queries, as they are naturally
@@ -67,12 +67,12 @@ Lastly the presented way of combining top-$k$ joining techniques with language
 models should be applicable to a whole range of language model tasks.
 The \emph{noisy channel} \parencite{Shannon1948} is a framework used to model
 the task of extrapolating given, scrambled information.
-It is used to describe spelling correction spelling correction
+It is used to describe spelling correction
 \parencite{JurafskyMartin2009,Manning2008,Kernighan1990,Mays1991},
 word prediction \parencite{Bickel2005}, part-of-speech tagging
 \parencite{Church1988} and machine translation \parencite{Brown1990}.
 Generally top-$k$ joining techniques can be applied to all of them.
-However for some of them the actual join condition might not fit an equi-join
+However, for some of them, the actual join condition might not fit an equi-join
 and thus require more sophisticated top-$k$ joining techniques than the ones
 described in this chapter \parencite{Ilyas2004}.
 

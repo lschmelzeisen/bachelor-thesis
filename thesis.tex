@@ -45,7 +45,7 @@
   linecolor = Maroon,
   bordercolor = Maroon,
   backgroundcolor = White,
-  disable,
+%   disable,
 ]{todonotes}
 
 \definecolor{draft}{rgb}{0.5, 0.5, 0.5}
@@ -54,23 +54,23 @@
 }{%
 }
 
-% \newcommand*\Lukas[2][]{
-%   \todo[linecolor = Cyan, bordercolor = Cyan, #1]{\textcolor{Cyan}{Lukas}: #2}
-% }
-% \newcommand*\Rene[2][]{
-%   \todo[linecolor = Blue, bordercolor = Blue, #1]{\textcolor{Blue}{Rene}: #2}
-% }
-%
-% \newcommand{\noref}{\textcolor{RoyalBlue}{\footnotesize[Citation needed]}}
-% \newcommand{\mbref}[1]{\textcolor{RoyalBlue}{\footnotesize[Citation: #1?]}}
-
 \newcommand*\Lukas[2][]{
+  \todo[linecolor = Cyan, bordercolor = Cyan, #1]{\textcolor{Cyan}{Lukas}: #2}
 }
 \newcommand*\Rene[2][]{
+  \todo[linecolor = Blue, bordercolor = Blue, #1]{\textcolor{Blue}{Rene}: #2}
 }
 
-\newcommand{\noref}{}
-\newcommand{\mbref}[1]{}
+\newcommand{\noref}{\textcolor{RoyalBlue}{\footnotesize[Citation needed]}}
+\newcommand{\mbref}[1]{\textcolor{RoyalBlue}{\footnotesize[Citation: #1?]}}
+
+% \newcommand*\Lukas[2][]{
+% }
+% \newcommand*\Rene[2][]{
+% }
+%
+% \newcommand{\noref}{}
+% \newcommand{\mbref}[1]{}
 
 % ==============================================================================
 
@@ -85,6 +85,7 @@
 
 \selectlanguage{ngerman}
 \maketitle
+\makestatement
 \selectlanguage{american}
 
 \cleardoublepage
