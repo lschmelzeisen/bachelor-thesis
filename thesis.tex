@@ -45,13 +45,17 @@
   linecolor = Maroon,
   bordercolor = Maroon,
   backgroundcolor = White,
-%   disable,
+  disable,
 ]{todonotes}
+
+\usepackage{verbatim}
 
 \definecolor{draft}{rgb}{0.5, 0.5, 0.5}
 \newenvironment*{draft}{%
   \color{draft}%
+%   \expandafter\comment
 }{%
+%   \expandafter\endcomment
 }
 
 \newcommand*\Lukas[2][]{

@@ -13,7 +13,7 @@ Language Model}.
 \textcite{Chelba2013}.}
 
 \begin{draft}
-Mention \emph{Nerual Network Language Models} \parencite{Bengio2003,Mikolov2012}
+Mention \emph{Neural Network Language Models} \parencite{Bengio2003,Mikolov2012}
 (do we not use them because they can not be represented as weighted sums?), as
 they seem to be in favor of academic research recently.
 \end{draft}
@@ -106,7 +106,7 @@ It directly follows \textcite{ChenGoodman1999}, who report interpolated
 techniques to be superior to the previous work of \emph{backoff} language
 models by \textcite{KneserNey1995}.
 
-Therefore Modified Kneser-Ney smoothed language models are calculated as an
+Therefore, Modified Kneser-Ney smoothed language models are calculated as an
 interpolation of higher and lower order $n$-gram language models
 \parencite{Pickhardt2014}.
 The highest order model $\ProbMKN$ is interpolated with lower orders $\ProbMKN*$
@@ -130,14 +130,14 @@ We call the word $w_n$ for which we calculate the probability the
 \Cref{eq:mkn-high} is only defined if the denominator
 ${\Count(w_1^{n-1} \Skp) > 0}$, that is if the history $w_1^{n-1} \Skp$ was seen
 in training.
-If $w_1^{n-1} \Skp$ was not seen, we perform a so called \emph{``back-off''}
+If $w_1^{n-1} \Skp$ was not seen, we perform a so called \emph{``backoff''}
 and set:
 \begin{align}
   \label{eq:mkn-backoff}
   \ProbMKN{w_n}{w_1^{n-1}} = \ProbMKN{w_n}{w_2^{n-1}}
       & & \Condition{\Count(w_1^{n-1} \Skp) = 0}
 \end{align}
-It is common to perform multiple back-offs until the history was actually seen.
+It is common to perform multiple backoffs until the history was actually seen.
 
 Thus, interpolation with lower order models correspond to leaving out the first
 word of the history, on which our probabilities are conditioned.
@@ -160,7 +160,7 @@ first lower order. How do we handle this in current implementation?}
 
 The lowest order (the probability of a single word) can not be further
 interpolated and we use the relative continuation frequency of that word.
-Similarly if we only want to compute the probability of a single word on the
+Similarly, if we only want to compute the probability of a single word on the
 highest order, we compute it as the relative frequency of that word:
 \begin{subequations}
   \label{eq:mkn-lowest}
@@ -218,7 +218,7 @@ For instance: $\SkpOp[2]{w_1^3} = w_1 \Skp w_3$.
 
 Again as with Modified Kneser-Ney Smoothing, \cref{eq:glm-high} is not
 defined if $w_1^{n-1}$ is unseen and thus our denominator would be zero.
-The back-off step is then performed as:
+The backoff step is then performed as:
 \begin{equation}
   \label{eq:glm-backoff}
   \begin{split}
@@ -228,7 +228,7 @@ The back-off step is then performed as:
   \end{split}
 \end{equation}
 
-Subsequently lower order models are computed as:
+Subsequently, lower order models are computed as:
 \todo{Replace \Skp with \WSkp in $\ContCountIp$ in GLM?}
 \todo{\WSkp at end of $\ContCountIp$ correct?}
 \begin{equation}

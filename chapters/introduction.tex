@@ -61,7 +61,7 @@ We subsume next word prediction with or without a prefix under the title of
 We solve this task by finding the $k$ words $w$ in the vocabulary $\Vocab$, the
 set of all words, that maximize the probability $\Prob{w}{h}$.
 That probability models the likelihood of a word $w$ following the history $h$.
-$\Argmax*[k]$ is a auxiliary used to model the $k$ words that maximize the
+$\Argmax*[k]$ is an auxiliary used to model the $k$ words that maximize the
 probability and an extension to the conventional $\Argmax$ function:
 \begin{subequations}
   \begin{align}
@@ -170,7 +170,7 @@ noisy channel type queries.
 Top-$k$ queries are queries whose results are limited to only the $k$ most
 important ones.
 These top-$k$ results are identified by scoring all answers with a
-\emph{scoring function}, and selecting the $k$ highest scoring.
+\emph{scoring function} and selecting the $k$ highest scoring.
 \emph{Top-$k$ join queries} are those top-$k$ queries that produce
 their results trough combining multiple data sources \parencite{Ilyas2008}.
 

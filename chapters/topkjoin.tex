@@ -8,10 +8,10 @@ prediction queries for arbitrary histories and prefixes.
 \Cref{eq:prefixquery} shows that next word prediction queries $\NWP[p][k](h)$
 are an argmax of probabilities.
 To optimize query time we follow a two-pronged approach:
-First we identify calculations shared by multiple probabilities, and perform
+First we identify calculations shared by multiple probabilities and perform
 them only once up front.
 Secondly we try to avoid enumerating the whole argument space of the argmax.
-Instead our goal is to always compute the probability for the next most
+Instead, our goal is to always compute the probability for the next most
 promising argument, and to terminate as soon as we are sure to have found the
 $k$ words that maximize the probability.
 
@@ -24,7 +24,7 @@ We store those counts in a data structure that is optimized for necessary
 retrieval.
 We will explain that data structure and define what necessary retrieval means
 in \cref{sec:completiontrie}.
-Subsequently we may persist that data, so that for each requested corpus the
+Subsequently, we may persist that data, so that for each requested corpus the
 necessary analyzation only has to be performed once.
 
 To find the answer for a query $\NWP[p][k]{h}$, probabilities $\Prob{w}{h}$ have
@@ -39,7 +39,7 @@ The remaining factors $\SumArg^h_i(w)$ depend on $w$.
 This means we can find a function $s$ that expresses our
 probabilities\footnote{The definition for $s$ is just \cref{eq:weightedsum}.
 This new representation is only introduced to make it clear, that given the
-$\SumWeight^h_i$ the probability can be calculated from the $\SumArg^h_i(w)$.}:
+$\SumWeight^h_i$, the probability can be calculated from the $\SumArg^h_i(w)$.}:
 \todo{It is not visible from the notation that $s$ depends on the
   $\SumWeight^h_i$.}
 \begin{equation}
@@ -89,7 +89,7 @@ Since join combinations
 $\left(\SumArg^h_1(w), \, ..., \, \SumArg^h_N(w)\right)$ are $N$-dimensional
 there is no meaningful order defined on them, besides sorting by the scoring
 function.
-However that requires calculating the probability for each join
+However, that requires calculating the probability for each join
 combination, which is precisely what we are trying to avoid.
 For this reason we instead maintain $N$ data relations, one for each
 $\SumArg^h_i(w)$, and sort them independently in the learning phase.
@@ -124,17 +124,17 @@ compare them against each other and the simple argmax approach.
 optimal} solutions to top-$k$ join queries: there is no possible algorithm
 that provides a better solution over all possible database contents.
 
-However algorithms which outsource some computation into a precompution step, and thus
-achieve a faster query response are still possible:
+However, algorithms which outsource some computation into a precompution step,
+and thus achieve a faster query response, are still possible:
 there exists a plethora of such more sophisticated top-$k$ joining techniques,
 of which \textcite{Ilyas2008} surveys a wide number.
-For example \emph{onion indices} \parencite{Chang2000} and
+For example, \emph{onion indices} \parencite{Chang2000} and
 \emph{rank join indices} \parencite{Tsaparas2003} feature an extended learning
 phase, in which optimized data representation are created over all arguments to
 the scoring function.
 These allow faster top-$k$ joins for arbitrary scoring functions over the same
 arguments.
-However optimizations like these are not applicable to our prefix query problem,
+However, optimizations like these are not applicable to our prefix query problem,
 as the history $h$ changes with each query $\NWP[p][k](h)$.
 Because of this the whole argument space $\SumArg^h_i(w)$ changes, which in turn
 means we would have to built indices with each query, obviously defeating the
@@ -142,7 +142,7 @@ purpose.
 The \emph{Rank Join operator} \parencite{Ilyas2004} is another more recent
 algorithm, designed for fast solution in the presence of arbitrary join
 conditions.
-However in the precense of an equi-join it practically reduces to the threshold
+However, in the presence of an equi-join it practically reduces to the threshold
 algorithm.
 
 % ------------------------------------------------------------------------------
@@ -158,7 +158,7 @@ On top of that the threshold algorithm requires random access to the data
 structure, that is for a given $w$ we want to find $\SumArg^h_i(w)$.
 Random access might yield additional information to an algorithm and thus allow
 it to terminate earlier.
-Also our definitions to calculate the sum weights $\SumWeight^h_i$ given in
+Also, our definitions to calculate the sum weights $\SumWeight^h_i$ given in
 \cref{ch:weightedsum} require this form of random access, so it is desirable for
 our data structure to support it.
 The alternative would be to maintain a separate data store that is optimized for
@@ -193,7 +193,7 @@ ratio of their data structure of 51\% compared to raw uncompressed text files.
 In the same publication \textcite{HsuOttaviano2013} present two alternative
 data structures for the same task that achieve compression ratios of 29\%
 respectively 30\%.
-However they report access times which are at least twice as high as those
+However, they report access times which are at least twice as high as those
 of the completion trie.
 Since speed is the primary concern of this thesis these alternatives
 were not further considered.
@@ -218,7 +218,7 @@ This enables all our desired accessing schemes:
   \item Random access for a fixed history $h$ and fixed word $w$ is achieved by
     walking the path along the trie that is described by $h \NGramConcat w$.
     If that path ends in a leaf node, this node's score is $\SumArg^h_i(w)$.
-    If that path does not exists, or the found node is not a leaf node,
+    If that path does not exist, or the found node is not a leaf node,
     $\SumArg^h_i(w)$ is zero.
 \end{itemize}
 
@@ -404,7 +404,7 @@ we continue with the next iteration step
 (\cref{ln:ta-isseen-if,ln:ta-isseen-continue}).
 If the word is new, we add it to the list of seen words (\cref{ln:ta-seen-add}).
 
-In the following the probability $\Prob{w}{h}$ for the word is calculated
+In the following, the probability $\Prob{w}{h}$ for the word is calculated
 (\cref{ln:ta-prob}).
 The factor $\SumArg_i$ is known from sorted access (\cref{ln:ta-a-sorted}), all
 other $\SumArg_j$ with $j \neq i$ are retrieved by random access
@@ -415,7 +415,7 @@ predictions thus far
 The sorting of the priority queue happens implicit with the
 \Call{push}{$\DummyArg$} operation.
 
-Afterwards the last access sorted count of the current trie is update
+Afterwards the last accessed sorted count of the current trie is updated
 (\cref{ln:ta-bara-update}) and with it the \emph{threshold} calculated
 (\cref{ln:ta-threshold}).
 If we already found \emph{limit} predictions and the probability of all those
@@ -436,7 +436,7 @@ roughly works as follows \parencite{Fagin2001}:
     are queried with prefix $h \NGramConcat p$) in any order.
     One strategy might be a round robin approach, that is each source is
     accessed once in turn.
-  \item We maintain a mapping that initially maps all words to \emph{unkown}
+  \item We maintain a mapping that initially maps all words to \emph{unknown}
     counts $\SumArg^h_i(w)$.
     For every word-count pair queried, we set that count in the mapping to its
     now know value.
@@ -444,9 +444,9 @@ roughly works as follows \parencite{Fagin2001}:
     words.
     Let $\overline{\SumArg}_i$ denote the last count $\SumArg^h_i(w)$ that
     was encountered during sorted access to the $i$th data source.
-    The upper bound for a word probability is calculated by replacing unkown
+    The upper bound for a word probability is calculated by replacing unknown
     counts with their highest possible value $\overline{\SumArg}_i$.
-    Lower bounds are calculated by replaced unkown counts with zeros.
+    Lower bounds are calculated by replaced unknown counts with zeros.
   \item Once $k$ words have been found, whose lower bound of probability is
     higher than all other upper bounds, the algorithm terminates and returns
     these $k$ best predictions.
@@ -488,7 +488,7 @@ roughly works as follows \parencite{Fagin2001}:
         \label{ln:nra-next}
       \If{\textbf{not} wordCounts.\Call{contains}{word}}
         \label{ln:nra-contains}
-        \State $\SumArg_1, \: \ldots, \: \SumArg_N \gets $ \textbf{unkown}$, \: \ldots, \:$\textbf{unkown}
+        \State $\SumArg_1, \: \ldots, \: \SumArg_N \gets $ \textbf{unknown}$, \: \ldots, \:$\textbf{unknown}
           \label{ln:nra-set-unkown}
       \Else
         \State $\SumArg_1, \: \ldots, \: \SumArg_N \gets $ wordCounts.\Call{get}{word}
@@ -577,7 +577,7 @@ before (\cref{ln:nra-sumweights,ln:nra-bara-for,ln:nra-bara-peek}).
 
 \emph{wordCounts} is the mapping from words $w$ to $N$-tuples that contain the
 counts $\SumArg^h_i(w)$ (\cref{ln:nra-wordcounts}).
-Unset values are interpreted as having \emph{unkown} counts.
+Unset values are interpreted as having \emph{unknown} counts.
 
 \emph{queue} is a priority queue that stores $($word$,$ upper
 bound$,$ lower bound$)$ tuples (\cref{ln:nra-queue}).
@@ -597,7 +597,7 @@ and the following sorted access to that trie (\cref{ln:nra-next}) are equal
 to those of the \emph{Threshold Algorithm}.
 Each new word-count-pair is stored in \emph{wordCounts}.
 If the word has not been seen before (\cref{ln:nra-contains}) we initialize all
-counts $\SumArg_1, \: \ldots, \: \SumArg_N$ as \emph{unkown} values.
+counts $\SumArg_1, \: \ldots, \: \SumArg_N$ as \emph{unknown} values.
 Otherwise we load previously stored counts from the mapping
 (\cref{ln:nra-get-wordcounts}).
 Additionally as we know the word to receive updated bounds its entry is removed
@@ -612,7 +612,7 @@ First we update the last accessed count of the current trie
 (\cref{ln:nra-bara-update}).
 Bounds are then calculated as the weighted sums of $\SumArg_j$
 (\cref{ln:nra-upperbound-known,ln:nra-lowerbound-known}).
-In case the the value of any $\SumArg_j$ is \emph{unkown}, it is  substituted
+In case the the value of any $\SumArg_j$ is \emph{unknown}, it is  substituted
 with the highest possible value $\overline{\SumArg}_j$ for the calculation of
 the upper bound (\cref{ln:nra-upperbound-unknown}) or in the case of the lower
 bound it is not factored in at all.
@@ -640,7 +640,7 @@ of each item in the queue, for with $\SumArg_i$ is unknown, will change.
 So in practice one would have to recalculate all upper bounds and resort the list
 every time an $\overline{\SumArg}$ value is updated.
 This is not made explicit in the presented algorithm.
-However one can take advantage of the fact that our probabilities are monotone,
+However, one can take advantage of the fact that our probabilities are monotone,
 and the sorting of items thus remains constant for changing $\SumArg_i$.
 This means one only needs to recalculate the upper bound in places where the
 actual value is needed.
@@ -650,7 +650,7 @@ before \emph{limit} predictions have been established.
 Because of this we fill the \emph{predictions} with words from the \emph{queue}
 in order until \emph{limit} many have been reached
 (\cref{ln:nra-for-limit,ln:nra-pop-2,ln:nra-upperbound-zero-if,ln:nra-upperbound-zero-break,ln:nra-limit-predict}).
-However if remaining words have an probability upper bound of zero
+However, if remaining words have a probability upper bound of zero
 (\cref{ln:nra-upperbound-zero-if}) we prefer to have less than \emph{limit}
 predictions, as the remaining ones are guaranteed not to match.
 
@@ -660,7 +660,7 @@ predictions, as the remaining ones are guaranteed not to match.
 
 Previously we have spoken about querying a completion trie with a history
 $h$ and retrieving a pair $(w, \SumArg^h_i(w))$.
-However this is only a simplified view on the underlying process.
+However, this is only a simplified view on the underlying process.
 In practice it is infeasible to store $\SumArg^h_i(w)$ for every possible
 history $h$, or even only for seen histories.
 Instead we rely on the derived histories $\DerivedHistory[\DummyIndex]$
@@ -683,7 +683,7 @@ This call abstracts the problem of finding the optimal next trie.
 As we have said, all access strategies are possible, as long as empty tries ---
 tries whose iterator has passed the last entry --- are not selected anymore.
 A simple strategy is round robin access, that is accessing each trie after
-another and than starting over.
+another and then starting over.
 \textcite{Guentzer2000,Guentzer2001} research optimal access strategies for
 both presented algorithms.
 They introduce a notion of the partial derivative of a data source to find the

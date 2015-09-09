@@ -5,14 +5,14 @@
 
     Next word prediction is the task of guessing the next word a user intends to
     type from the words they have already entered.
-    Traditionally this problem is solved by calculating an argmax of language
+    Traditionally, this problem is solved by calculating an argmax of language
     model probabilities for all words in a vocabulary.
-    However this approach is slow and becomes linearly worse with
+    However, this approach is slow and becomes linearly worse with
     increasing vocabulary size.
     This thesis proposes two independent optimizations.
     First, a novel approach is presented that allows to move a part of
     probability calculation into a precomputation step.
-    Second it is shown how to apply top-k joining techniques to word
+    Second, it is shown how to apply top-k joining techniques to word
     prediction to avoid enumerating all words in the vocabulary.
     Using both optimizations sub-millisecond next word prediction time is
     achieved.
