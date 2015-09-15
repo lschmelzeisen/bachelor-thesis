@@ -110,11 +110,11 @@ Java Platform.
 The Java Virtual Machine (JVM) was assigned \SI{16}{\gibi\byte} of main memory,
 a limit that none of the experiments hit.
 
-Java Virtual Machines are known to exhibit \enquote{warm-up} behavior \noref.
+Java Virtual Machines are known to exhibit \enquote{warm-up} behavior\noref.
 That is, it takes some time while running a program to find hotspot sections
 in the code and JIT compile these.
 Traditionally, experimenters want to avoid that benchmarks are distorted by
-this warm-up behavior \noref.
+this warm-up behavior\noref.
 To circumvent this, the code under benchmark is usually executed multiple times,
 to ensure JIT compilation of the relevant sections, and the actual benchmark
 is only performed afterwards.
@@ -204,10 +204,10 @@ method also needs to store the sum weights~$\SumWeight^h_i$. But as we only
 calculate these values at query time for a specific query, only $N$ weights have
 to be stored per query. As explained in \cref{ch:weightedsum} $N$ is usually a
 very small number. For example, calculating probabilities under a 5th order
-Markov assumption --- that is the length of the history $h$ is capped to 4 words
+Markov assumption --- that is, the length of the history $h$ is capped to 4 words
 --- requires storing at most 5 (MKN, \cref{eq:weightedsum-mkn-num}) respectively
 32 (GLM, \cref{eq:weightedsum-glm-num}) floating point numbers.
-Such a small requirement of memory can be neglected}.
+We chose to neglect such a small requirement of memory.}.
 
 Our first experiment aims to compare the calculation time of one single
 probability for both approaches and both considered language models, independent
@@ -425,8 +425,9 @@ both required space and runtime as we will see in
 Next, we will measure the memory requirements of our next word prediction
 system.
 Again, the choice of algorithm to calculate next word prediction is irrelevant.
-For all algorithms we use the same data structure to store occurrence counts of
-text corpora: the completion trie described in \cref{sec:completiontrie}.
+All algorithms are built on top  of the same data structure to store occurrence
+counts of text corpora: the completion trie described in
+\cref{sec:completiontrie}.
 This data structure is optimized for compact storage and supports all required
 access types.
 However, the amount of necessary data varies with the employed language model.
@@ -475,7 +476,7 @@ This argument will be reinforced by comparing their runtimes.
 Finally, we want to compare the presented next word prediction algorithms by
 their runtime, as fast next word prediction algorithms were the main objective
 of this thesis.
-In this thesis, we described three different solutions:
+We described three different solutions:
 \begin{inparaenum}[(1)]
   \item the Simple Argmax algorithm, which calculates the probability of all
     words in a vocabulary and then selects the ones with the highest
@@ -700,7 +701,7 @@ However, no clear statement can be made from these measurements.
 The relation could also be linear in practice, and the seemingly logarithmic
 relation could be the result of variance.
 On the other hand, a logarithmic relation would be well explainable, since
-top-$k$ algorithms precisely try to avoid enumerating all words.
+top-$k$ algorithms precisely try to avoid iterating all words.
 More importantly though, the top-$k$ joining algorithms are able to calculate
 the results multiple orders of magnitude faster for both language models.
 Calculations that ranged in the order of seconds were sped up to
@@ -718,7 +719,7 @@ Together with \cref{tab:evaluation-nkss} this figure gives a good overview of
 possible runtime / prediction quality trade-offs.
 \todo{Does it make sense to take measurement of unique words vs trie depth?}
 
-Lastly, \cref{fig:evaluation-time-nwp-mkn-predictions,%
+Last, \cref{fig:evaluation-time-nwp-mkn-predictions,%
 fig:evaluation-time-nwp-glm-predictions} show how these algorithms behave
 when more than one word is to predicted.
 Obviously, for the Simple Argmax Algorithm the time remains constant, as it
@@ -734,7 +735,7 @@ Algorithm.
 Throughout all experiments, a clear improvement in runtime through top-$k$ join
 algorithms is observable.
 At large the calculations using Modified Kneser-Ney Smoothing were around ten
-times faster than those of the Generalized Language Model.
+times faster than the ones of the Generalized Language Model.
 Additionally, the Threshold Algorithm was able to outperform the No Random Access
 Algorithm in all but the most niche measurement\footnote{The only measuring
 point for which the No Random Access Algorithm was faster were for $2$-grams.
@@ -758,7 +759,8 @@ We thus conclude that for our experiment setup and data structure access costs,
 the Threshold Algorithm significantly outperforms.
 One should only use the No-Random-Access Algorithm because of structural
 inabilities to support random access.
-Note, that this result is not surprising and directly follows from data theory.
+Note, that this result is not surprising and directly follows from database
+theory \parencite{Fagin2001}.
 
 \begin{figure}[p!]
   \centering
@@ -771,7 +773,7 @@ Note, that this result is not surprising and directly follows from data theory.
     \input{figures/thesis-comp-nra-ta}
   \end{minipage}
   \caption{Histogram showing the ratio of runtime of the No Random Access
-    Algorithm over the Threshold Algorithms for all performed experiments.
+    Algorithm over the Threshold Algorithm for all performed experiments.
     These experiments were next word prediction queries for Modified Kneser-Ney
     Smoothing with $n$-gram length from two to five, number of predictions $k$
     from one to five and five increasing corpus sizes.

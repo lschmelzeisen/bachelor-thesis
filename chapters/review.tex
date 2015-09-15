@@ -25,17 +25,17 @@ namely \emph{Modified Kneser-Ney Smoothing} (\cref{sec:review-lm-mkn}) and the
 However we will only give and explain definitions for these language models.
 No motivation or justification of their genesis will be performed, as they are
 only of peripheral importance to understand the contribution of this thesis.
-Instead the interested reader is hereby referred to the primary sources.
+Instead, the interested reader is hereby referred to the primary sources.
 
 
 % ------------------------------------------------------------------------------
 \section{Notation: Counts and Skips}
 \label{sec:review-notation}
 
-Let $\Count(w_1^n)$ denote the frequency count of a sequence's
-$w_1^n = w_1 \ldots w_n$ occurrence in training data.
+Let $\Count(w_1^n)$ denote the frequency count of the occurrence of a sequence
+$w_1^n = w_1 \ldots w_n$ in training data.
 $w_1^n$ may be any contiguous sequence of length $n$ in a text.
-So $w_1$ does not have to be the first word of a sentence or the like,
+$w_1$ does not have to be the first word of a sentence or something similar,
 it just designates the first word of the sequence.
 
 By writing two words directly next to each other, as in $w_1 w_2$, we mean to
@@ -93,7 +93,7 @@ sometimes call the former \emph{absolute} counts.
 This notation mirrors that of previous publications in the field by
 \textcite{ChenGoodman1996,ChenGoodman1998,ChenGoodman1999,Goodman2001,Pickhardt2014}.
 With the exception of the new skip $\Skp$ wildcard, which is primarily based
-on yet unpublished work by \textsc{Ren{\'e} Pickhardt}.
+on yet unpublished work by Ren{\'e} Pickhardt.
 \todo{Examples of counting with small text corpus?}
 
 % ------------------------------------------------------------------------------
@@ -140,7 +140,7 @@ and set:
 It is common to perform multiple backoffs until the history was actually seen.
 
 Thus, interpolation with lower order models correspond to leaving out the first
-word of the history, on which our probabilities are conditioned.
+word of the history on which our probabilities are conditioned.
 Lower order models are computed differently, and in turn interpolated with
 further lower orders:
 \begin{equation}
@@ -174,8 +174,8 @@ highest order, we compute it as the relative frequency of that word:
 
 Note that this definition of lowest order probabilities deviates from
 \textcite{ChenGoodman1999}.
-They instead smooth the lowest order with the uniform distribution of
-$\frac{1}{\Cardinality{\Vocab}}$.
+Instead, they additionally smooth the lowest order with the uniform distribution
+of $\frac{1}{\Cardinality{\Vocab}}$.
 \todo{Why don't we do this?}
 
 
@@ -258,7 +258,7 @@ In practice this is the case when $w_1^{n-1}$ only consists of skips.
 
 The purpose of the discounted count functions $\DiscountedCount(\DummyArg)$
 and $\DiscountedCount*(\DummyArg)$ is to reduce the absolute values of
-higher order probability of the language model.
+higher order probabilities of the language model.
 This is done in order to have \enquote{left over probability mass} to assign
 to lower orders \parencite{NeyEssen1991,NeyKneser1994}.
 
@@ -298,7 +298,7 @@ in the training corpus \parencite{ChenGoodman1999}.
 \todo{This doesn't really fully explain how $n_i$ works does it?}
 
 Based on this we can define the interpolation weight $\gamma(\DummyArg)$ that
-determines how much lower order probabilities factor into those of higher
+determines how much lower order probabilities factor into the ones of higher
 orders \parencite{ChenGoodman1999}:
 \begin{equation}
   \label{eq:review-gamma}

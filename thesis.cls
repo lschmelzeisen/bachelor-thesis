@@ -143,6 +143,7 @@
   doi = false, % do not show doi
   isbn = false, % do not show isbn
   url = false, % do not show url
+  eprint = false, % do not show eprint
   urldate = long, % format of urldate field
 ]{biblatex}
 
@@ -202,8 +203,13 @@
     urlcolor = Maroon,
     linkcolor = Maroon,
     citecolor = Maroon,
+%     urlcolor = Grey!85!Black,
+%     linkcolor = Grey!85!Black,
+%     citecolor = Grey!85!Black,
   }
 }\relax
+
+% \colorlet{Maroon}{Black}
 
 % Title ========================================================================
 
@@ -329,8 +335,7 @@
           \vspace{0.75cm}
 
           \large{}vorgelegt von\\
-          \Large\spacedlowsmallcaps{\@author}\\
-          \normalsize\@authormaillinked
+          \Large\spacedlowsmallcaps{\@author}
         \end{center}
 
         \vfill
@@ -417,11 +422,11 @@
         Der Ver\"offentlichung dieser Arbeit im Internet    & {} & {} & {}\\
         stimme ich zu.                                      & {} & $\square$ & $\square$\\[.5cm]
         Der Text dieser Arbeit ist unter einer Creative     & {} & {} & {}\\
-        Commons Lizenz (CC BY-SA 3.0) verf\"ugbar.          & {} & $\square$ & $\square$\\[.5cm]
-        Der Quellcode ist unter einer Creative Commons      & {} & {} & {}\\
-        Lizenz (CC BY-SA 3.0) verf\"ugbar.                  & {} & $\square$ & $\square$\\[.5cm]
+        Commons Lizenz (CC BY-SA 4.0) verf\"ugbar.          & {} & $\square$ & $\square$\\[.5cm]
         Die erhobenen Daten sind unter einer Creative       & {} & {} & {}\\
-        Commons Lizenz (CC BY-SA 3.0) verf\"ugbar.          & {} & $\square$ & $\square$\\
+        Commons Lizenz (CC BY-SA 4.0) verf\"ugbar.          & {} & $\square$ & $\square$\\[.5cm]
+        Der Quellcode ist unter der GNU General Public      & {} & {} & {}\\
+        License (GPL v3.0) verf\"ugbar.                     & {} & $\square$ & $\square$\\
       \end{tabular}
     \end{center}
 

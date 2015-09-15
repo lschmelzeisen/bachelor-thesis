@@ -11,9 +11,11 @@ equations of the following form:
   \label{eq:weightedsum}
   \Prob{w}{h} = \sum_{i = 1}^{N} \SumWeight_i^h \cdot \SumArg_i^h(w)
 \end{equation}
+Where $N$ is the number of interpolation factors dependent on the choice of
+language model.
 
-To the authors knowledge, there is no other work on expressing existing language
-models as weighted sums.
+To the author's knowledge, there is no other work on expressing existing
+language models as weighted sums.
 However, \textcite{JelinekMercer1980} already experimented with learning
 weighted sum parameters automatically for language modeling.
 
@@ -33,12 +35,12 @@ lookups $\SumArg^h_i(w)$ that actually depend on $w$.
 Another handy benefit is that by this representation we have all terms that
 change with $w$ explicitly available, which is a prerequisite for top-$k$
 joining and will be explained in \cref{ch:topkjoin}.
-Lastly our algorithms for calculating sum weights turn out to be performing
+Last, our algorithms for calculating sum weights turn out to be performing
 faster than the direct recursive implementations, which we measure in
 \cref{sec:evaluation-weightedsum}.
 
 We will now present the basic idea of how to transform a probability
-$\Prob{w_n}{w_1^{n-1}}$ into a weighted sum, that applies to both Modified
+$\Prob{w_n}{w_1^{n-1}}$ into a weighted sum that applies to both Modified
 Kneser-Ney Smoothing and the Generalized Language Model:
 
 Note that in all \cref{eq:mkn-high,eq:mkn-low,eq:glm-high,eq:glm-low} the
@@ -48,7 +50,7 @@ Additionally $w_n$ occurs as arguments for $\Count$ and $\ContCountIp$ in the
 lowest order \cref{eq:mkn-lowest,eq:glm-lowest}.
 Our general idea is thus, to first expand recursive calls to
 $\Prob(\DummyArg)$ or $\Prob*(\DummyArg)$, and second to factor
-out those terms that do not depend on $w_n$ by the distributive property.
+out the terms that do not depend on $w_n$ by the distributive property.
 
 \Cref{sec:weightedsum-mkn} explains our approach for Modified Kneser-Ney
 Smoothing, while \cref{sec:weightedsum-glm} concerns itself with the Generalized
@@ -108,7 +110,7 @@ By using the distributive property we obtain:
 \end{align}
 
 In the final equation \cref{eq:probmknexpansion-final} we can clearly identify
-the terms that do depend on $w_3$ and those that do not.
+the terms that do depend on $w_3$ and the ones that do not.
 Note that $w_3$ never occurs on the right side of the multiplication dot.
 Per line the left side of the multiplication dot will form the terms
 $\SumArg^h_i(w_3)$, while the right side will form the sum weights
@@ -122,7 +124,7 @@ resulting formula is obtained.
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Sum Terms}
 
-All counts except those of the lowest order are discounted using
+All counts except the ones of the lowest order are discounted using
 $\DiscountedCount$ and $\DiscountedCount*$ to interpolate that order with the
 following by the weight $\gamma(h)$.
 This process of interpolating different orders is visualized in
@@ -165,7 +167,7 @@ one for the empty history.
 Where $\NGramLength{w_1^n} = n$ is the length of the $n$-gram $w_1^n$.
 
 The next step is to find the actual terms $\SumArg_i^h(w)$ that shall be
-weightedly added.
+weighted and added.
 When looking at the equations that define Modified Kneser-Ney we note the fact
 that only the count terms in the numerators depend on the probability event $w$.
 Exactly these terms compose our sum arguments:
@@ -179,7 +181,7 @@ Exactly these terms compose our sum arguments:
     \end{dcases*}
 \end{equation}
 
-Lastly, we need to define the actual sum weights $\SumWeight_i^h$.
+Last, we need to define the sum weights $\SumWeight_i^h$.
 We note that --- because each order is interpolated with the weight $\gamma$ of
 the previous order --- each order is in total weighted by the product of the
 $\gamma$s of all previous orders.
@@ -236,19 +238,19 @@ This is done to avoid repeated count lookups and multiplications.
 \section{Generalized Language Model}
 \label{sec:weightedsum-glm}
 
-The difference between the Modified Kneser-Ney smoothed language model and the
+The difference between a Modified Kneser-Ney smoothed language model and the
 Generalized Language Model is the way in which orders are interpolated.
 Instead of just one probability --- that of shortening the history by one ---
 being factored in, in the Generalized Language Model the average of multiple
 probabilities of the next lower order is factored into the higher order
 probability.
 
-This section will not consider the general case were one probability
+This section will not consider the general case where one probability
 $\ProbGLM{w}{h}$ incorporates exactly $\NumSkpOp{h}$ probabilities
 $\ProbGLM*{w}{\SkpOp[j]{h}}$ of the next lower order.
 Instead, only the special case described by \textcite{Pickhardt2014}, that is
 actually used in practice, is examined.
-That is the number of lower order probabilities incorporated $\NumSkpOp{h}$
+That is, the number of lower order probabilities incorporated $\NumSkpOp{h}$
 is set to the number of non-skip words in $h$, and $\SkpOp[j]{h}$ is defined as
 replacing the $j$th non-skip word in $h$ with a skip $\Skp$.
 
@@ -265,7 +267,7 @@ replacing the $j$th non-skip word in $h$ with a skip $\Skp$.
 \newcommand{\ProbGLMcss}
   {\frac{\ContCountIp(\WSkp \Skp \Skp w_3)}{\ContCountIp(\WSkp \Skp \Skp \WSkp)}}
 
-Exemplary the full formula expansion for $\ProbGLM{w_3}{w_1 w_2}$, assuming
+Exemplary, the full formula expansion for $\ProbGLM{w_3}{w_1 w_2}$, assuming
 the sequence $w_1 w_2 \Skp$ was seen:
 \begin{subequations}
   \begin{align}
@@ -301,7 +303,7 @@ $\SumWeight^h_i$ right.
 
 \Cref{fig:history-glm} shows the \emph{backoff graph} introduced by
 \textcite{BilmesKirchhoff2003}.
-It visualizes the lower order probabilities that factor into those of higher
+It visualizes the lower order probabilities that factor into the ones of higher
 orders, using that definition of $\SkpOp[j]{h}$.
 The nodes represent the histories $h = w_1 w_2 w_3$ of a probability
 $\ProbGLM{w_4}{w_1 w_2 w_3}$.
@@ -340,7 +342,7 @@ properties:
   \item \label{itm:num-nodes}  There are $2^n$ nodes in the graph.
 \end{enumerate}
 
-\Cref{itm:num-layers} is due to the fact that layer $l$ includes exactly those
+\Cref{itm:num-layers} is due to the fact that layer $l$ includes exactly the
 histories that are part of the $k$th highest order of probability.
 
 To explain \cref{itm:num-childs}, it is helpful to imagine replacing words in
@@ -353,9 +355,9 @@ $n = l + k$.
 
 \Cref{itm:num-edges} directly follows from the fact that each non-skip word
 in a history can be replaced by a skip, and that each skip is the result
-of those replacements.
+of these replacements.
 
-Lastly, we can explain \cref{itm:num-nodes} because every history is simply the
+Last, we can explain \cref{itm:num-nodes} because every history is simply the
 result of laying a mask which consists of a combination of skips or non-skips on
 top of the original history.
 All possible masks are therefore all permutations of two elements (skips or
@@ -368,10 +370,11 @@ Following the model of the backoff graph will be a major aid in understanding
 the weighted sum representation of the Generalized Language Model.
 
 In order to have a notation available for all derived histories, we impose an
-arbitrary total ordering one those histories.
+arbitrary total ordering on the histories.
 One such ordering is given in \cref{fig:history-glm} and assigns each history
 a number between $1$ and $8$.
-Let $\DerivedHistory[i]$ than be the $i$th history of an arbitrary ordering.
+Let $\DerivedHistory[i]$ than be the $i$th history of an arbitrary, but fixed
+ordering.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Number of Sum Weights}
@@ -380,13 +383,14 @@ In the previous subsection, it was reasoned that, in the Generalized Language
 Model, for a history of length $n$ there are exactly $2^n$ possible derivative
 histories.
 Following this, one might make the assumption, that to evaluate $\ProbGLM{w}{h}$
-it is necessary to evaluate at most $2^n - 1$  different probabilities
-$\ProbGLM*{w}{\partial^* h}$ where $\partial^* h$ is any of the $2^n - 1$
-derived histories of $h$ excluding $h$ itself.
-This assumption however is wrong as it can be necessary that one history $h^*$
-is both part of a highest order probability $\ProbGLM{w}{h^*}$ and a lower order
-probability $\ProbGLM*{w}{h^*}$ in the presence of unseen histories, as will
-shown in the next paragraph.
+it is necessary to evaluate at most $2^n - 1$  different lower order
+probabilities $\ProbGLM*{w}{\partial^* h}$ where $\partial^* h$ is any of the
+$2^n - 1$ derived histories of $h$ excluding $h$ itself.
+This assumption however is wrong as it can be necessary that, in the presence of
+unseen histories, one history $\DerivedHistory[i]$ is both part of a highest
+order probability $\ProbGLM{w}{\DerivedHistory[i]}$ and a lower order
+probability $\ProbGLM*{w}{\DerivedHistory[i]}$, as will be shown in the next
+paragraph.
 
 \begin{subequations}
   Let us for example calculate the probability $\ProbGLM{w_3}{w_1 w_2}$ on
@@ -394,8 +398,8 @@ shown in the next paragraph.
   That hypothetical training data shall be different from
   \cref{subsec:weightedsum-glm-example} and now $w_1 w_2$ shall be unseen,
   ergo $\Count(w_1 w_2) = 0$.
-  Because of this the average of backoff probabilities following
-  \cref{eq:glm-backoff} has to be formed:
+  Because of this, following \cref{eq:glm-backoff}, the average of backoff
+  probabilities to be formed:
   \begin{equation}
     \ProbGLM{w_3}{w_1 w_2} = \frac{1}{2} \left( \ProbGLM{w_3}{\Skp w_2} + \ProbGLM{w_3}{w_1 \Skp}\right)
   \end{equation}
@@ -458,13 +462,13 @@ Based on this we can define the sum terms for $1 \leq i \leq N$.
 \end{subequations}
 The terms with an odd index (\cref{eq:glmarg-high}) correspond to
 $\DerivedHistory[i]$ occurring as the highest order of probability, the terms
-with even index (\cref{eq:glmarg-low}) to lower orders.
+with an even index (\cref{eq:glmarg-low}) to lower orders.
 The case of $\NumSkpOp{\DerivedHistory[i]} = 0$ occurs when $\DerivedHistory[i]$
 consists only of skips, it thus can no longer be backoffed, and therefore
 presents the unigram case.
 
 Finding the sum weights $\SumWeight^h_i$ is more complex.
-We will first reason about how those weights have to be structured and then
+We will first reason about how these weights have to be structured and then
 give a more rigorous definition.
 %We will first discuss weights for $\SumArg^h_{2 i - 1}(w)$, that is for the
 %terms that compose the highest order.
@@ -519,8 +523,8 @@ Lower order sum weights thus consists of sums of multiplications, where the
 factors are based on the nodes along a path to the current node.
 \todo{Additional explanation of $factor \cdot sum$ property.}
 
-Because of this complexity of terms that compose the sum weights we will not try
-to find a mathematical expression that defines these sum weights.
+Because of this complexity of terms that compose the sum weights, we will not
+try to find a mathematical expression that defines these sum weights.
 Instead, we will define them by specifying the algorithm that computes them:
 Sum weights $\SumWeight^h_i$ are calculated by \cref{alg:weightedsum-glm} which
 uses the auxiliary functions of \cref{alg:weightedsum-glm-helper}.
@@ -715,7 +719,7 @@ First some required data is prefetched
 (\cref{ln:glm-lookup-count,ln:glm-lookup-contcount,ln:glm-lookup-gamma,ln:glm-lookup-coeff}),
 then the highest order weight is computed
 (\cref{ln:glm-if-highweight-zero,ln:glm-highweight-zero,ln:glm-if-highweight-root,ln:glm-highweight-frac,ln:glm-if-highweight-else,ln:glm-highweight-rec}),
-and lastly that for lower orders
+and last that for lower orders
 (\cref{ln:glm-if-lowweight-zero,ln:glm-lowweight-zero,ln:glm-if-lowweight-zero,ln:glm-if-lowweight-else,ln:glm-lowweight-rec}).
 
 \emph{node.index} is simply the position of the total ordering of the backoff
@@ -726,18 +730,18 @@ Accessing a count value like $\Count(\DerivedHistory[\text{node.index}] \Skp)$
 in \cref{ln:glm-lookup-count} is a potentially expensive operation, as a
 separate data structure has to be queried.
 \emph{node.count}, \emph{node.contCount}, and \emph{node.gamma} shall simply be
-floating point variables that are stored local to each node and thus quickly
+floating point variables that are stored local to each node and are thus quickly
 accessible.
 A possible implementation that supports this is showcased in
 \cref{subsec:weightedsum-glm-implementation}.
 \Cref{ln:glm-lookup-coeff} is listed under data lookup because the computation
-of $\mu$ can simply be replaced by a lookup to a precomputed table with
-two-dimensional keys. \emph{node.layer} is the layer of the node in the
+of $\mu$ can simply be replaced by a lookup to a precomputed table with a
+two-dimensional key. \emph{node.layer} is the layer of the node in the
 backoff graph.
 
 The properties \emph{node.count}, \emph{node.contCount}, and
 \emph{node.gamma} are not only needed for calculations of the current node, but
-also for those of all its descendants (for example
+also for the ones of all its descendants (for example
 \cref{ln:highhlp-count-nonzero}).
 Because of this an implementation has to ensure that the for-each loop in
 \cref{ln:glm-fornodesingraph} only iterates over a node in layer $l$ if all
@@ -757,7 +761,7 @@ weight as the fraction of coefficient $\mu$, number of paths, and denominator
 that just counts the number of paths that only spans unseen nodes from
 an \emph{ancestor} node to the current \emph{node} in a recursive manner.
 
-Lastly the weight $\SumWeight^h_{2 i}$ for lower orders is calculated.
+Last, the weight $\SumWeight^h_{2 i}$ for lower orders is calculated.
 Again if the term that would occur in the denominator \emph{node.contCount} is
 zero, that term is assigned a weight of zero.
 This also happens for the root note, as it can never occur in a lower order term
@@ -769,15 +773,15 @@ different auxiliary function
 That auxiliary function \Call{lowerOrdersWeight}{\emph{ancestor}, \emph{node},
 \emph{firstSeen}} forms the core of the algorithm.
 We have reasoned above that the weight for lower orders is proportional to
-a sum of multiplication, where each multiplication is built out of one path
+a sum of multiplications, where each multiplication is built out of one path
 from the root to the current node and each node contributes a
 $\frac{\gamma}{\text{denominator}}$ factor.
 This however depends on the node: if a node is the first seen one on the path
 it contributes a
-$\frac{\gamma(\DerivedHistory[\DummyIndex])}{\Count(\DerivedHistory[\DummyIndex] \Skp)}$
+$\gamma(\DerivedHistory[\DummyIndex]) \div \Count(\DerivedHistory[\DummyIndex] \Skp)$
 factor (\cref{ln:lowhlp-count-nonzero,ln:lowhlp-from-highhlp}) as of
 \cref{eq:glm-high}. Following nodes on the path contribute a
-$\frac{\gamma(\DerivedHistory[\DummyIndex])}{\ContCount(\WSkp \DerivedHistory[\DummyIndex] \WSkp)}$
+$\gamma(\DerivedHistory[\DummyIndex]) \div \ContCount(\WSkp \DerivedHistory[\DummyIndex] \WSkp)$
 factor (\cref{ln:lowhlp-contcount-nonzero,ln:lowhlp-from-lowhlp}) as of
 \cref{eq:glm-low}.
 Nodes that are unseen contribute the neutral element of multiplication, i.e.\
@@ -869,7 +873,7 @@ The C code of \Cref{lst:backoff-graph-c} exhaustively lists necessary data
 structures to implement \cref{alg:weightedsum-glm,alg:weightedsum-glm-helper}.
 \texttt{n} has to be a predefined constant that specifies the (maximal) length
 of histories.
-The \texttt{struct} \texttt{node} consists of exactly those data members that are
+The \texttt{struct} \texttt{node} consists of exactly the data members that are
 used for data lookup storage in the algorithm.
 \texttt{history} stores the $n$-gram $h$, and \texttt{nodes} bundles all nodes
 of a graph in one instance.
@@ -884,7 +888,7 @@ representation:
   \item A node is the top root node if its index has no set bits, and in turn a
     node is the bottom leaf node if all bits in the index are set.
   \item The layer of a node is the number of set bits in its index.
-  \item As explained in \cref{subsec:backoff-graph} a node at layer $l$ has
+  \item As explained in \cref{subsec:backoff-graph}, a node at layer $l$ has
     exactly $l$ parents and $\NGramLength{h} - l$ children.
   \item The index of the $i$th parent (child) of a node is found by unsetting
     (setting) the $i$th set (unset) bit.
@@ -899,7 +903,7 @@ representation:
     with \texttt{\&} the bitwise-and, and \texttt{|} the bitwise-or.
 \end{itemize}
 
-The only non-trivial problem that follows from that representation is finding
+The only non-trivial problem that follows from this representation is finding
 the proper ordering of indices in which they should be accessed during an
 in-order loop over the graph.
 An in-order loop over the backoff graph iterates all nodes, such that a node
@@ -920,12 +924,12 @@ composition of bit-level operations.
 % \setlength{\textfloatsep}{\oldtextfloatsep}
 
 % ------------------------------------------------------------------------------
-\section{Monotony}
+\section{Monotonicity}
 \label{sec:monotony}
 
 We now want to prove that the probability definitions for Modified Kneser-Ney
 Smoothing (\cref{sec:weightedsum-mkn}) and the Generalized Language Model
-(\cref{sec:weightedsum-glm}) are monotone functions on the $\SumArg^h_i(w)$.
+(\cref{sec:weightedsum-glm}) are monotonic functions on the $\SumArg^h_i(w)$.
 This means that higher $\SumArg^h_i(w)$ values correspond to higher
 probabilities.
 We can formalize that property as:
@@ -938,9 +942,9 @@ techniques in \cref{ch:topkjoin}.
 
 Because we have defined these probabilities as sums of weights $\SumWeight^h_i$
 multiplied with terms $\SumArg^h_i(w)$ (\cref{eq:weightedsum}), and since
-addition and multiplication are trivially monotone, it suffice to show that the
+addition and multiplication are trivially monotonic, it suffice to show that the
 $\SumWeight^h_i$ are always non-negative to prove that our probability
-definitions are monotone.
+definitions are monotonic.
 
 To show that $\SumWeight^h_i$ are non-negative we take at look at their
 definitions (\cref{eq:mkn-sumweight},
@@ -969,4 +973,4 @@ the limit of $\frac{1}{2}$ for an infinitely large corpus, and thus infinitely
 large number of n-grams $n_\DummyIndex$.
 As a result of the fact that these factors are limited, none of the discount
 values can be negative.
-Thereby we can see that our probability definitions are indeed monotone.
+Thereby we can see that our probability definitions are indeed monotonic.

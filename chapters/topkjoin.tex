@@ -10,22 +10,22 @@ are an argmax of probabilities.
 To optimize query time we follow a two-pronged approach:
 First we identify calculations shared by multiple probabilities and perform
 them only once up front.
-Secondly we try to avoid enumerating the whole argument space of the argmax.
+Secondly we try to avoid iterating the whole argument space of the argmax.
 Instead, our goal is to always compute the probability for the next most
 promising argument, and to terminate as soon as we are sure to have found the
 $k$ words that maximize the probability.
 
-As specified in \cref{ch:review} each language model probability  is calculated
+As specified in \cref{ch:review}, each language model probability  is calculated
 from occurrence counts of sequences in a corpus.
 In order to avoid having to analyze the corpus on each query for its relevant
-sequences, the number of occurrence for all contained sequences in a corpus is
+sequences, the number of occurrences for all contained sequences in a corpus is
 counted up front in a learning phase.
-We store those counts in a data structure that is optimized for necessary
+We store these counts in a data structure that is optimized for necessary
 retrieval.
-We will explain that data structure and define what necessary retrieval means
+We will explain this data structure and define what necessary retrieval means
 in \cref{sec:completiontrie}.
 Subsequently, we may persist that data, so that for each requested corpus the
-necessary analyzation only has to be performed once.
+necessary analysis must be performed only once.
 
 To find the answer for a query $\NWP[p][k]{h}$, probabilities $\Prob{w}{h}$ have
 to be calculated for a fixed history $h$ but many different $w$.
@@ -38,7 +38,7 @@ for every probability calculation of a query.
 The remaining factors $\SumArg^h_i(w)$ depend on $w$.
 This means we can find a function $s$ that expresses our
 probabilities\footnote{The definition for $s$ is just \cref{eq:weightedsum}.
-This new representation is only introduced to make it clear, that given the
+This new representation is only introduced to make it clear that given the
 $\SumWeight^h_i$, the probability can be calculated from the $\SumArg^h_i(w)$.}:
 \todo{It is not visible from the notation that $s$ depends on the
   $\SumWeight^h_i$.}
@@ -57,7 +57,7 @@ topic of \emph{top-$k$ joining techniques}.
 The result of a join operation is the set of all combinations of tuples from
 multiple data sources, where each tuple combination satisfies the \emph{join
 condition}.
-Top-$k$ joins are then these that only return the $k$ highest scoring
+Top-$k$ joins are then these joins that only return the $k$ highest scoring
 according to some \emph{scoring function}.
 
 We can easily see that our prefix queries fit the scheme of top-$k$ join
@@ -70,17 +70,17 @@ for each word $w$ is actually a join operation with the join condition that
 the $w$ is constant over the $\SumArg^h_i(w)$ of a single combination.
 As defined, for a query $\NWP[p][k]{w}$ we only want to return the $k$ best
 predictions.
-The $k$ best predictions are those that yield the $k$ highest values according
-to a scoring function, which in our case is the probability.
+The $k$ best predictions are the ones that yield the $k$ highest values
+according to a scoring function, which in our case is the probability.
 Each join combination gives the arguments for the scoring function, as shown
 in \cref{eq:scoringfunc}.
 
 Almost all top-$k$ joining techniques that try to be more efficient than
-enumerating all join combinations, require \emph{monotone} scoring functions.
-Monotone in our context means that higher $\SumArg^h_i(w)$ values correspond
+iterating all join combinations, require \emph{monotonic} scoring functions.
+Monotonicity in our context means that higher $\SumArg^h_i(w)$ values correspond
 to higher probabilities.
 We have shown in \cref{sec:monotony} that our probability definitions are
-monotone on the $\SumArg^h_i(w)$.
+monotonic on the $\SumArg^h_i(w)$.
 This fact can be utilized to find the top-$k$ predictions by always calculating
 the probability for the next promising $w$ with the highest $\SumArg^h_i(w)$.
 
@@ -166,9 +166,9 @@ random access --- for example a hash map --- which would necessitate a huge
 memory usage.
 
 Another desirable characteristic of data storage is data compression.
-Since the analyzation of larger corpora yields to more accurate language models
-\noref, a higher degree of data compression allows to perform more accurate
-word prediction on the same hardware.
+Since the analyzation of larger corpora yields to more accurate language
+models\noref, a higher degree of data compression allows to perform more
+accurate word prediction on the same hardware.
 Obviously a balance between data compression and access time has to be found,
 since fast prefix queries are the goal of this thesis.
 
@@ -193,7 +193,7 @@ ratio of their data structure of 51\% compared to raw uncompressed text files.
 In the same publication \textcite{HsuOttaviano2013} present two alternative
 data structures for the same task that achieve compression ratios of 29\%
 respectively 30\%.
-However, they report access times which are at least twice as high as those
+However, they report access times which are at least twice as high as the ones
 of the completion trie.
 Since speed is the primary concern of this thesis these alternatives
 were not further considered.
@@ -213,8 +213,8 @@ This enables all our desired accessing schemes:
     Results are sorted on the score $\SumArg^h_i(w)$.
     \todo{Querying $i$-th trie is only said implicitly.}
   \item A prefix $p$ which $w$ has to start with is easily included.
-    Querying for completions of $h \NGramConcat p$ returns the same pairs as above, but only
-    those where $p$ is a prefix in $w$.
+    Querying for completions of $h \NGramConcat p$ returns the same pairs as
+    above, but only the ones where $p$ is a prefix in $w$.
   \item Random access for a fixed history $h$ and fixed word $w$ is achieved by
     walking the path along the trie that is described by $h \NGramConcat w$.
     If that path ends in a leaf node, this node's score is $\SumArg^h_i(w)$.
@@ -349,12 +349,13 @@ Our implementation of the \emph{Threshold Algorithm} is given in
 As input we require $N$ completion tries from which we can extract
 $(w, \: \SumArg^h_i(w))$ pairs in sorted or random order as described in
 \cref{sec:completiontrie}.
-Further, as we are finding answers to an $\NWP[p][k]{h}$ query, those parameters
-are necessary.
+Further, as we are finding answers to an $\NWP[p][k]{h}$ query, these parameters
+$p$, $k$ and $n$ are necessary.
 Both \emph{history} and \emph{prefix} are strings that may be empty;
 \emph{limit} has to be an integer greater zero.
 The output \emph{predictions} will be a list composed of at most
-\emph{limit} $(w, \: \Prob{w}{h})$ pairs, sorted descendingly by probability.
+\emph{limit} $(w, \: \Prob{w}{h})$ pairs, sorted by probability in descending
+order.
 
 The calculation of probabilities depends on sum weights
 $\SumWeight_1, \: \ldots, \: \SumWeight_N$.
@@ -363,7 +364,7 @@ the start of each query (\cref{ln:ta-sumweights}).
 To calculate the \emph{threshold}, the upper bound for all of remaining
 probabilities, the factors
 $\overline{\SumArg}_1, \: \ldots, \: \overline{\SumArg}_N$ are required.
-Those are the last accessed counts $\SumArg_i(w)$ of each trie.
+They are the last accessed counts $\SumArg_i(w)$ of each trie.
 Before performing any trie-access we initialize them to the highest count in the
 trie (\cref{ln:ta-bara-for,ln:ta-bara-peek}).
 \emph{Peeking} a data source is the operation that returns the next entry in it,
@@ -371,7 +372,7 @@ without advancing its iterator.
 
 \emph{seen} is a set that keeps track of all processed words thus far
 (\cref{ln:ta-seen}).
-It's purpose is to avoid random access for the calculation of probabilities
+Its purpose is to avoid random access for the calculation of probabilities
 that have been performed before.
 It is an optimization that enables a faster execution time at the cost of
 a higher space complexity.\todo{HashSet}
@@ -418,7 +419,7 @@ The sorting of the priority queue happens implicit with the
 Afterwards the last accessed sorted count of the current trie is updated
 (\cref{ln:ta-bara-update}) and with it the \emph{threshold} calculated
 (\cref{ln:ta-threshold}).
-If we already found \emph{limit} predictions and the probability of all those
+If we already found \emph{limit} predictions and the probability of all these
 predictions is higher than our upper bound of all remaining ones, the algorithm
 terminates (\cref{ln:ta-done-if-1,ln:ta-done-if-2,ln:ta-done-break}).
 The resulting \emph{predictions} are formed by the conversion of the
@@ -446,7 +447,7 @@ roughly works as follows \parencite{Fagin2001}:
     was encountered during sorted access to the $i$th data source.
     The upper bound for a word probability is calculated by replacing unknown
     counts with their highest possible value $\overline{\SumArg}_i$.
-    Lower bounds are calculated by replaced unknown counts with zeros.
+    Lower bounds are calculated by replacing unknown counts with zeros.
   \item Once $k$ words have been found, whose lower bound of probability is
     higher than all other upper bounds, the algorithm terminates and returns
     these $k$ best predictions.
@@ -594,7 +595,7 @@ It contains at most \emph{limit} items.
 
 The selection of the next trie with \Call{nextTrie}{$ $} (\cref{ln:nra-while})
 and the following sorted access to that trie (\cref{ln:nra-next}) are equal
-to those of the \emph{Threshold Algorithm}.
+to the ones of the \emph{Threshold Algorithm}.
 Each new word-count-pair is stored in \emph{wordCounts}.
 If the word has not been seen before (\cref{ln:nra-contains}) we initialize all
 counts $\SumArg_1, \: \ldots, \: \SumArg_N$ as \emph{unknown} values.
@@ -606,7 +607,7 @@ Afterwards we update the one $\SumArg_i$ we have retrieved the value for
 (\cref{ln:nra-a-set}) and write the resulting count-tuple back into the map
 (\cref{ln:nra-update-mapping}).
 
-With the update counts we can compute a better upper and lower bound for the
+With the updated counts we can compute a better upper and lower bound for the
 word probability.
 First we update the last accessed count of the current trie
 (\cref{ln:nra-bara-update}).
@@ -640,8 +641,9 @@ of each item in the queue, for with $\SumArg_i$ is unknown, will change.
 So in practice one would have to recalculate all upper bounds and resort the list
 every time an $\overline{\SumArg}$ value is updated.
 This is not made explicit in the presented algorithm.
-However, one can take advantage of the fact that our probabilities are monotone,
-and the sorting of items thus remains constant for changing $\SumArg_i$.
+However, one can take advantage of the fact that our probabilities are
+monotonic, and the sorting of items thus remains constant for changing
+$\SumArg_i$.
 This means one only needs to recalculate the upper bound in places where the
 actual value is needed.
 
@@ -665,9 +667,9 @@ In practice it is infeasible to store $\SumArg^h_i(w)$ for every possible
 history $h$, or even only for seen histories.
 Instead we rely on the derived histories $\DerivedHistory[\DummyIndex]$
 (\cref{fig:history-mkn,fig:history-glm}), described in \cref{ch:weightedsum},
-which some are partly common to multiple query histories $h$.
-So to obtain an $\SumArg^h_i(w)$ the $i$th completion trie has to be queried with
-$\DerivedHistory[i]$.
+which overlap for multiple query histories $h$.
+So to obtain an $\SumArg^h_i(w)$, the $i$th completion trie has to be queried
+with $\DerivedHistory[i]$.
 Deriving the $\DerivedHistory[\DummyIndex]$ from $h$ is possible via simple
 computation rules.
 
@@ -721,13 +723,13 @@ considerably steeper memory requirements.
 
 The runtime of both algorithms is largely dependent on the costs of sorted and
 random access.
-For our application and data structure we perform an in depth empirical
+For our application and data structure we perform an in-depth empirical
 comparison in \cref{subsec:evaluation-topkjoin-time}.
 In our setup the Threshold Algorithms performs its calculations much more
 quickly for the vast share of queries.
 \textcite{Fagin2001} present the \emph{Combined Algorithm}, a generalized
 version of both, that performs an optimal ratio of sorted and random accesses,
-if the runtime costs of both form of access are known.
+if the runtime costs of both forms of access are known.
 Finding the correct access costs for top-$k$ joining next word prediction and
 fitting the Combined Algorithm to these would be interesting future work.
 

@@ -1,8 +1,6 @@
 \pdfbookmark[1]{Abstract}{Abstract}
 \begin{abstractpage}
   \begin{abstract}
-    \todo[inline]{Write Abstract.}
-
     Next word prediction is the task of guessing the next word a user intends to
     type from the words they have already entered.
     Traditionally, this problem is solved by calculating an argmax of language
@@ -10,30 +8,33 @@
     However, this approach is slow and becomes linearly worse with
     increasing vocabulary size.
     This thesis proposes two independent optimizations.
-    First, a novel approach is presented that allows to move a part of
-    probability calculation into a precomputation step.
+    First, a novel approach is presented that allows for performing part of the
+    probability calculation in a precomputation step.
     Second, it is shown how to apply top-k joining techniques to word
-    prediction to avoid enumerating all words in the vocabulary.
+    prediction to avoid iterating all words in the vocabulary.
     Using both optimizations sub-millisecond next word prediction time is
     achieved.
-
-    \begin{draft}
-      The concern of this thesis is solving noisy channel type queries that are based
-      on statistical language model probabilities.
-      Our novel approach is to formulate language models as weighted sum functions on
-      occurrence counts.
-      As these weighted sum functions are monotone, we can then employ various
-      top-$k$ joining techniques, to efficiently find those arguments that maximize
-      the noisy channel's probability.
-      This approach can be used for all noisy channel type queries, that can be
-      expressed as monotone scoring functions.
-      We will present our method by implementing next word prediction with it.
-    \end{draft}
   \end{abstract}
 
   \selectlanguage{ngerman}
   \begin{abstract}
-    \todo[inline]{{\"U}bersetzte Abtract auf Deutsch.}
+    Next-Word-Prediction ist die Problemstellung das nächste Wort vorherzusagen,
+    welches ein Benutzer zu tippen beabsichtigt, mit Hilfe der Kenntnis, welche
+    Wörter bereits eingetippt wurden.
+    Für gewöhnlich wird dieses Problem mit Hilfe eines Argmax über
+    Sprachmodellwahrscheinlichkeiten aller Wörter eines Vokabulars gelöst.
+    Diese Ansatz ist jedoch langsam und wird mit wachsender Vokabulargröße
+    linear schlechter.
+    Diese Arbeit schlägt zwei unabhängige Optimierungen vor.
+    Zum einen wird ein neuartiger Ansatz vorgestellt, der es erlaubt einen Teil
+    der Wahrscheinlichkeitsberechnung in einem Vorberechnungsschritt
+    auszuführen.
+    Zum anderen wird gezeigt wie Top-k-Joining-Verfahren zur Berechnung der
+    Wortvorhersage eingesetzt werden können.
+    Dies ermöglicht es, die Iteration über aller Wörter des Vokabulars zu
+    vermeiden.
+    Unter Einsatz beider Optimierungen wurden Vorhersagezeiten unter einer
+    Millisekunde erzielt.
   \end{abstract}
   \selectlanguage{american}
 \end{abstractpage}

@@ -27,6 +27,11 @@ However, Modified Kneser-Ney Smoothing hugely outclasses the Generalized
 Language Model in terms of both time and space complexity and is thus favorably
 in practice.
 
+However, our experiments did not research how these language models perform in
+settings with unknown words.
+\textcite{Pickhardt2014} state that this would be the main advantage of the
+Generalized Language Model.
+
 While not showing the most dramatic speedup, the weighted sum representation
 forms the key contribution of this thesis, as it is truly novel.
 Top-$k$ joining techniques on the other hand are well known, this thesis' work
@@ -63,7 +68,7 @@ Machines that have to handle multiple queries at the same time (servers) would
 be better advised to just parallelize these queries, as they are naturally
 independent of each other.
 
-Lastly, the presented way of combining top-$k$ joining techniques with language
+Finally, the presented way of combining top-$k$ joining techniques with language
 models should be applicable to a whole range of language model tasks.
 The \emph{noisy channel} \parencite{Shannon1948} is a framework used to model
 the task of extrapolating given, scrambled information.

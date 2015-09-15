@@ -30,17 +30,11 @@
   binary-units = true,
 ]{siunitx}
 
-% TODO
-\usepackage{nicefrac}
-\usepackage{paralist}
-\newcommand{\inlinecode}[1]{\lstinline[columns=fixed]{#1}}
-
 \addbibresource{bibliography.bib}
 
 % Editorial Commands ===========================================================
 % TODO: remove before relase
 
-\usepackage{printlen}
 \usepackage[
   linecolor = Maroon,
   bordercolor = Maroon,
@@ -48,33 +42,37 @@
   disable,
 ]{todonotes}
 
-\usepackage{verbatim}
 
-\definecolor{draft}{rgb}{0.5, 0.5, 0.5}
-\newenvironment*{draft}{%
-  \color{draft}%
-%   \expandafter\comment
-}{%
-%   \expandafter\endcomment
-}
-
-\newcommand*\Lukas[2][]{
-  \todo[linecolor = Cyan, bordercolor = Cyan, #1]{\textcolor{Cyan}{Lukas}: #2}
-}
-\newcommand*\Rene[2][]{
-  \todo[linecolor = Blue, bordercolor = Blue, #1]{\textcolor{Blue}{Rene}: #2}
-}
-
-\newcommand{\noref}{\textcolor{RoyalBlue}{\footnotesize[Citation needed]}}
-\newcommand{\mbref}[1]{\textcolor{RoyalBlue}{\footnotesize[Citation: #1?]}}
-
-% \newcommand*\Lukas[2][]{
-% }
-% \newcommand*\Rene[2][]{
+% \definecolor{draft}{rgb}{0.5, 0.5, 0.5}
+% \newenvironment*{draft}{%
+%   \color{draft}%
+% }{%
 % }
 %
-% \newcommand{\noref}{}
+% \newcommand*\Lukas[2][]{
+%   \todo[linecolor = Cyan, bordercolor = Cyan, #1]{\textcolor{Cyan}{Lukas}: #2}
+% }
+% \newcommand*\Rene[2][]{
+%   \todo[linecolor = Blue, bordercolor = Blue, #1]{\textcolor{Blue}{Rene}: #2}
+% }
+%
+% \newcommand{\noref}{\textcolor{RoyalBlue}{\footnotesize[Citation needed]}}
+% \newcommand{\mbref}[1]{\textcolor{RoyalBlue}{\footnotesize[Citation: #1?]}}
+
+% \newcommand*\Lukas[2][]{%
+% }
+% \newcommand*\Rene[2][]{%
+% }
+
+\newcommand{\noref}{}
 % \newcommand{\mbref}[1]{}
+
+\usepackage{verbatim} % for comment environment
+\newenvironment{draft}{%
+  \expandafter\comment%
+}{%
+  \expandafter\endcomment%
+}
 
 % ==============================================================================
 
@@ -96,22 +94,20 @@
 \include{frontbackmatter/abstract}
 
 \clearpage
-\todo[inline]{License!}
-\todo[inline]{Dedication}
-\todo[inline]{Use etoolbox for ifthenelse in class.}
-\todo[inline]{Kill warnings.}
-\todo[inline]{Rewrite math package. Use left/right braces for set.}
-\todo[inline]{Use subequations more often?}
-\todo[inline, caption={Check for typographicals errors before submission.}]{%
-  Check for typographical errors before submission.%
-  \begin{itemize}%
-    \item Check if all ellipsis "\ldots" are done using
-      \texttt{\textbackslash{}ldots}.%
-    \item Check if words ending in "s" require possessive apostrophe.%
-  \end{itemize}%
-}
-\todo[inline]{Keywords?}
-\todo[inline]{Section capitalization}
+\newgeometry{left = 2.5cm, right = 2.5cm}
+  \begin{center}
+    \includegraphics{figures/cc-by-sa}
+  \end{center}
+
+  \vspace{0.25cm}
+
+  \noindent
+  This work is licensed under the \emph{Creative Commons Attribution-ShareAlike
+  4.0 International License}.
+  To view a copy of this license, visit
+  \mbox{\url{http://creativecommons.org/licenses/by-sa/4.0/}} or send a letter to
+  Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
+\restoregeometry
 
 \cleardoublepage
 \pdfbookmark[1]{\contentsname}{toc}
@@ -132,7 +128,25 @@
 
 % Backmatter ===================================================================
 
+\cleardoublepage
+\include{frontbackmatter/acknowledgments}
+
 \printbibliography
+
+\todo[inline]{Dedication}
+\todo[inline]{Use etoolbox for ifthenelse in class.}
+\todo[inline]{Kill warnings.}
+\todo[inline]{Rewrite math package. Use left/right braces for set.}
+\todo[inline]{Use subequations more often?}
+\todo[inline, caption={Check for typographicals errors before submission.}]{%
+  Check for typographical errors before submission.%
+  \begin{itemize}%
+    \item Check if all ellipsis "\ldots" are done using
+      \texttt{\textbackslash{}ldots}.%
+    \item Check if words ending in "s" require possessive apostrophe.%
+  \end{itemize}%
+}
+\todo[inline]{Keywords?}
 
 \listoftodos
 
