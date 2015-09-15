@@ -132,9 +132,23 @@
 
 % References
 \RequireOptionsPackage[
+  authordate,
+  backend = biber,
+  maxbibnames = 10, % max number of names in bibliography
+  maxcitenames = 2, % max number of names in text cite
+  uniquelist = minyear, % only add more authors if year is not unique
+  backref = true, % bibliography contains links to cite occurence
+  backrefstyle = three+,
+  doi = false, % do not show doi
+  isbn = false, % do not show isbn
+  url = false, % do not show url
+  eprint = false, % do not show eprint
+  urldate = long, % format of urldate field
+]{biblatex-chicago}
+\RequireOptionsPackage[
   backend = biber, % use biber as backend
-  style = authoryear-comp,
-  %style = alphabetic,
+%   style = authoryear-comp,
+%   %style = alphabetic,
   maxbibnames = 10, % max number of names in bibliography
   maxcitenames = 2, % max number of names in text cite
   uniquelist = minyear, % only add more authors if year is not unique
@@ -209,7 +223,7 @@
   }
 }\relax
 
-% \colorlet{Maroon}{Black}
+\colorlet{Maroon}{Black}
 
 % Title ========================================================================
 
