@@ -223,7 +223,7 @@
   }
 }\relax
 
-\colorlet{Maroon}{Black}
+% \colorlet{Maroon}{Black}
 
 % Title ========================================================================
 
